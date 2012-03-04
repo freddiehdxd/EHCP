@@ -41,10 +41,6 @@ class Application:
 	def zamanBas(self):
 		return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 	
-	def dosyaSakla(self,dosya):
-		global KLASOR_SAKLAMA_YERI_GUN
-		self.moveFile(dosya,KLASOR_SAKLAMA_YERI_GUN+self.getFilename(dosya),' dosya saklaniyor.. ')
-
 	def checkDuplicateProgram(self):
 		pid=os.getpid()
 		# bu programin ismini de al.
@@ -244,53 +240,7 @@ class Application:
 			print "query islerken hata olustu:",q
 		
 	
-	def numaratemizle(self,num):
-		if (len(num)==14 and num[0:4]=='0090'):
-			num=num[4:14]
-		elif (len(num)==13 and num[0:3]=='090'):
-			num=num[3:13]
-		elif (len(num)==12 and num[0:2]=='90'):
-			num=num[2:12]
-		elif (len(num)==11 and num[0:1]=='0'):
-			num=num[1:11]
-			
-		return num.strip()
 
-	def hatalidosyayaz(self,str):
-		global hatalilardizini,hatalidosyaadi,hatalisatirsayisi
-		hatalidosyaadi=hatalilardizini+OPERATORADI+'_hatalisatirlar_'+self.getFilename(self.input)  # hatali olan, islenemeyen satirlari biyere kaydet... 
-		if hatalisatirsayisi==0: # ilk hatada dizini olustur. hata olmazsa dizin olusmaz.. 
-			os.system("mkdir -p "+hatalilardizini)
-					
-		self.dosyayaekle2(hatalidosyaadi,str)
-		hatalisatirsayisi+=1
-
-	def hexdecode(self,str):
-		try:
-			str=str.decode('hex')
-		except:			
-			str=str[0:str.__len__()-1] # bazi hexlerin son dijiti hatali oluyor. onlari atiyoruz. 
-			try:
-				str=str.decode('hex')
-			except:
-				print "str decode edilemedi :(",str,"): len:",str.__len__(),"\n"
-		return str
-        
-	def dosyayaekle2(self,dosya,line): # iki farkli yontem... bu daha hizli calisti.. digeri os system call yapiyor...
-		global arg2
-
-		if arg2=="no":# ikinci argumani al... "no" ise, output olusturma, sadece inputu process et, hatalari bulmak icin.. 
-			return 
-
-		f=open(dosya,'a+')
-		f.write(line)
-		f.close()
-	
-	def dosyayaekle(self,dosya,line):		
-		cmd="echo \""+line+"\" >> "+dosya
-		#print cmd,"\n\n"
-		os.system(cmd)
-	
 	def error_occured(self,sender):
 		self.output+=sender+' An error occured..'
 		return False

@@ -1,5 +1,5 @@
 <?php
-$ehcpversion="0.30.5";
+$ehcpversion="0.30.7";
 # last modified by bvidinli on 13.11.2010 (d-m-y)
 # include_once("config/dbutil.php");  # dbutil is being removed from project.
 /*
@@ -706,8 +706,11 @@ function install_nginx_webserver(){
 	copy("$mydir/etc/nginx/mime.types","/etc/nginx/mime.types");
 	
 	rebuild_nginx_config2(".");	
+	
 	passthru2("/etc/init.d/php5-fpm stop");
 	passthru2("update-rc.d -f nginx remove");  # apache is default	
+	passthru2("/etc/init.d/nginx stop");
+	
 	echo "\nEnd nginx install\n";
 	#bekle();
 }

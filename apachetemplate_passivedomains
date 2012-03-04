@@ -1,5 +1,7 @@
 #____________start of {domainname}__paneluser:{panelusername}_reseller:{reseller}_id:{id}____________
-# explanation  {aciklama}
+# Comment:  {aciklama}
+# this file used in Easy Hosting Control Panel (ehcp), www.ehcp.net
+
 
 <VirtualHost *>
         ServerName   {domainname}

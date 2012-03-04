@@ -3,10 +3,10 @@
 	$ip='192.168.1.3';
 	$user_name='bv';
 	$user_email='bvidinli@gmail.com';
-	$ehcpmysqlpass='bahh';
-	$rootpass='bahh';
+	$ehcpmysqlpass='';
+	$rootpass='';
 	$newrootpass='';
-	$ehcpadminpass='bahh';
+	$ehcpadminpass='';
 	$hostname='bilg';
 	$lang='en';
 	$installextrasoftware='';

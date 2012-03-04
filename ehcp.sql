@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS scripts_log (
 CREATE TABLE IF NOT EXISTS servers (
   id smallint(6) NOT NULL auto_increment,
   servertype varchar(10) default NULL,
-  ip varchar(20) default NULL,
+  ip varchar(30) default NULL,
   accessip varchar(30) default NULL,
   mandatory char(1) default NULL,
   location varchar(20) default NULL,
@@ -159,7 +159,7 @@ CREATE TABLE IF NOT EXISTS domains (
   homedir varchar(100) default NULL,
   comment varchar(50) default NULL,
   status varchar(10) default NULL,
-  serverip varchar(20) default NULL,
+  serverip varchar(30) default NULL,
   diskquotaused int(4) default NULL,  -- Thanks to deconectat
   diskquota int(4) default NULL,
   diskquotaovernotified int(4) NULL,
@@ -256,7 +256,7 @@ CREATE TABLE IF NOT EXISTS backups (
 CREATE TABLE log (
   id int(11) NOT NULL auto_increment,
   tarih datetime default NULL,
-  ip varchar(15) default NULL,
+  ip varchar(30) default NULL,
   log varchar(60) default NULL,
   referrer varchar(100) default NULL,
   url varchar(100) default NULL,
@@ -291,7 +291,7 @@ INSERT INTO misc (id, name, value, longvalue,comment) VALUES
 (3, 'adminemail', 'b', NULL,''),
 (5, 'ehcpdir', '/var/www/vhosts/ehcp', NULL,''),
 (6, 'banner', '', 'this is banner.. you may write here something using <a href=\\"?op=options\\">server settings</a>\r\n<br><br>',''),
-(7, 'defaulttemplate', 'ubuntu0.4.2', NULL,''),
+(7, 'defaulttemplate', 'sky', NULL,''),
 -- (7, 'defaulttemplate', 'xp5-z7', NULL,''),
 (8, 'defaultlanguage', 'en', NULL,''),
 (9, 'updatehostsfile', 'on', NULL,''),
@@ -341,9 +341,9 @@ CREATE TABLE operations (
   status varchar(15) default NULL,
   tarih datetime default NULL,
   try smallint(6) default '0',
-  info varchar(100) default NULL,
+  info varchar(200) default NULL,
   info2 varchar(200) default NULL,
-  info3 varchar(100) default NULL,
+  info3 varchar(200) default NULL,
   action varchar(50) default NULL,
   PRIMARY KEY  (id)
 ) ENGINE=MyISAM comment='ehcp db - list of pending/done daemon operations, misc operations.. ';
@@ -411,3 +411,39 @@ DROP TABLE IF EXISTS net2ftp_users;
 CREATE TABLE net2ftp_users (ftpserver varchar(255) NOT NULL default '0',username text NOT NULL,homedirectory text NOT NULL,KEY index1 (ftpserver,username(50))) ENGINE=MyISAM;
 
 
+
+
+CREATE TABLE IF NOT EXISTS `vps` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `reseller` varchar(30) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
+  `panelusername` varchar(30) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
+  `status` varchar(20) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
+  `vpsname` varchar(30) CHARACTER SET utf8 COLLATE utf8_turkish_ci NOT NULL,
+  `description` varchar(100) CHARACTER SET utf8 COLLATE utf8_turkish_ci NOT NULL,
+  `hostip` varchar(20) CHARACTER SET utf8 COLLATE utf8_turkish_ci NOT NULL,
+  `ip` varchar(20) CHARACTER SET utf8 COLLATE utf8_turkish_ci NOT NULL,
+  `netmask` varchar(20) CHARACTER SET utf8 COLLATE utf8_turkish_ci NOT NULL,
+  `broadcast` varchar(20) CHARACTER SET utf8 COLLATE utf8_turkish_ci NOT NULL,
+  `gateway` varchar(20) CHARACTER SET utf8 COLLATE utf8_turkish_ci NOT NULL,
+  `image_template` varchar(100) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
+  `ram` int(11) DEFAULT NULL,
+  `cpu` int(11) DEFAULT NULL,
+  `state` varchar(20) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
+  `ping` varchar(10) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
+  `hdimage` varchar(200) DEFAULT NULL,
+  `vncpassword` varchar(20) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 COMMENT='ehcp db - list of domains and their properties';
+
+
+CREATE TABLE IF NOT EXISTS `settings` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `group` varchar(20) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT '',
+  `reseller` varchar(30) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT '',
+  `panelusername` varchar(30) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT '',
+  `name` varchar(40) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT '',
+  `value` text CHARACTER SET utf8 COLLATE utf8_turkish_ci,
+  `longvalue` text CHARACTER SET utf8 COLLATE utf8_turkish_ci,
+  `comment` varchar(100) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT '',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM  DEFAULT CHARSET=latin1 COMMENT='ehcp db - Table for misc configruation of ehcp';

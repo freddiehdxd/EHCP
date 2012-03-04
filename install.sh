@@ -3,7 +3,7 @@
 # this is a very basic shell installer, real installation in install_lib.php, which is called by install_1.php, install_2.php
 #
 # please contact me if you made any modifications.. or you need help
-# msn/email: info@ehcp.net or bvidinli@iyibirisi.com
+# msn/email: info@ehcp.net
 # skype/yahoo/gtalk: bvidinli
 
 # Marcel <marcelbutucea@gmail.com>
@@ -12,7 +12,7 @@
 #
 
 
-ehcpversion="0.30.3"
+ehcpversion="0.30.7"
 
 echo
 echo 
@@ -232,7 +232,7 @@ function launchPanel(){
 
 
 #echo "`date`: initializing.b"  # i added these echo's because on some system, some stages are very slow. i need to investigate that.
-infoMail "ehcp_1_installstarted_ver_$ehcpversion"
+#infoMail "ehcp_1_installstarted_ver_$ehcpversion"
 checkUser
 #echo "`date`: initializing.c"
 ehcpHeader
@@ -283,7 +283,7 @@ echo
 echo "STAGE 2"
 echo "====================================================================="
 echo "now running install_1.php "
-infoMail ehcp_2_install-starting-install_1.php
+#infoMail ehcp_2_install-starting-install_1.php
 php install_1.php $noapt
 
 echo 
@@ -291,7 +291,7 @@ echo
 echo "STAGE 3"
 echo "====================================================================="
 echo "now running install_2.php "
-infoMail ehcp_2_2_install-starting-install_2.php
+#infoMail ehcp_2_2_install-starting-install_2.php
 
 #php install_2.php $noapt || php /etc/ehcp/install_2.php $noapt  # start install_2.php if first install is successfull at php level. to prevent many errors.
 php install_2.php $noapt

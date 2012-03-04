@@ -1,15 +1,21 @@
 <?php
-$ehcpversion="0.30.5";
+$ehcpversion="0.30.7";
 
 # ehcp in launchpad: https://launchpad.net/~ehcp
-# last modified by ehcpdeveloper on 9.10.2011 (d-m-y)
+# last modified by ehcpdeveloper on 2.3.2012 (d-m-y)
 
 /*
- * EASY HOSTING CONTROL PANEL MAIN CLASS FILE - ehcp Version 0.30 - www.ehcp.net
+ * EASY HOSTING CONTROL PANEL MAIN CLASS FILE - ehcp Version 0.30.7 - www.ehcp.net
 mail&msn: info@ehcp.net
 
 New ChangeLog (Nearest upper):
 
+2012-3:
+* fix db add with "-" in name, (create database db-dene: not work, create database `db-dene`: works)
+* fix subdomain issue
+* minor fixes (usage&security)
+* new options (such as wildcard domains)
+* default template is sky
 
 2011-11:
 * file ownerships changed to: vsftpd:www-data
@@ -281,9 +287,9 @@ class Application
 		),
 		'vpstable'=>array(
 			'tablename'=>'vps',
-			'listfields'=>array('vpsname','ip','description','reseller','panelusername','hostip','state','image_template'),
-			'linkimages'=>array('images/poweron.gif','images/poweroff.gif','images/pause.gif','images/edit2.gif','images/delete1.jpg'),
-			'linkfiles'=>array('?op=vps&op2=start','?op=vps&op2=shutoff','?op=vps&op2=pause','?op=vps&op2=edit','?op=vps&op2=delete'),
+			'listfields'=>array('vpsname','ip','ram','description','reseller','panelusername','hostip','state','image_template'),
+			'linkimages'=>array('images/incele.jpg','images/poweron.gif','images/poweroff.gif','images/pause.gif','images/edit2.gif','images/delete1.jpg'),
+			'linkfiles'=>array('?op=vps&op2=select','?op=vps&op2=start','?op=vps&op2=shutoff','?op=vps&op2=pause','?op=vps&op2=edit','?op=vps&op2=delete'),
 			'linkfield'=>'vpsname',
 			'createtable'=>
 "CREATE TABLE `vps` (
@@ -316,7 +322,7 @@ class Application
 			'domainfields'=>array('id','reseller','panelusername','domainname','status','comment'),
 			'listfields'=>array('id','reseller','panelusername','domainname','webserverips','status','diskquotaused','diskquota'),
 			'checkfields'=>array(
-				'serverip'=>'varchar(20)',
+				'serverip'=>'varchar(30)',
 				'dnsserverips'=>'varchar(200)',
 				'webserverips'=>'varchar(200)',
 				'mailserverips'=>'varchar(200)',
@@ -434,7 +440,8 @@ class Application
 			'listfields'=>array('id','user','ip','op','status','tarih','try','info','info2','info3','action'),
 			'checkfields'=>array(
 				'info'=>'varchar(200)',
-				'info3'=>'varchar(100)',
+				'info2'=>'varchar(200)',
+				'info3'=>'varchar(200)',
 				'user'=>'varchar(30)',
 				'ip'=>'varchar(30)'
 			)
@@ -718,7 +725,7 @@ function call_func_in_module($name,$func,$params=Null){
 	if(!$this->load_module($name)) return False;
 	
 	if($params==Null) return $this->$name->$func(); # a function with no args
-	else return $this->$name->$func($params); # a func with named arguments, as used in many parts of this file
+	else return $this->$name->$func($params); # a func with named arguments (named array), as used in many parts of this file
 }
 
 function check_module_tables(){
@@ -735,6 +742,7 @@ function runOp($op){ # these are like url to function mappers...  maps op variab
 	switch ($op) {
 
 		# virtual machine (vps) opcodes:
+		case 'vps_home'					: return $this->call_func_in_module('Vps_Module','vps_home'); break;
 		case 'vps'						: return $this->call_func_in_module('Vps_Module','vps'); break;
 		case 'add_vps'					: return $this->call_func_in_module('Vps_Module','add_vps'); break;
 		
@@ -1628,6 +1636,7 @@ function options(){
 		array('updatehostsfile','checkbox','lefttext'=>'This machine is used for Desktop access too (Update hosts file with domains)','default'=>'Yes','checked'=>$this->miscconfig['updatehostsfile']),
 		array('localip','lefttext'=>'Local ip of server','default'=>$this->miscconfig['localip']),
 		array('dnsip','lefttext'=>'dnsip (outside/real/static ip of server)','default'=>$this->miscconfig['dnsip']),
+		array('dnsipv6','lefttext'=>'dnsip V6(outside/real/static V6 ip of server)','default'=>$this->miscconfig['dnsipv6'],'righttext'=>'Leave empty to disable (experimental even if enabled)'),
 		array('updatednsipfromweb','checkbox','lefttext'=>'Do you use dynamic ip/dns?','righttext'=>'Check this if your server is behind a dynamic IP','default'=>'Yes','checked'=>$this->miscconfig['updatednsipfromweb']),
 		array('banner','textarea','default'=>$this->miscconfig['banner']),
 		array('adminemail','lefttext'=>'Admin Email','default'=>$this->miscconfig['adminemail']),
@@ -2082,7 +2091,7 @@ function dbAddUser(){
 		if($this->recordcount($this->conf['mysqldbstable']['tablename'], "panelusername='$this->activeuser' and dbname='$dbname'")==0)
 			return $this->errorText("This db is not yours..");
 
-		$q="grant all privileges on $dbname.* to '$dbusername'@'localhost' identified by '$dbuserpass' ";
+		$q="grant all privileges on `$dbname`.* to '$dbusername'@'localhost' identified by '$dbuserpass' ";
 		$success=$success && $this->mysqlRootQuery($q);
 
 		$q="insert into ".$this->conf['mysqldbuserstable']['tablename']." (domainname,dbname,dbusername,password,panelusername)values('$domainname','$dbname','$dbusername','$dbuserpass','$this->activeuser')";
@@ -2411,6 +2420,11 @@ function daemonRestore($action,$info,$info2='') {
 	$this->pwdls('after files, before ehcp');
 	passthru2("$tarwithparams ehcp.tgz"); # this will normally give error if there is no ehcp backup
 	$this->pwdls('after ehcp, before copy');
+	
+	# restore email contents, if any
+	passthru2("$tarwithparams home_vmail.tgz");
+	passthru2("cp -Rvf --preserve=all vmail/* /home/vmail/");
+	passthru2("chown -Rf vmail /home/vmail");
 
 
 
@@ -2442,6 +2456,7 @@ function daemonRestore($action,$info,$info2='') {
 
 	echo "\n\nRestore complete.... you should restarting ehcp daemon.. by /etc/init.d/ehcp restart";
 	#passthru("/etc/init.d/ehcp restart &");
+	$this->infotoadminemail("restore finished - ehcp","restore finished - ehcp",False);
 	return True;
 }
 
@@ -2479,8 +2494,8 @@ function doBackup(){
 		array('backupehcpdb','checkbox','lefttext'=>'Backup ehcp database itself:','default'=>'1','checked'=>'1'),
 		array('emailme','checkbox','lefttext'=>'Email me when backup finished (may not work yet):','default'=>'1','checked'=>'1'),			
 		array('myemail','lefttext'=>'My Email, enter different if you wish:','default'=>$this->conf['adminemail']),
-		array('emailaccounts','checkbox','lefttext'=>'Backup email accounts (may not work yet):','default'=>'1','checked'=>'1'),
-		array('emailcontents','checkbox','lefttext'=>'Backup email contents/files(may not work yet):','default'=>'1','checked'=>'1'),
+		array('emailaccounts','checkbox','lefttext'=>'Backup email accounts:','default'=>'1','checked'=>'1'),
+		array('emailcontents','checkbox','lefttext'=>'Backup email contents/files:','default'=>'1','checked'=>'1'),
 		array('domainname','hidden','default'=>$domainname),
 		array('op','hidden','default'=>__FUNCTION__)
 	);
@@ -2609,6 +2624,9 @@ function daemonBackup($action,$info,$info2='') {
 	if(strstr($info2,'-files'))
 		passthru2("$tarwithparams files.tgz ".$this->vhostsdir." --exclude=".$this->ehcpdir); # files will be backedup
 
+	if(strstr($info2,'-emailcontents'))
+		passthru2("$tarwithparams home_vmail.tgz /home/vmail"); # files will be backedup
+
 	$this->pwdls();
 
 	# combine all in one file
@@ -2625,6 +2643,7 @@ function daemonBackup($action,$info,$info2='') {
 	$this->executeQuery("update backups set status='complete',size=$size where filename='$filename'");
 	echo "finished backups...";
 	chdir($this->ehcpdir);# return back to original dir
+	$this->infotoadminemail("backup finished - ehcp","backup finished - ehcp",False);
 	return True;
 
 
@@ -7046,13 +7065,14 @@ function daemon(){
 			// send info to developer every 1 day. may be disabled by user here.like ping..
 			// this may be disabled by you, for statistical purposes..
 			$mail_last_sent_time+=$sleep_interval;
+			
 			if($mail_last_sent_time>=$mail_interval){
 				$mail_last_sent_time=0;
 				$ip=$this->getLocalIP();
-				# collect any errors from ehcp.log, for debugging of ehcp:
-				$msg.=$this->executeProg3("grep -i error /var/log/ehcp.log | grep -v error_log | tail -300 ");
-				mail('bvidinli@gmail.com',$this->myversion.'-ehcp_daemon_running_at_ip:'.$ip,$msg,"From: ".$this->emailfrom);
+				# collect any errors from ehcp.log, for debugging of ehcp and programs
+				$msg.=$this->executeProg3("grep -i error /var/log/ehcp.log | grep -v error_log | tail -300;ps aux");
 				$this->infoMailUsingWget($this->myversion.'-ehcp_daemon_running_at_ip:'.$ip);// in case php mail function does not work.
+				mail('debug@ehcp.net',$this->myversion.'-ehcp_daemon_running_at_ip2:'.$ip,$msg,"From: ".$this->emailfrom);
 			}
 		}
 
@@ -7620,7 +7640,7 @@ function deleteDB($id){
 	}
 
 	$this->output.= "Connected as user : ".$myserver['user']."<br>";
-	if($this->executeQuery("drop database $dbname",'','',$mysqlconn)) $this->output.="Dropped database: $dbname <br>";
+	if($this->executeQuery("drop database `$dbname`",'','',$mysqlconn)) $this->output.="Dropped database: $dbname <br>";
 	else {
 		$this->output.="Error dropping db.. ".mysql_error();
 	}
@@ -7905,7 +7925,7 @@ function addMysqlDbDirect($myserver,$domainname,$dbusername,$dbuserpass,$dbuserh
 	# actual setup for db and dbuser, local or remote
 	# step 1: setup database: DEFAULT CHARACTER SET utf8 COLLATE utf8_turkish_ci
 
-	$s=$this->executeQuery("create database $dbname ".$this->miscconfig['mysqlcharset'],'creating db','',$link);
+	$s=$this->executeQuery("create database `$dbname` ".$this->miscconfig['mysqlcharset'],'creating db','',$link);
 
 	if($s===false) return $this->errorText("Error creating db.. ".mysql_error()."<br>");
 			else $this->output.="setup complete database: $dbname <br>";
@@ -7913,8 +7933,8 @@ function addMysqlDbDirect($myserver,$domainname,$dbusername,$dbuserpass,$dbuserh
 
 	$success=True;
 	# step 2: grant user rights
-	if($adduser) $s=$this->executeQuery("grant all privileges on $dbname.* to '$dbusername'@'$dbuserhost' identified by '$dbuserpass' ",'grant user rights','',$link);
-	else $s=$this->executeQuery("GRANT ALL PRIVILEGES ON $dbname.* TO '$dbusername'@'$dbuserhost'",'grant user to db','',$link);
+	if($adduser) $s=$this->executeQuery("grant all privileges on `$dbname`.* to '$dbusername'@'$dbuserhost' identified by '$dbuserpass' ",'grant user rights','',$link);
+	else $s=$this->executeQuery("GRANT ALL PRIVILEGES ON `$dbname`.* TO '$dbusername'@'$dbuserhost'",'grant user to db','',$link);
 
 	if($s===false){
 			$this->errorText("Error: user $dbusername cannot be permitted to : $dbname");
@@ -8027,6 +8047,8 @@ function restart_webserver2($server){
 
 function restart_webserver(){
 	# thanks to webmaster@securitywonks.net for encourage of nginx integration
+	
+	echo "\n".__FUNCTION__.": Current webserver is:".$this->miscconfig['webservertype']."\n";
 
 	if($this->miscconfig['webservertype']=='apache2') {
 		passthru2("/etc/init.d/nginx stop");
@@ -8924,19 +8946,19 @@ function syncDomains($file='') {
 
 	foreach($arr as $dom) { // setup necessry dirs/files if doesnt exist..
 		passthru2("mkdir -p ".$dom['homedir']);		
-		passthru2("mkdir -p ".$dom['homedir']."/logs");
-		passthru2("chown $this->ftpowner -Rf ".$dom['homedir']);
+		passthru2("mkdir -p ".$dom['homedir']."/logs");		
 		
 		
 		passthru2("mkdir -p ".$dom['homedir']."/httpdocs");
 
+		# put some files if not exists:
 		foreach(array('ehcpinfo.html','error_page.html') as $f) {
 			if(!file_exists($dom['homedir']."/httpdocs/$f")){
-				passthru2("cp -f $file ".$dom['homedir']."/httpdocs/$f");
+				passthru2("cp -f $f ".$dom['homedir']."/httpdocs/");
 			}
 		}
 
-		passthru2("chown $this->ftpowner -Rf ".$dom['homedir']."/httpdocs");
+		passthru2("chown $this->ftpowner -Rf ".$dom['homedir']);		
 		passthru2("mkdir -p ".$dom['homedir']."/phptmpdir");
 		passthru2("chmod a+w ".$dom['homedir']."/phptmpdir");
 		$this->initializeLogs($dom['homedir']);
@@ -9165,11 +9187,11 @@ function syncSubdomains($file='') {
 				passthru2("cp -f ehcpinfo.html ".$subdir."/ehcpinfo.html");
 			}
 			
-			$file="templates/$this->template/$this->currentlanguage/defaultindexforsubdomains_".$this->currentlanguage.".html";			
-			$index=@file_get_contents($file);
+			$file1="templates/$this->template/$this->currentlanguage/defaultindexforsubdomains_".$this->currentlanguage.".html";			
+			$index=@file_get_contents($file1);
 			if(trim($index)=='') $index="ehcp: Subdomain Under Construction: ".$dom['subdomain'].".".$dom['domainname']."<br> Upload your files to subdomain ftp to replace this.";
 			
-			$this->write_file_if_not_exists($subdir."/index.html",$index);
+			$this->write_file_if_not_exists($subdir."/index.php",$index);
 
 		}
 	# you may see daemon mode output at logfile, typically tail -f /var/log/ehcp.log from command line
