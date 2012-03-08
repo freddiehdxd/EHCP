@@ -18,9 +18,18 @@ server {
                 	try_files $uri $uri/ /index.php;
             	}
 
+		if (-f $request_filename/index.html) {
+    			rewrite (.*) $1/index.html break;
+		}
+
 		if (!-f $request_filename) {
                    	rewrite ^(.*) /index.php?$1 last;
             	}
+
+		location /favicon.ico {
+                	log_not_found off;
+                	access_log off;
+        	}
 	}
 
 	location ~ \.php$ {
