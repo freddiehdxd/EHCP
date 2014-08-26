@@ -40,12 +40,18 @@ function check_programs(){
 }
 
 
-while true
-do
+# Changed the way this works by using a function that respawns the php script if it exits.
+# Changed by:  earnolmartin@gmail.com
+function startPHPDaemon(){
+	cd /var/www/new/ehcp
+	until php index.php daemon ; do
+	echo "Server php index.php daemon crashed with exit code -1.  Respawning..." >&2
+	sleep 3
+	done
+	startPHPDaemon
+}
 cd /var/www/new/ehcp
 check_programs
 
-php index.php daemon
-sleep 20
-done
-
+# Start the initial loop
+startPHPDaemon

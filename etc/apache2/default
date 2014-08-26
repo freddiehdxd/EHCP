@@ -5,7 +5,7 @@
 	ServerName default
 	DocumentRoot /var/www/new
 	<Directory />
-			Options FollowSymLinks
+			Options +FollowSymLinks
 			AllowOverride None
 	</Directory>
 

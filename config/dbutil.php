@@ -3,7 +3,7 @@
 
 // Ver. 1.129.5. ehcp
 // .3 ve .4 e gore birkac fonksiyon eklendi. buildoption2 gibi.
-// baz duzeltmeler de yapld. 
+// bazı duzeltmeler de yapıldı.
 
 //
 
@@ -11,11 +11,11 @@ $clientip = getenv ("REMOTE_ADDR");
 if(substr($clientip,0,4)=="65.54") {die();};
 
 // if($clientip=="65.54.188.109") exit; // saldiri oldu
-// serverda mysql extension gidince aa�daki ie yaryor..
+// serverda mysql extension gidince aşağıdaki işe yarıyor..
 
 if(!function_exists("mysql_connect"))
 	{
-    echo "php mysql extension is not installed.... this is a serious problem. reinstall ehcp or php-mysql";
+    echo "php mysql extension is not installed.... this is a serious problem. reinstall ehcp or php-mysql; if you just installed webserver/php, try to restart webserver, php, php-fpm";
     };
 
 GLOBAL $confdir,$ortam;
@@ -80,7 +80,7 @@ $alansayisi=count($alan);
                 };
         }
 		for ($i=0;$i<count($extra);$i++)$result2.="$th&nbsp;</th>";
-		
+
         $result2.="</tr>\n ";
         return $result2;
 }
@@ -146,7 +146,7 @@ function kayitsayisi2($tablo,$filtre) {
 	};
 };
 
-function buildquery3($select,$filtre,$orderby,$baslangic,$satirsayisi){ // v1.0
+function buildquery3($select,$filtre,$sirala='',$baslangic=0,$satirsayisi=0){ // v1.0
 // buildquery2 den farki limit
     GLOBAL $dbtype;
 
@@ -158,9 +158,9 @@ function buildquery3($select,$filtre,$orderby,$baslangic,$satirsayisi){ // v1.0
 	if($sirala<>"") {
 	    $res.=" order by $sirala";
 	};
-	
+
 	if($satirsayisi>0)$res.=" limit $baslangic, $satirsayisi";
-	
+
     return $res;
 }
 
@@ -232,7 +232,7 @@ if($arananalan<>"" or $sess_arananalan<>"") $output.="Arananalan:($arananalan), 
 			$_SESSION['sess_arananalan']=$arananalan;
 			$_SESSION['sess_aranan']=$aranan;
 			$baslangic=0;
-        	
+
             if($arananalan==""){
             	$output.="Aranacak Alany belirtmediniz. Bir alan seçiniz.";
             } else {
@@ -281,7 +281,7 @@ if ($res) {
                 {
 		$r=$res->FetchRow();
 		//$output.=print_r2($r);
-		
+
                 if(iseven($satirno)){$satirrengi=$color1;} else {$satirrengi=$color2;};$satirno++;
                 $result2.="<tr bgcolor='$satirrengi'>";
                 for ($i=0;$i<$alansayisi;$i++)
@@ -319,7 +319,7 @@ if ($res) {
 	    $querystring=$_SERVER['QUERY_STRING'];
 	    $self2=$self."?".$querystring;
         // aramalarn ayarlanmas.
-        
+
         if($aramayap and $kayitsayisi>0){
             $arama="<form method=post>Arama yap:".buildoption2("arananalan",$alan,$arananalan)."<input type=text name=aranan value='$aranan'><input type=submit value=Ara></form>";
             $result2.=$arama;
@@ -975,9 +975,9 @@ function executeprog2($prog){ // echoes output.
 }
 
 function executeprog($prog){ // does not echo output. only return it.
-	$fp = popen("$prog", 'r');
-	$read = fread($fp, 8192);
-	pclose($fp);
+	$fp = @popen("$prog", 'r');
+	$read = @fread($fp, 8192);
+	@pclose($fp);
 	return $read;
 }
 
@@ -1034,7 +1034,7 @@ $res.="</table>";
 return $res;
 
 /*
-ic ice (recursive) yapmak icin, 
+ic ice (recursive) yapmak icin,
 en basa, if(!is_array($ar)) return $ar;
 $res.="<tr><td>".print_r3(key($ar))."</td><td>".print_r3($val)."</td></tr>";
 */
@@ -1062,7 +1062,7 @@ if(!function_exists("debug_backtrace2")){
 function debug_backtrace2(){
 	$ar=debug_backtrace();
 	$out="<br>";
-	array_shift($ar); # enson cagrilan zaten bu. ona gerek yok. 
+	array_shift($ar); # enson cagrilan zaten bu. ona gerek yok.
 	$ar=array_reverse($ar);
 	foreach($ar as $a) {
 		$f=$a['file'];
@@ -1076,9 +1076,9 @@ function debug_backtrace2(){
 		#$f=implode("/",$nf);
 		$out.="(".$f.':'.$a['line'].':'.$a['function'].")->";
 		#$out.="(".$f.'->'.$a['function'].")->";
-	
+
 	}
-	return $out."<br>";	
+	return $out."<br>";
 }
 }
 
@@ -1105,8 +1105,8 @@ function degiskenal($variables,$dotrim=false) {
 			else ${$varname}=$_GET[$varname];
 		}
 		$tmp=@mysql_real_escape_string(${$varname});
-		if($tmp!==False) ${$varname}=$tmp; # otherwise, without a db connection, mysql_real_escape_string returns false. this will skip that; no need to mysql_real_escape_string when there is no db conn, I think. 
-		
+		if($tmp!==False) ${$varname}=$tmp; # otherwise, without a db connection, mysql_real_escape_string returns false. this will skip that; no need to mysql_real_escape_string when there is no db conn, I think.
+
 		if($dotrim) ${$varname}=trim(${$varname});
 		$values[$varname]=${$varname};
 	};

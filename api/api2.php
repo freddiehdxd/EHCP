@@ -2,7 +2,7 @@
 # ehcp.net: example, add ftp, paneluser and domain all in one
 # Easy Hosting Control Panel (ehcp)
 
-require("ehcpfiles/classapp.php");
+require("../classapp.php");
 $domainname = "d2omainsite.com";
 $panelusername = "resell";
 $ftppassword=$paneluserpass="123";
@@ -16,9 +16,9 @@ $app->activeuser=$panelusername;
 $ret=$app->addDomainDirect($domainname,$panelusername,$paneluserpass,$ftpusername,$ftppassword,$status,$email='',$quota=0);
 
 if($ret){
-    print "Success";
+    echo "Success";
 } else {
-    print $app->output;
+    echo $app->output;
 } 
 
 echo "($ret)";

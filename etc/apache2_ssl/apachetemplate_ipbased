@@ -63,7 +63,7 @@ php_admin_value open_basedir /var/www/vhosts/ehcp/
 	    
 	    php_admin_value open_basedir {homedir}
 	    php_admin_value upload_tmp_dir {homedir}/phptmpdir
-		php_admin_value session.save_path {homedir}/phptmpdir
+		php_admin_value session.save_path 0;660;{homedir}/phptmpdir
 
         AccessFileName .htaccess
 	    
@@ -138,7 +138,7 @@ SSLCertificateKeyFile /etc/ssl/private/server.key
 	    
 	    php_admin_value open_basedir {homedir}
 	    php_admin_value upload_tmp_dir {homedir}/phptmpdir
-		php_admin_value session.save_path {homedir}/phptmpdir
+		php_admin_value session.save_path 0;660;{homedir}/phptmpdir
 
         AccessFileName .htaccess
         SSLEngine on

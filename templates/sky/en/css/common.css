@@ -364,6 +364,14 @@ article h1 {
 		);
 	}
 
+.failedlogin {
+	border: 2px solid;
+	border-color: #F06356;
+	background: #E2A5B1;
+	font-size: 1.5em;
+}
+
+
 /************** Button-style links **************/
 .button,
 .form legend,

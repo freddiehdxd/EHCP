@@ -541,3 +541,8 @@
 			p span.relative > select + .check-warning {
 				margin-top: -0.583em;
 			}
+			
+			
+.inputform {
+	vertical-align:middle;
+}

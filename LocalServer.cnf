@@ -2,11 +2,10 @@
 prompt			= no
 distinguished_name	= server_distinguished_name
 
-
 [ server_distinguished_name ]
-commonName		= somename.somewhere.com
+commonName		= {webserverip}
 stateOrProvinceName	= Some State
 countryName		= US
-emailAddress		= root@somename.somewhere.com
-organizationName	= My Large Organization Name
-organizationalUnitName	= My Subunit of Large Organization
+emailAddress		= noreply@gmail.com
+organizationName	= Server Managed by Ehcp
+organizationalUnitName	= Server Managed by Ehcp

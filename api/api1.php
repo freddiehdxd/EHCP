@@ -14,9 +14,9 @@ $app->activeuser=$panelusername;
 $ret=$app->addDomainDirectToThisPaneluser($domainname,$selfftp);
 
 if($ret){
-    print "Success";
+    echo "Success";
 } else {
-    print $app->output;
+    echo $app->output;
 } 
 
 echo "($ret)";

@@ -1,4 +1,34 @@
 <?php
+@ini_set("date.timezone","UTC");
+
+function imgextension($f){
+	return isextension($f,'img');
+}
+
+function isoextension($f){
+	return isextension($f,'iso');
+}
+
+function kill_mysql_procs(){
+	# ornek güzel func. internetten aldım.
+	$result = mysql_query("SHOW FULL PROCESSLIST");
+	while ($row=mysql_fetch_array($result)) {
+	  $process_id=$row["Id"];
+	  if ($row["Time"] > 200 ) {
+	    $sql="KILL $process_id";
+	    mysql_query($sql);
+	  }
+	}
+}
+
+function isextension($f,$e){
+	if(!is_file($f)) return false;
+	$f=basename($f);
+	$ext = explode(".", strtolower($f));
+	$ext=array_pop($ext);
+	#echo "isleniyor: $f : ext:($ext) \n";
+	return ($ext==$e);
+}
 
 function mymkdir($dirname){
 	$dirname=trim($dirname);
@@ -43,7 +73,7 @@ $res.="</table>";
 return $res;
 
 /*
-ic ice (recursive) yapmak icin, 
+ic ice (recursive) yapmak icin,
 en basa, if(!is_array($ar)) return $ar;
 $res.="<tr><td>".print_r3(key($ar))."</td><td>".print_r3($val)."</td></tr>";
 */
@@ -254,7 +284,7 @@ function addifnotexists($what,$where) {
 		//echo "buldu... sorun yok. \n";
 		// already found, so, do not add
 	}
-	
+
 	#bekle(__FUNCTION__." bitti...");
 
 }
@@ -287,8 +317,8 @@ function debugecho($str,$level=0) {
 
 
 if(!function_exists("arraytofile")){
-function arraytofile($file,$lines) {
-	$new_content = join('',$lines);
+function arraytofile($file,$lines,$joinstr='') {
+	$new_content = join($joinstr,$lines);
 	$fp = fopen($file,'w');
 	$write = fwrite($fp, $new_content);
 	fclose($fp);
@@ -342,7 +372,8 @@ function generatepass(){
 }
 </script>
 
-	<form method=post ";
+	<form method=post enctype='multipart/form-data' ";
+
 	if($action<>""){$res.=" action='$action'";};
 	$res.="><table class='inputform'>";
 
@@ -351,7 +382,11 @@ function generatepass(){
 	foreach($alanlar as $alan)
 		$res.=inputelement2($alan);
 
-	$res.="</table><input type=submit></form>";
+
+	$res.="</table>";
+	if(strstr($res,"input type='submit' ")===false) $res.="<input type=submit>";
+	$res.="</form>";
+
 	return $res;
         /* this function is very flexible, cok esnek yani... ingilizce yazdik diye yanlis anlasilmasin, anadoluda yazildi bu...;)
          * example usages:
@@ -382,7 +417,8 @@ function inputelement2($alan){
 
 
 	if($alanadi=='') $alanadi=$alan[0]; # fieldname is the first element, if not defined as 'alanadi'=>'fieldname_example'
-	if(!$solyazi and $alantipi<>'hidden') $solyazi=$alanadi;
+	if(!$solyazi and !in_array($alantipi,array('hidden','comment','submit'))) $solyazi=$alanadi;
+	if($alantipi=='comment') $span=" colspan=3 "; # no 3 columns for comment type
 
 
 	$varsayilan=$alan['varsayilan'];
@@ -391,30 +427,33 @@ function inputelement2($alan){
 	if(!$varsayilan and $alan['value']<>'') $varsayilan=$alan['value'];
 	if(!$varsayilan and $alan['deger']<>'') $varsayilan=$alan['deger']; # ister varsayilan, ister value, ister deger de, gine de calisir..
 	if($deger=='') $deger=$value=$varsayilan;
-	
+
 	if($alan['readonly']<>'') $readonly='readonly="yes"';
 
 
-	$res.="<tr class='inputform'><td class='inputform'>";
-	$res.=$solyazi."</td>\n<td class='inputform'>";
-	
+	$res.="<tr class='inputform'><td class='inputform' $span>";
+	if($span=='') $res.=$solyazi."</td>\n<td class='inputform'>"; # no need to a new td if there is a col span
+
 	switch($alantipi) {
 		case 'password_with_generate':
 			#$alantipi='password';
-			$alantipi='text';
+			#$alantipi='text';
     /* Password generator by cs4fun.lv */
-$res.="<input id='$alanadi' type='$alantipi' name='$alanadi' value='$varsayilan'></td><td>
+$res.="<input id='$alanadi' type='text' name='$alanadi' value='$varsayilan'></td><td>
 <input type=\"button\" value=\"Generate:\" onClick=\"$('#$alanadi').val(generatepass());\">
-</td>\n";
-                        break;
+$sagyazi</td>\n";
+            break;
     /* END Password generator by cs4fun.lv */
+		case 'comment':
+			$res.="$varsayilan</td>\n";
+			break;
 		case 'hidden&text':
-			$res.="<input id='$alanadi' type='hidden' name=$alanadi value='$varsayilan'>$varsayilan</td>\n";
+			$res.="<input id='$alanadi' type='hidden' name='$alanadi' value='$varsayilan'>$varsayilan</td>\n";
 			break;
 		case 'password':
 		case 'text':
 		case 'hidden':
-			$res.="<input id='$alanadi' type='$alantipi' name=$alanadi value='$varsayilan'></td>\n";
+			$res.="<input id='$alanadi' type='$alantipi' name='$alanadi' value='$varsayilan'></td>\n";
 			break;
 		case 'textarea':
 			$res.="<textarea id='$alanadi' cols=$cols name='$alanadi' rows=$rows $readonly>$varsayilan</textarea> <br></td>\n";
@@ -422,6 +461,7 @@ $res.="<input id='$alanadi' type='$alantipi' name='$alanadi' value='$varsayilan'
 		case 'checkbox':
 				if($alan['checked']) $checked="checked=".$alan['checked'];
 				else $checked='';
+				if($deger=='') $deger=$alanadi;
 				$res.="<input type='checkbox' name='$alanadi'  value='$varsayilan'  $checked >".$alan['secenekyazisi']."</td>\n";
 		break;
 
@@ -436,24 +476,33 @@ $res.="<input id='$alanadi' type='$alantipi' name='$alanadi' value='$varsayilan'
 		break;
 
 		case 'select':
-			$sayi=count($varsayilan);
             $res.="<select name='$alanadi'>\n\r";
             if(!is_array($alan['secenekler'])) $alan['secenekler']=$varsayilan;
             foreach($alan['secenekler'] as $deger2=>$yazi2) {
-				if($varsayilan==$deger2) $sel=" selected='yes'";
+				if($varsayilan===$deger2) $sel=" selected='yes'";
 				$res.="<option value='$deger2'$sel>$yazi2</option>\n\r";
 			}
             #for ($j=0;$j<$sayi;$j++) $res.="<option value='".$varsayilan[$j]."'>".$varsayilan[$j]."</option>\n\r";
             $res.="</select></td>\n";
 		break;
 
+		case 'fileupload':
+			$res.="\n<td><input type='file' id='$alanadi' name='$alanadi'></td>\n";
+		break;
+
+		case 'submit':
+			$res.="\n<input type='submit' id='$alanadi' name='$alanadi' value='$deger'>\n";
+		break;
 
 
 		default:
-			$res.="<input id='$alanadi' type='text' name=$alanadi value='$varsayilan'></td>\n";
+			$res.="<input type='text' id='$alanadi' name='$alanadi' value='$deger'></td>\n";
 	}
 
-	$res.="<td>".$sagyazi."</td></tr>\n";
+	if($span=='' and $alantipi<>'password_with_generate') $res.="<td>$sagyazi</td>";
+
+	#$res.="<td>($alantipi)</td></tr>\n";
+	$res.="</tr>\n";
 	return $res;
 }
 
@@ -491,7 +540,7 @@ $alansayisi=count($alan);
                 };
         }
 		for ($i=0;$i<count($extra);$i++)$result2.="$th&nbsp;</th>";
-		
+
         $result2.="</tr>\n ";
         return $result2;
 }
@@ -544,7 +593,7 @@ function get_filename_extension($filename) {
 }
 
 if(!function_exists('securefilename')){
-function securefilename($fn){	
+function securefilename($fn){
 	$ret=str_replace(array("\\",'..','%','&'),array('','',''),$fn);
 	#$ret=escapeshellarg($ret);
 	return $ret;
@@ -637,7 +686,7 @@ if(!function_exists("debug_backtrace2")){
 function debug_backtrace2(){
 	$ar=debug_backtrace();
 	$out="<br>";
-	array_shift($ar); # enson cagrilan zaten bu. ona gerek yok. 
+	array_shift($ar); # enson cagrilan zaten bu. ona gerek yok.
 	$ar=array_reverse($ar);
 	foreach($ar as $a) {
 		$f=$a['file'];
@@ -651,20 +700,65 @@ function debug_backtrace2(){
 		#$f=implode("/",$nf);
 		$out.="(".$f.':'.$a['line'].':'.$a['function'].")->";
 		#$out.="(".$f.'->'.$a['function'].")->";
-	
+
 	}
-	return $out."<br>";	
+	return $out."<br>";
 }
 }
 
-function textarea_to_array($area){
+function textarea_to_array($area,$start=array(),$end=array()){
 	$templ=array();
 	$templates=explode("\n",$area);
+	#echo print_r2($templates);
+	$templates=array_merge($start,$templates,$end);
+
 	foreach($templates as $t) {
 		$t=trim($t);
 		$templ[$t]=$t;
+		#echo "$t -> $t ekleniyor <br>";
 	}
+	#echo print_r2($templ);
+	# bu çalışmadı, bug var veya anlamadım: $templ=array_merge($start,$templ,$end);
+	#array_push($templ,$end);  # bunlar da çalışmadı.
+	#array_unshift($templ,$start);
+	#echo print_r2($templ);
 	return $templ;
+/*
+çok ilginç, yukardaki array_merge fonksiyonları, array'ın indexlerini değiştiriyor:
+çıktısı:
+* Array gosteriliyor:
+Array
+(
+    [4096] => 4096
+    [2048] => 2048
+    [256] => 256
+    [512] => 512
+    [1024] => 1024
+    [1536] => 1536
+)
+Array gosteriliyor:
+Array
+(
+    [0] => Array
+        (
+            [0] => seÃ§
+        )
+
+    [1] => 4096
+    [2] => 2048
+    [3] => 256
+    [4] => 512
+    [5] => 1024
+    [6] => 1536
+    [7] => Array
+        (
+        )
+
+)
+*
+ *
+ */
+
 }
 
 ?>
