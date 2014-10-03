@@ -21,10 +21,10 @@ server {
         }
 
         ## Images and static content is treated different
-       location ~* ^.+.(jpg|jpeg|gif|css|png|js|ico|xml|swf)$ {
-                 access_log        off;
-                 expires           30d;
-                 root {homedir}/httpdocs;
+        location ~* ^.+.(jpg|jpeg|gif|css|png|js|ico|xml|swf|woff|eot|otf|ttf|svg)$ {
+                access_log        off;
+                expires           30d;
+                root {homedir}/httpdocs;
         }
 
         location ~ .php$ {
