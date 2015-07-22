@@ -1,5 +1,5 @@
 <?php
-$ehcpversion="0.36.5.b";
+$ehcpversion="0.36.5.b"; # test github
 $emailenable=True;
 
 #şuanda, ssl ayarlamayı tamamen otomatik yapmaya calısıyorum, kullanıcıdan bilgileri alıp, CSR oluşturacağım, bununla vatandaş gidip istediği yerden alabilecek. sonra ayarları gine tamamen webbased olabilecek. fixapacheconfigssl fonksiyonunu domain ile çalışacak hale getirecem, template'lerde ve veritabanında sadece bir domain'e farklı bir sertifika bilgisi yükleyebilmek için gerekli değişiklikleri yapacam.
