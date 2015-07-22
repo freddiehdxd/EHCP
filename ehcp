@@ -3,6 +3,7 @@
 # www.ehcp.net
 
 
+
 log="$2"
 echo
 echo
@@ -24,6 +25,14 @@ ehcp_start(){
 	echo "starting ehcp.."
 	
 	cd /var/www/new/ehcp
+
+	if [ -f path ] ; then # when running inside cron, we need default path. this path variable is filled when installing, in install.sh
+		export PATH=`cat path`
+	else
+		echo "path file NOT FOUND, ehcp may not work correctly in crontab..."
+	fi
+
+
 	./ehcpdaemon.sh
 	show_ehcp
 

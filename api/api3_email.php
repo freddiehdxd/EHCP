@@ -1,4 +1,5 @@
-<?
+<?php
+
 # ehcp.net: example, add an email user to system directly. 
 # Easy Hosting Control Panel (ehcp)
 

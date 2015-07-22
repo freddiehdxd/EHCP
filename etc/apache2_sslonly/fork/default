@@ -1,9 +1,16 @@
 # this file used in Easy Hosting Control Panel (ehcp), www.ehcp.net
 
-<VirtualHost *:80>
+<VirtualHost {webserverip}:80>
 
-	RewriteEngine On
-	RewriteCond %{HTTPS} off
-	RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}
+	ServerName default
+	DocumentRoot /var/www/new
+	<Directory />
+		Options +FollowSymLinks
+		AllowOverride None
+	</Directory>
+
+
+	ErrorLog /var/log/apache2/error.log
+	CustomLog /var/log/apache2/access.log combineddefault
 
 </VirtualHost>

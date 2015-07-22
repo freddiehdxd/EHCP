@@ -1,7 +1,7 @@
 <html>
 
 This implemented only help you a bit more.... <hr>
-<b>Mysql Troubleshooter Version 0.29, last modified at 18.12.2008 by bvidinli </b><br><br><br>
+<b>Mysql Troubleshooter Version 0.29, last modified at 23 Jul 2015 by ehcpdeveloper </b><br><br><br>
 
 
 if you get mysql error:<br>

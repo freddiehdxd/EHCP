@@ -4,8 +4,8 @@
 
 # bu kısım aslında bir defa olsa olur.
 <VirtualHost {webserverip}>
-ServerName {webserverip}
-DocumentRoot /var/www/new
+	ServerName {webserverip}
+	DocumentRoot /var/www/new
 </VirtualHost>
 
 
@@ -45,9 +45,8 @@ DocumentRoot /var/www/new
 
 
 <VirtualHost {webserverip}>
-    ServerName   {domainname}
-    ServerAlias  www.{domainname} {wildcarddomain} # this is changed to *.{domainname} within classapp.php
-	# buraya aliaslar yazilacak..
+	ServerName   {domainname}
+	ServerAlias  www.{domainname} {wildcarddomain} 
 	{aliases}
 		
 	UseCanonicalName Off
@@ -66,7 +65,7 @@ DocumentRoot /var/www/new
 	php_admin_value session.save_path 0;660;{homedir}/phptmpdir
 
 	AccessFileName .htaccess
-	    
+		
 
 	{customhttp}
 

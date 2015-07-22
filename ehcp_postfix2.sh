@@ -1,11 +1,11 @@
 #!/bin/bash
 # This file is no longer used in ehcp, left here for historical purposes.
-#  ehcp - Easy Hosting Control Panel install/remove by bvidinli@iyibirisi.com
+#  ehcp - Easy Hosting Control Panel install/remove by ehcpdeveloper@ehcp.net
 #
 #  main installation program.
 #
 # please contact me if you made any modifications.
-# msn/email: bvidinli@iyibirisi.com
+# msn/email: ehcpdeveloper@ehcp.net
 #
 
 # This is inspired by document from: http://www.howtoforge.com/virtual_postfix_mysql_quota_courier
@@ -22,8 +22,8 @@ echo "Enable suExec? <-- Yes"
 echo "Create directories for web-based administration ? <-- No"
 echo "General type of configuration? <-- Internet site"
 echo "Where should mail for root go? <-- NONE"
-echo "Mail name? <-- server.iyibirisi.com"
-echo "Other destinations to accept mail for? (blank for none) <-- server.iyibirisi.com, localhost, localhost.localdomain"
+echo "Mail name? <-- server.ehcp.net"
+echo "Other destinations to accept mail for? (blank for none) <-- server.ehcp.net, localhost, localhost.localdomain"
 echo "Force synchronous updates on mail queue? <-- No"
 echo "SSL certificate required <-- Ok"
 echo "Install Hints <-- Ok"

@@ -1,12 +1,12 @@
 # this file used in Easy Hosting Control Panel (ehcp), www.ehcp.net
 
-<VirtualHost *:80>
+<VirtualHost {webserverip}:80>
 
 	ServerName default
 	DocumentRoot /var/www/new
 	<Directory />
-			Options +FollowSymLinks
-			AllowOverride None
+		Options +FollowSymLinks
+		AllowOverride None
 	</Directory>
 
 

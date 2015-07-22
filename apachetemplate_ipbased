@@ -46,8 +46,7 @@ DocumentRoot /var/www/new
 
 <VirtualHost {webserverip}>
     ServerName   {domainname}
-    ServerAlias  www.{domainname} {wildcarddomain} # this is changed to *.{domainname} within classapp.php
-	# buraya aliaslar yazilacak..
+    ServerAlias  www.{domainname} {wildcarddomain} 
 	{aliases}
 		
 	UseCanonicalName Off

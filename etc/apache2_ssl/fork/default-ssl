@@ -1,6 +1,6 @@
 # this file used in Easy Hosting Control Panel (ehcp), www.ehcp.net
 
-<VirtualHost *:443>
+<VirtualHost {webserverip}:443>
 
 	ServerName ssl
 	DocumentRoot /var/www/new

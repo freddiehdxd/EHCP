@@ -3,7 +3,7 @@
 login.php
  * EASY HOSTING CONTROL PANEL MAIN index.php FILE Version 0.23.4 - www.EHCP.net
 by I.Bahattin Vidinli, 
-mail&msn: bvidinli@iyibirisi.com
+mail&msn: ehcpdeveloper@ehcp.net
 
 see classapp.php for real application.
 */

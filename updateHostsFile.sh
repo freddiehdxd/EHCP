@@ -12,7 +12,7 @@ else
 	fi
 
 	# If the EHCP Comment does not exist, add it:
-	ehcpComment="# EHCP Generated Entries # Place Custom Edits Above This Line Or They WILL BE LOST"
+	ehcpComment="# EHCP Generated Entries # ehcp.net # Place Custom Edits Above This Line Or They WILL BE LOST"
 	ehcpLocate=$(cat /etc/hosts | grep -i "$ehcpComment")
 	if [ -z "$ehcpLocate" ]; then
 		echo -e "\n$ehcpComment" >> /etc/hosts 

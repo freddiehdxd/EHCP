@@ -4,7 +4,7 @@
 #
 # please contact me if you made any modifications.. or you need help
 # msn/email: info@ehcp.net
-# skype/yahoo/gtalk: bvidinli
+# skype/yahoo/gtalk: ehcpdeveloper
 #
 # Main Developer: info@ehcp.net
 # Marcel <marcelbutucea@gmail.com>
@@ -14,14 +14,15 @@
 # by earnolmartin@gmail.com : many fixes,
 # by own3mall@gmail.com : many fixes,
 # (Looking for other volunteer developers.. in future, maybe, we may have some budget... )
+# last modified by ehcpdeveloper on 1.11.2014 (d-m-y)
 
 
-ehcpversion="0.36.5.b"
-emailenable=true
+ehcpversion="0.37.4.b"
+emailenable=true  # write true/false lowercase for bash.. 
 
 echo
 echo
-#echo "Please Wait... initializing.a	  If something is very slow, please report on our site."
+#echo "Please Wait... initializing.a	  If something is very slow, please report on our site: ehcp.net"
 echo
 echo
 chmod -Rf a+r *
@@ -48,7 +49,6 @@ fi
 function installaptget () {
 	echo "now let's try to install apt-get on your system."
 	echo "Not yet implemented"
-	exit
 }
 
 
@@ -87,6 +87,8 @@ function ehcpHeader() {
 	echo
 	echo "Now, ehcp pre-installer begins, a series of operations will be performed and main installer will be invoked. "
 	echo "if any problem occurs, refer to www.ehcp.net forum section, or contact me, mail/msn: info@ehcp.net"
+	echo
+	echo "For automated installs, use $0 unattended (passwords are default in this case)"
 
 	echo "Please be patient, press enter to continue"
 	echo
@@ -155,13 +157,14 @@ function checkAptget(){
 
 # Retrieve statistics
 # Marcel: This freezed the installer on one of my Centos Servers (needs more investigating)
-# bvidinli:answer: this infomail may be disabled, only for statistical purposes... may hang if for 10 second if user is not connected to internet, or something is wrong with wget or dns resolution...
+# ehcpdeveloper:answer: this infomail may be disabled, only for statistical purposes... may hang if for 10 second if user is not connected to internet, or something is wrong with wget or dns resolution...
 # no hanging longer than 10 sec should occur... i think.. btw, your code is perfect, Marcel
 
 function infoMail(){
-	ip=`ifconfig | grep "inet addr" | grep -v "127.0.0.1" | awk '{print $2}' `
-	wget -q -O /dev/null --timeout=10 http://www.iyibirisi.com/diger/msg.php?msg=$1.$ip > /dev/null 2>&1 &
-	# echo "(infoMail) your ip is: $ip"
+	if $emailenable ; then
+		ip=`ifconfig | grep "inet addr" | grep -v "127.0.0.1" | awk '{print $2}' `
+		wget -q -O /dev/null --timeout=10 http://www.ehcp.net/diger/msg.php?msg=$1.$ip > /dev/null 2>&1 &
+	fi
 }
 
 # Function to be called when installing packages, by Marcel <marcelbutucea@gmail.com>
@@ -541,6 +544,14 @@ function fixBINDPerms(){ # by earnolmartin@gmail.com
 	chmod -R 774 /etc/bind
 }
 
+function fix_permissions1(){
+	# sometime, permissions are lost because of cile copying etc.
+	chmod a+rx install*
+	chmod a+rx *.sh
+	chmod a+rx ehcp
+	find ./ -type d -exec chmod a+rx {} \; # fix directory perms
+}
+
 function fixEHCPPerms(){ # by earnolmartin@gmail.com
 	chmod a+rx /var/www/new/ehcp/
 	chmod -R a+r /var/www/new/ehcp/
@@ -579,7 +590,9 @@ function fixPHPPerms(){ # by earnolmartin@gmail.com
 
 function updateBeforeInstall(){ # by earnolmartin@gmail.com
 	# Update packages before installing to avoid errors
-	return # cancelled now, user should do this his/herself.  a few reason: may be dangerous, user may choose to do it later, slowing down installation... etc..
+	# return # cancelled now, user should do this his/herself.  a few reason: may be dangerous, user may choose to do it later, slowing down installation... etc..
+	# without this function, apt-get installations cannot be done in a new server.. 
+	
 	if [ -n "$noapt" ] ; then  # skip install
 		echo "skipping apt-get update"
 		return
@@ -589,7 +602,10 @@ function updateBeforeInstall(){ # by earnolmartin@gmail.com
 		echo "Updating package information and downloading package updates before installation."
 		apt-key update
 		apt-get update -y
-		apt-get upgrade -y --allow-unauthenticated
+		# apt-get upgrade -y --allow-unauthenticated
+	else
+		echo "apt-get seems not installed, so, cannot update apt repository.. press Enter to continue"
+		read a
 	fi
 }
 
@@ -628,6 +644,11 @@ function check_mysql(){
 #############################################################
 # End Functions & Start Install							 #
 #############################################################
+checkUser $@
+ehcpHeader
+
+fix_permissions1
+
 dpkg --configure -a  # complete any pending operations, to avoid "dpkg interrupted" errors.
 
 installdir=$(pwd)
@@ -638,8 +659,6 @@ fi
 
 #echo "`date`: initializing.b"  # i added these echo's because on some system, some stages are very slow. i need to investigate that.
 #infoMail "ehcp_1_installstarted_ver_$ehcpversion"
-checkUser $@
-ehcpHeader
 #/etc/init.d/apparmor stop & > /dev/null  # apparmor causes many problems..
 /etc/init.d/apparmor teardown & > /dev/null  # apparmor causes many problems..if anybody knows a better solution, let us know.
 checkDistro
@@ -667,7 +686,7 @@ aptgetInstall python-software-properties # for add-apt-repository
 # alias ins='apt-get -y install $1'
 # sftp://bv@10.0.2.2
 aptgetInstall php5
-aptgetInstall php5-mysql  # why here: If I install php5-mysql after install_1.php started, mysqli_connect functions does not work.
+aptgetInstall php5-mysqlnd  # why here: If I install php5-mysql after install_1.php started, mysqli_connect functions does not work.
 aptgetInstall php5-cli
 aptgetInstall sudo
 aptgetInstall wget
@@ -754,12 +773,20 @@ genUbuntuFixes
 
 check_mysql
 
+echo "$PATH" > path # fill this file, so that ehcp can run correctly in crontab or similar
+
+
 infoMail "ehcp_8_install-finished-install.sh_ver_$ehcpversion.$outside_ip"
 echo "now running ehcp daemon.."
 cd /var/log
 /etc/init.d/ehcp restart
 echo "ehcp run/restart complete.."
 sleep 5 # to let ehcp log fill a little
+
+
+
+
+
 
 # you may disable following lines, these are for debug/check purposes.
 ps aux > debug.txt

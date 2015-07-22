@@ -1,4 +1,5 @@
-<?
+<?php
+
 # ehcp.net: example, add ftp, paneluser and domain all in one
 # Easy Hosting Control Panel (ehcp)
 

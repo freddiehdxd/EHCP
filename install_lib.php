@@ -1,10 +1,10 @@
 <?php
-$ehcpversion="0.36.5.b";
+$ehcpversion="0.37.1.b";
 $emailenable=True;
 // Default variable used as constant
 $usePrompts=True;
 
-# last modified by bvidinli on 13.11.2010 (d-m-y)
+# last modified by ehcpdeveloper on 1.11.2014 (d-m-y)
 # include_once("config/dbutil.php");  # dbutil is being removed from project.
 /*
 notes to who want to change code, developers:
@@ -317,6 +317,12 @@ maxretry = 10";
 			#append_to_file($f,$ehcpF2Config);
 		}
 
+		if(!file_exists("/etc/fail2ban/filter.d/apache-dos.conf")){
+			replacelineinfile("destemail[apache-dos]
+enabled = true","[apache-dos]
+enabled = false",$f);
+		}
+
 }
 
 function replace_in_file($find,$replace,$sourcefile,$targetfile){
@@ -620,7 +626,9 @@ copyPostFixConfig();
 
 add_if_not_exists3("# lines added by ehcp ","/etc/mysql/my.cnf","[mysqld]");
 add_if_not_exists3("bind-address=127.0.0.1","/etc/mysql/my.cnf","[mysqld]");
-add_if_not_exists3("skip-innodb","/etc/mysql/my.cnf","[mysqld]"); # disable innodb by default, because it consumes a lot of memory
+#add_if_not_exists3("skip-innodb","/etc/mysql/my.cnf","[mysqld]"); # disable innodb by default, because it consumes a lot of memory
+# innodb is needed by some applications
+
 add_if_not_exists3("character-set-server=utf8","/etc/mysql/my.cnf","[mysqld]");
 add_if_not_exists3("collation-server=utf8_general_ci","/etc/mysql/my.cnf","[mysqld]");
 add_if_not_exists3("default-storage-engine=myisam","/etc/mysql/my.cnf","[mysqld]");
@@ -748,14 +756,27 @@ passthru("chmod 1733 /var/spool/postfix/maildrop");
 passthru2("newaliases"); # on some systems, aliases.db is deleted by user or somehow,  this fixes that.
 passthru("cp -vf pop-before-smtp.conf /etc/pop-before-smtp/");
 
+
+if(!file_exists("/var/lib/pop-before-smtp/hosts.db")){
+	passthru2("mkdir /var/lib/pop-before-smtp");
+	passthru2("touch /var/lib/pop-before-smtp/hosts");
+	passthru2("postmap /var/lib/pop-before-smtp/hosts");
+}
+
 # adjust roundcube:
 # adjust symlink for roundcube
 passthru2("ln -s /usr/share/roundcube /var/www/new/ehcp/webmail2");
 replacelineinfile("\$rcmail_config['default_host']","\$rcmail_config['default_host']='localhost';",'/etc/roundcube/main.inc.php');
+
+
 # end adjust roundcube
 
+foreach(array('active','bounce','corrupt','defer','deferred','flush','incoming','maildrop','private','public','saved') as $dir) 
+	passthru("chown -Rf postfix /var/spool/postfix/$dir"); # fix dir ownerships, if broken somehow... 
+	
+
 foreach(array('pop-before-smtp','postfix','saslauthd','courier-authdaemon','courier-imap','courier-imap-ssl','courier-pop','courier-pop-ssl') as $service)
-	passthru("/etc/init.d/$service restart");
+	passthru("service $service restart");
 
 passthru("postfix check");
 
@@ -890,6 +911,10 @@ function installMySQLServ(){#by earnolmartin@gmail.com
 		echo "Mariadb installation seems failed. continuing with normal mysql: \n";
 		# Install MySQL Server With Pre-Answered Prompts
 		aptget(array('mysql-server','mysql-client'),$usePrompts);
+	} else {
+		print "installing php5-mysqlnd; because, php5-mysql may not work with mariadb \n";
+		# related error: mysqli_real_connect(): Headers and client library minor version mismatch. Headers:50538 Library:100010 in adodb
+		aptget(array("php5-mysqlnd"),$usePrompts,True);
 	}
 
 	replacelineinfile("old_passwords","old_passwords=0","/etc/mysql/my.cnf"); # disable mysql old passwords... if enabled, vsftp auth cant work sometime.. changed 26.2.2008
@@ -952,7 +977,7 @@ function installmailserver(){
 		case 'extra':
 		case 'normal': installRoundCube();installPHPMYAdmin();
 		case 'light':
-			aptget(array('postfix','postfix-mysql'));
+			aptget(array('postfix','postfix-mysql'),False,True);
 			aptget(array('courier-authdaemon','courier-authlib-mysql','courier-pop','courier-pop-ssl','courier-imap','courier-imap-ssl','libsasl2-2','libsasl2','libsasl2-modules','libsasl2-modules-sql','sasl2-bin','libpam-mysql','openssl','pop-before-smtp'),False,True); # changed libsasl2-2 to libsasl2 **
 			break;
 		default: echo "Unknown installmode parameter at ".__LINE__;
@@ -967,7 +992,7 @@ function installmailserver(){
 
 	#remove:  apt-get remove postfix postfix-mysql postfix-doc mysql-client mysql-server courier-authdaemon courier-authmysql courier-pop courier-pop-ssl courier-imap courier-imap-ssl libsasl2 libsasl2-modules libsasl2-modules-sql sasl2-bin libpam-mysql openssl phpmyadmin
 	bosluk2();
-	# all mail configuration should be moved into this function: bvidinli, to be able to re-configure mail later
+	# all mail configuration should be moved into this function: ehcpdeveloper, to be able to re-configure mail later
 	mailconfiguration(array('ehcppass'=>$ehcpmysqlpass));
 	mailNameFix();
 
@@ -990,7 +1015,7 @@ function rebuild_nginx_config2($mydir){
 	passthru2("cp $mydir/etc/nginx/apachetemplate.nginx $mydir/apachetemplate");
 	passthru2("cp $mydir/etc/nginx/apache_subdomain_template.nginx $mydir/apache_subdomain_template");
 	replacelineinfile("listen =","listen = 9000","/etc/php5/fpm/pool.d/www.conf");
-	passthru2("/etc/init.d/php5-fpm restart"); # this does not work on some systems.. needs another binary to work
+	passthru2("service php5-fpm restart"); # this does not work on some systems.. needs another binary to work
 }
 
 function install_nginx_webserver(){
@@ -1002,9 +1027,9 @@ function install_nginx_webserver(){
 
 	#rebuild_nginx_config2(".");	# this will be done when nginx is selected from panel.
 
-	passthru2("/etc/init.d/php5-fpm stop");
+	passthru2("service php5-fpm stop");
 	passthru2("update-rc.d -f nginx remove");  # apache is default
-	passthru2("/etc/init.d/nginx stop");
+	passthru2("service nginx stop");
 
 	echo "\nEnd nginx install\n";
 	#bekle();
@@ -1132,7 +1157,7 @@ ftpd_banner=Welcome to vsFTPd Server, managed by EHCP (Easy Hosting Control Pane
 # allow_writeable_chroot=YES : bunun uzerinde calisacagim... boyle olmuyor... bakalim... bu olabilir: http://ehcp.net/?q=comment/2905#comment-2905
 	writeoutput("/etc/vsftpd.conf",$filecontent,"w");
 	passthru2("usermod -g $app->ftpgroup $app->ftpuser");
-	passthru("/etc/init.d/vsftpd restart");
+	passthru("service vsftpd restart");
 
 
 }
@@ -1165,7 +1190,7 @@ function installsql() {
 
 	# check if ehcp db already exists...
 	$baglanti=mysqli_connect("localhost", "root", $tmprootpass);
-	$ret=mysql_select_db("ehcp",$baglanti);
+	$ret=mysqli_select_db($baglanti,"ehcp");
 
 	if($ret===true){
 		echo "seems to found old ehcp db..(will try to backup existing ehcp db with timestamp... )";
@@ -1180,7 +1205,6 @@ function installsql() {
 		#--end backup ehcp db
 	}
 	# end check..
-
 
 	# echo 'var_dump($ehcpmysqlpass,$rootpass,$newrootpass,$ehcpadminpass);\n';
 	# var_dump($ehcpmysqlpass,$rootpass,$newrootpass,$ehcpadminpass);
@@ -1205,10 +1229,10 @@ function installsql() {
 
 	writeoutput($ehcpinstalldir."/ehcp1.sql",$filecontent,"w");
 
-	echo "executing: mysql -u root --password=$rootpass < $ehcpinstalldir/ehcp1.sql \n ";
-	passthru("mysql -u root --password=$rootpass < $ehcpinstalldir/ehcp1.sql"); # root pass changes here... if different , disabled
+	echo "executing: mysql -u root --password='$rootpass' < $ehcpinstalldir/ehcp1.sql \n ";
+	passthru("mysql -u root --password='$rootpass' < $ehcpinstalldir/ehcp1.sql"); # root pass changes here... if different , disabled
 	echo "importing ehcp sql: \n";
-	passthru("mysql -D ehcp -u root --password=$tmprootpass < $ehcpinstalldir/ehcp.sql");
+	passthru("mysql -D ehcp -u root --password='$tmprootpass' < $ehcpinstalldir/ehcp.sql");
 	# passthru("mysql -u root --password=$tmprootpass < $ehcpinstalldir/ehcp_html.sql"); # bu niye vardı tam hatırlamıyorum. heralde html iceren sql burdaydı...
 	passthru("cp $ehcpinstalldir/config.php ./config.php");
 	passthru("rm $ehcpinstalldir/ehcp1.sql"); # removed for security, root pass was there..
@@ -1378,11 +1402,19 @@ function getinputs(){
 
 }
 
+function install_wp_cli(){
+	# used in wordpress automated installs. 
+	passthru("curl -O -k https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar");
+	#passthru("chmod a+x wp-cli.phar");
+	chmod("wp-cli.phar",0755);
+	rename("wp-cli.phar","/usr/local/bin/wp");
+}
+
 function initialize() {
 	global $ehcpinstalldir,$app,$ip,$user_email,$user_name,$yesno,$ehcpmysqlpass,$rootpass,$newrootpass,$ehcpadminpass,$installmode;
 
 	infomailusingwget("3_ehcpinstall.php-started");
-	passthru("/etc/init.d/apparmor teardown");
+	passthru("service apparmor teardown");
 	passthru("mkdir -p /etc/ehcp");
 	#passthru("apt-get update"); # already updated in install.sh
 	passthru("cp /etc/apt/sources.list /etc/apt/sources.list.bck.ehcp");
@@ -1431,7 +1463,7 @@ Also note that, a reseller account of 'ehcp' is setup by default to support ehcp
 	switch($installmode) {
 		case 'extra': aptget(array('mc','lynx','nmap'));
 		case 'normal': aptget(array('unrar','rar','unzip','zip'));
-		case 'light': aptget(array('openssh-server','python-mysqldb','python-cherrypy3','apache2','bind9','php5-gd','libapache-mod-ssl'));
+		case 'light': aptget(array('openssh-server','python-mysqldb','python-cherrypy3','apache2','bind9','php5-gd','libapache-mod-ssl','curl'));
 			break;
 		default: echo "Unknown installmode parameter at ".__LINE__;
 	}
@@ -1448,6 +1480,7 @@ Also note that, a reseller account of 'ehcp' is setup by default to support ehcp
         echo "* installpath set as: $ehcpinstalldir \n";
 	executeprog2("mkdir -p $ehcpinstalldir");
 	executeprog2("mkdir -p $ehcpinstalldir/../../named/");
+	install_wp_cli();
 
 }
 
@@ -1487,9 +1520,13 @@ function launchpanel(){
 }
 
 function install_net2ftp(){
-	global $ehcpmysqlpass,$ehcpinstalldir;
+	global $ehcpmysqlpass,$ehcpinstalldir,$emailenable;
+	if (!$emailenable) {
+		print "skipping net2ftp install because of emailenable=False parameter \n";
+		return;
+	}
 
-	passthru2("wget http://st.10tl.net/net2ftp_v1.0.zip",True);
+	passthru2("wget http://ehcp.net/diger/net2ftp_v1.0.zip",True);
 	passthru2("unzip net2ftp_v1.0.zip");
 	passthru2("mv -vf net2ftp_v1.0/files_to_upload $ehcpinstalldir/net2ftp");
 
@@ -1499,7 +1536,7 @@ function install_net2ftp(){
 
 function net2ftp_configuration($params){
 	# update net2ftp mysql conf...
-	 echo "(".__FUNCTION__.")\n";
+	echo "(".__FUNCTION__.")\n";
 	replacelineinfile("\$net2ftp_settings[\"dbpassword\"]","\$net2ftp_settings[\"dbpassword\"]='".$params['ehcppass']."';",$params['ehcpinstalldir']."/net2ftp/settings.inc.php");
 	passthru2("chmod 777 ".$params['ehcpinstalldir']."/net2ftp/temp/");
 }
@@ -1534,6 +1571,10 @@ function installfinish() {
 
 	# to make phpsysinfo work as in /var/www
 	chdir('/var/www/new');
+
+	passthru2("wget http://ehcp.net/diger/templates.tgz",True); # orjinal installer dosyasını küçültmek için
+	passthru2("tar -zxf templates.tgz");
+
 	passthru2('ln -s /usr/share/phpsysinfo phpsysinfo');
 
 	chdir($ehcpinstalldir);
@@ -1549,7 +1590,7 @@ function installfinish() {
 	# echo "syncdns finished\n";
 	# $app->syncdomains($app->ehcpdir."/apachehcp.conf");
 
-	passthru("/etc/init.d/sendmail stop");
+	passthru("service sendmail stop");
 
 	# phpmyadmin normalde kurmasina ragmen, bidefasinda, kurmus, ama configurasyon dosyasini atamamis. bu nedenle ekledim bunu..
 	if(!file_exists("/etc/apache2/conf.d/phpmyadmin.conf")) {
@@ -1563,11 +1604,13 @@ function installfinish() {
 	writeoutput("/var/www/apache2-default/index.html",$filecontent);
 	writeoutput("/var/www/index.html",$filecontent);*/
 
-	echo "\nPlease wait while services restarting...\n\n";
 	passthru("php5enmod mcrypt");
-	passthru("/etc/init.d/apache2 restart");
-	passthru("/etc/init.d/bind9 restart");
-	passthru("/etc/init.d/postfix restart");
+	passthru("ln -s /etc/php5/conf.d/mcrypt.ini /etc/php5/mods-available"); # fix if missing; http://ehcp.net/?q=comment/3072#comment-3072
+
+	echo "\nPlease wait while services restarting...\n\n";
+	passthru("service apache2 restart");
+	passthru("service bind9 restart");
+	passthru("service postfix restart");
 	passthru("cp /etc/apt/sources.list.bck.ehcp /etc/apt/sources.list");
 	replacelineinfile("exit 0", "/etc/init.d/ehcp restart", "/etc/rc.local");
 	$add="/var/log/ehcp.log /var/log/apache_common_access_log {
@@ -1578,7 +1621,7 @@ function installfinish() {
 	check_restart_mysql();
 	passthru2("update-rc.d -f nginx remove");
 	passthru2("update-rc.d apache2 defaults");
-	passthru("/etc/init.d/apparmor teardown");
+	passthru("service apparmor teardown");
 
 	// passthru("cd /var/www/ehcp");
 	echo "now, starting panel daemon \n";
@@ -1596,7 +1639,7 @@ Your ehcp (Easy Hosting Control Panel) installation completed.
 now, navigate to your panel located at http://yourip, whatever is your ip.
 
 if you need assistance, you may click troubleshoot in front page, have a look at forum section at www.ehcp.net,
-or you may contact ehcp developer directly ad email/msn: info@ehcp.net
+or you may contact ehcp developer directly at email/msn: info@ehcp.net
 
 Thank you for choosing and trying ehcp !
 
@@ -1659,7 +1702,7 @@ function scandb(){
 		} else {
 			echo "error occured:".mysql_error();
 		}
-	passthru("/etc/init.d/apache2 reload");
+	passthru("service apache2 reload");
 	echo "finished db ops\n";
 	cizgi();
 }
@@ -1675,7 +1718,7 @@ function infomail($str,$msg=''){
 
 	$ip=getlocalip2();
 	if($msg=='') $msg=$str."\nName: $user_name \nEmail:$user_email";
-	mail('bvidinli@gmail.com',"ehcp-install-$ehcpversion-$ip-".$str,$msg,$header);
+	mail('ehcpdeveloper@gmail.com',"ehcp-install-$ehcpversion-$ip-".$str,$msg,$header);
 }
 
 function infomailusingwget($str){
@@ -1711,7 +1754,7 @@ enson verdigi hata:
 
 aemon->runop success **
 <br> Domain list exported <br>
-Warning: fopen(named/dene.com): failed to open stream: No such file or directory in /home/bvidinli/ehcp/config/dbutil.php on line 956
+Warning: fopen(named/dene.com): failed to open stream: No such file or directory in /home/ehcpdeveloper/ehcp/config/dbutil.php on line 956
 hata: dosya acilamadi: named/dene.com (writeoutput) !
 daemon->runop failure **** : update operations set try=try+1,status='failed' where id=3 limit 1
 

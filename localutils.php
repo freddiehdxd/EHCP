@@ -1,6 +1,14 @@
 <?php
 @ini_set("date.timezone","UTC");
 
+function is_valid_domain_name($domain_name)
+{
+    return (preg_match("/^([a-z\d](-*[a-z\d])*)(\.([a-z\d](-*[a-z\d])*))*$/i", $domain_name) //valid chars check
+            && preg_match("/^.{1,253}$/", $domain_name) //overall length check
+            ); 
+}
+
+
 function imgextension($f){
 	return isextension($f,'img');
 }
@@ -480,6 +488,7 @@ $sagyazi</td>\n";
             if(!is_array($alan['secenekler'])) $alan['secenekler']=$varsayilan;
             foreach($alan['secenekler'] as $deger2=>$yazi2) {
 				if($varsayilan===$deger2) $sel=" selected='yes'";
+				else $sel='';
 				$res.="<option value='$deger2'$sel>$yazi2</option>\n\r";
 			}
             #for ($j=0;$j<$sayi;$j++) $res.="<option value='".$varsayilan[$j]."'>".$varsayilan[$j]."</option>\n\r";

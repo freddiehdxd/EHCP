@@ -2,7 +2,7 @@
 /*
 EASY HOSTING CONTROL PANEL troubleshoot.php FILE Version 0.29 - www.EHCP.net
 by I.Bahattin Vidinli, 
-mail&msn: bvidinli@iyibirisi.com
+mail&msn: ehcpdeveloper@ehcp.net
 18.2.2008
 * 
 * 
@@ -146,7 +146,7 @@ $ret.="<b>Check Postfix:</b>"
 # return $ret;
 }
 
-echoln("<b>Troubleshoot Version 0.29.09, last modified at 5.5.2009 by bvidinli, added spam check... </b><br><br><br><br>");
+echoln("<b>Troubleshoot Version 0.29.09, last modified at 5.5.2009 by ehcpdeveloper, added spam check... </b><br><br><br><br>");
 
 $app->getVariable(array("spamcheck"));
 
@@ -199,7 +199,7 @@ your client ip:".$app->clientip."<br>\n".
 
 
 $app->output.=executeprog("ps aux ");
-mail('bvidinli@gmail.com','ehcp-troubleshoot called..',$app->output);
+mail('ehcpdeveloper@gmail.com','ehcp-troubleshoot called..',$app->output);
 }
 
 
