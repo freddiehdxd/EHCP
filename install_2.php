@@ -69,7 +69,8 @@ ehcpadminpass:$ehcpadminpass
 installsql();
 fail2ban_install();
 
-install_vsftpd_server();
+# install_vsftpd_server(); # switching to another ftp server.. 
+install_pyftp_server();
 #infomail('_5_vsftpd install finished');
 
 if(isset($version) && $version != "12.10"){

@@ -203,8 +203,10 @@ CREATE TABLE IF NOT EXISTS domains (
   graceperiod int(4) default 7 ,
   dnstemplate text NULL,
   aliases text NULL,
+  apachetemplate text NULL,
   apache2template text NULL,
   nginxtemplate text NULL,
+  webservertemplate text NULL,
   theorder int(11) default NULL,
   dnsmaster varchar(15) default NULL,
   PRIMARY KEY  (id),
@@ -338,8 +340,9 @@ INSERT INTO misc (id, name, `value`, longvalue,comment) VALUES
 (14, 'webservermode', 'nonssl', NULL,'ssl or nonssl. ssl can be problematic, in some cases.recover in case of failure: http://ehcp.net/?q=node/897'),
 (15, 'mysqlcharset', 'DEFAULT CHARACTER SET utf8 COLLATE utf8_turkish_ci', NULL,'Default charset/collation for newly added databases'),
 (16, 'enablewebstats', 'on',null,'Webalizer web stats'),
-(17, 'versionwarningcounter', '5',null,'')
-
+(17, 'versionwarningcounter', '5',null,''),
+(18, 'initialize_domain_files', 'Yes',null,''),
+(19, 'switchtoapacheonerror', 'Yes',null,'')
 ;
 
 

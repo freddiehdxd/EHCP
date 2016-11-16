@@ -2,7 +2,7 @@
 # checks apache and warns you if it does not run...
 
 # replace your email here:
-myemail="test@gmail.com";
+myemail="info@ehcp.netttt";
 
 
 apachecount=`ps aux | grep -v grep | grep apache | wc -l`

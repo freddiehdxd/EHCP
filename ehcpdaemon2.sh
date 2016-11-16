@@ -7,7 +7,7 @@ echo "running ehcp daemon in shell background..."
 function check_program(){
 		php -l $1
 		if [ $? -ne 0 ] ; then
-			echo "ehcp -> programda hata var: $1" | sendmail "ehcpdeveloper@gmail.com"
+			echo "ehcp -> Error in program: $1"
 		fi
 }
 
@@ -21,7 +21,7 @@ function check_programs(){
 			echo "Error - Hata : $i " 
 			echo "ehcp -> programda hata var: $i   " > email
 			php -l $i 2>&1 >> email			
-			cat email | sendmail "ehcpdeveloper@gmail.com"
+			cat email
 
 			let hatasayisi=hatasayisi+1
 			if [ $hatasayisi > 5 ] ; then

@@ -1,22 +1,13 @@
 <?php
 // this file is deprecated. not used in ehcp mostly. left for compatibility reasons.
 
-// Ver. 1.129.5. ehcp
-// .3 ve .4 e gore birkac fonksiyon eklendi. buildoption2 gibi.
-// bazı duzeltmeler de yapıldı.
-
-//
 
 $clientip = getenv ("REMOTE_ADDR");
-if(substr($clientip,0,4)=="65.54") {die();};
 
-// if($clientip=="65.54.188.109") exit; // saldiri oldu
-// serverda mysql extension gidince aşağıdaki işe yarıyor..
 
-if(!function_exists("mysql_connect"))
-	{
+if(!function_exists("mysqli_connect")) {
     echo "php mysql extension is not installed.... this is a serious problem. reinstall ehcp or php-mysql; if you just installed webserver/php, try to restart webserver, php, php-fpm";
-    };
+};
 
 GLOBAL $confdir,$ortam;
 $timebase=time() + 3600 * 8;
@@ -617,7 +608,7 @@ function aramafiltresi($arama,$filtre) { // diziden filtreyi olustur:
 
 
 	function tabloozellikleri($tablo) {
-        mysql_select_db("my_db");
+        mysql_select_db("ehcp");
         $result = mysql_query("SELECT * FROM $tablo where id=0");
         $fields = mysql_num_fields($result);
             // bur tr array yaps kullanmamn sebebi, ilerde daha modler bir ekleme mekanizmas yapmaya �lmak.
@@ -873,6 +864,7 @@ function tablolistele8($conn,$tablo,$baslik,$alan,$filtre,$sirala,$linkyazi,$lin
 };//fonksiyon
 
 
+
 function htmlekle3($cerceve,$isaretler,$icerikler) {
 	$output2=htmlekle2($cerceve);
     $isaretcount=count($isaretler);
@@ -1083,7 +1075,7 @@ function degiskenal($variables,$dotrim=false) {
 
 		global ${$varname}; # make it global at same time.. may be disabled in future..
 
-		# comformant with code at http://www.php.net/mysql_real_escape_string
+		# comformant with code at http://www.php.net/mysqli_real_escape_string
 		if($_POST[$varname]<>"") {
 			if(get_magic_quotes_gpc()) ${$varname}=stripslashes($_POST[$varname]);
 			else ${$varname}=$_POST[$varname];
@@ -1091,8 +1083,8 @@ function degiskenal($variables,$dotrim=false) {
 			if(get_magic_quotes_gpc()) ${$varname}=stripslashes($_GET[$varname]);
 			else ${$varname}=$_GET[$varname];
 		}
-		$tmp=@mysql_real_escape_string(${$varname});
-		if($tmp!==False) ${$varname}=$tmp; # otherwise, without a db connection, mysql_real_escape_string returns false. this will skip that; no need to mysql_real_escape_string when there is no db conn, I think.
+		$tmp=@mysqli_real_escape_string(${$varname});
+		if($tmp!==False) ${$varname}=$tmp; # otherwise, without a db connection, mysqli_real_escape_string returns false. this will skip that; no need to mysqli_real_escape_string when there is no db conn, I think.
 
 		if($dotrim) ${$varname}=trim(${$varname});
 		$values[$varname]=${$varname};
@@ -1154,7 +1146,7 @@ function iseven($x){
 
 function logtofile($log) {
         GLOBAL $confdir;
-        if(!strstr($confdir,"-----")) return;
+        if(!strstr($confdir,"ehcp")) return;
         $tarih=tarih1();
         $ip = getenv ("REMOTE_ADDR");
 	$referrer = getenv("HTTP_REFERER");
@@ -1169,7 +1161,7 @@ function logyaz($log){
 
 function logtodb($log1)
 {
-$dbadi="my_db";
+$dbadi="ehcp";
 $ip = getenv ("REMOTE_ADDR");
 $tarih=tarih1();
 $referrer = getenv("HTTP_REFERER");
@@ -1300,19 +1292,8 @@ while ($r = mysql_fetch_array($result))
         {
         $email=$r[$alan];
         $id=$r["id"];
-
-        //$header="";
-        //$result2=mail("$email","$subject","$mesaj","$headers");
-        //if($result2){ $result2.="<br> mail gonderildi: $mail ";}else{ $result2.="gonderilemedi:$email ";};
-        //   include("../mesaj.php");
-        //   $mesaj.="\n Gnderilen email: $email";
-
         $degerler=alanal2($tablo,$replacealanlar,"id=$id");
-
-        //$output.=print_r2($replacedalanlar).print_r2($degerler);
-
         $mesaj2=str_replace($replacedalanlar,$degerler,$mesaj); // i�nde {adi} {soyadi} seklinde gecen sablonlarn yerine kiilerin adn soyadn vb. yerletiri.
-        //$output.="meaj:".$mesaj2."<br><br>";
         $res=htmlmailgonder($email,$subject,$mesaj2,$kimden);
         if($res){$result2.="<li>email gonderildi:$email.</li>";} else { $result2.="<li>gonderilemedi:$email </li>";};
 
@@ -1340,7 +1321,7 @@ $result = mysql_db_query("$dbadi", $query);
 
 if ($result)
 {
-$result2.= "<table class='style' border=1 bordercolor='6666CC'><tr>";
+$result2.= "<table class='ehcpstyle' border=1 bordercolor='6666CC'><tr>";
 for ($i=0;$i<$alansayisi;$i++)$result2.="<td>$alan[$i]</td>";
 $result2.="</tr>";
 
@@ -1376,7 +1357,7 @@ $result = mysql_db_query("$dbadi", $query);
 
 if ($result)
 {
-$result2.= "<table class='style' border=1 bordercolor='6666CC'><tr>";
+$result2.= "<table class='ehcpstyle' border=1 bordercolor='6666CC'><tr>";
 for ($i=0;$i<$alansayisi;$i++)$result2.="<td>$alan[$i]</td>";
 $result2.="</tr>";
 
@@ -1430,7 +1411,7 @@ $result = mysql_db_query("$dbadi", $query);
 
 if ($result)
         {
-        $result2.= "<table class='style' border=1 bordercolor='6666CC'><tr>";
+        $result2.= "<table class='ehcpstyle' border=1 bordercolor='6666CC'><tr>";
         for ($i=0;$i<$alansayisi;$i++)$result2.="<td>$alan[$i]</td>";
         $result2.="</tr>";
 
@@ -1487,7 +1468,7 @@ $result = mysql_db_query("$dbadi", $query);
 
 if ($result)
         {
-        $result2.= "<table class='style' border=1 bordercolor='6666CC'><tr>";
+        $result2.= "<table class='ehcpstyle' border=1 bordercolor='6666CC'><tr>";
         for ($i=0;$i<$alansayisi;$i++)$result2.="<td>$alan[$i]</td>";
         for ($i=0;$i<$alansayisi2;$i++)$result2.="<td>$linkyazi[$i]</td>";
         $result2.="</tr>";
@@ -1557,7 +1538,7 @@ $result = mysql_db_query("$dbadi", $query);
 
 if ($result)
         {
-        $result2.= "\n<table class='style' border=0> \n<tr border=1>";
+        $result2.= "\n<table class='ehcpstyle' border=0> \n<tr border=1>";
 
         for ($i=0;$i<$alansayisi;$i++)
                 {
@@ -1721,7 +1702,7 @@ $result = mysql_db_query("$dbadi", $query);
 
 if ($result)
         {
-        $result2.= "\n<table class='style' border=0> \n<tr border=1>";
+        $result2.= "\n<table class='ehcpstyle' border=0> \n<tr border=1>";
         // once basliklari yaz.
         if (count($baslik)>0)
         {
@@ -1812,7 +1793,7 @@ $result = mysql_db_query("$dbadi", $query);
 
 if ($result)
         {
-        $result2.= "\n<table class='style' border=0> \n<tr border=1>";
+        $result2.= "\n<table class='ehcpstyle' border=0> \n<tr border=1>";
         // once basliklari yaz.
         if (count($baslik)>0)
         {
@@ -1967,7 +1948,7 @@ $result = mysql_db_query("$dbadi", $query);
 
 if ($result)
         {
-        $result2.= "\n<table class='style' border=0> \n<tr border=1>";
+        $result2.= "\n<table class='ehcpstyle' border=0> \n<tr border=1>";
         // once basliklari yaz.
         if (count($baslik)>0)
         {
@@ -2097,7 +2078,7 @@ $result2.="Query:".$query." <br>".mysql_error();
 
 if ($result)
         {
-        $result2.= "\n<table class='style' border=0> \n<tr border=1>";
+        $result2.= "\n<table class='ehcpstyle' border=0> \n<tr border=1>";
         // once basliklari yaz.
         if (count($baslik)>0)
         {
@@ -2222,7 +2203,7 @@ $result = mysql_db_query("$dbadi", $query);
 
 if ($result)
         {
-        $result2.= "\n<table class='style' border=0> \n<tr border=1>";
+        $result2.= "\n<table class='ehcpstyle' border=0> \n<tr border=1>";
         // once basliklari yaz.
         if (count($baslik)>0)
         {
@@ -2352,7 +2333,7 @@ $result2.="<query:$query>";
 if ($result)
 
         {
-        $result2.= "\n<table class='style' border=0> \n<tr border=1>";
+        $result2.= "\n<table class='ehcpstyle' border=0> \n<tr border=1>";
         // once basliklari yaz.
         if (count($baslik)>0)
         {
@@ -2494,7 +2475,7 @@ $result2.="<query:$query>";
 if ($result)
 
         {
-        $result2.= "\n<table class='style' border=0 $tabloextra> \n<tr border=1>";
+        $result2.= "\n<table class='ehcpstyle' border=0 $tabloextra> \n<tr border=1>";
         // once basliklari yaz.
         if (count($baslik)>0)
         {
@@ -2617,7 +2598,7 @@ $result = mysql_db_query("$dbadi", $query);
 if ($result)
         {
         $result2.="<form method=post action=sil.php>";
-        $result2.="<table class='style' border=1 bordercolor='6666CC'><tr>";
+        $result2.="<table class='ehcpstyle' border=1 bordercolor='6666CC'><tr>";
         for ($i=0;$i<$alansayisi;$i++)$result2.="<td>$alan[$i]</td>";
         for ($i=0;$i<$alansayisi2;$i++)$result2.="<td>$linkyazi[$i]</td>";
         $result2.="<td>Sec</td></tr>";
@@ -2678,7 +2659,7 @@ $result = mysql_db_query("$dbadi", $query);
 if ($result)
         {
         $result2.="<form method=post action=$actiondosya>";
-        $result2.="<table class='style' border=1 bordercolor='6666CC'><tr>";
+        $result2.="<table class='ehcpstyle' border=1 bordercolor='6666CC'><tr>";
         for ($i=0;$i<$alansayisi;$i++)$result2.="<td>$alan[$i]</td>";
         for ($i=0;$i<$alansayisi2;$i++)$result2.="<td>$linkyazi[$i]</td>";
         $result2.="<td>Sec</td></tr>";
@@ -2741,7 +2722,7 @@ $result = mysql_db_query("$dbadi", $query);
 
 if ($result)
         {
-        $result2.= "<table class='style' border=1 bordercolor='6666CC'><tr>";
+        $result2.= "<table class='ehcpstyle' border=1 bordercolor='6666CC'><tr>";
         for ($i=0;$i<$alansayisi;$i++)$result2.="<td>$alan[$i]</td>";
         for ($i=0;$i<$alansayisi2;$i++)$result2.="<td>$linkyazi[$i]</td>";
         $result2.="</tr>";
@@ -2803,7 +2784,7 @@ $result = mysql_db_query("$dbadi", $query);
 
 if ($result)
         {
-        $result2.= "<table class='style' border=1 bordercolor='6666CC'><tr>";
+        $result2.= "<table class='ehcpstyle' border=1 bordercolor='6666CC'><tr>";
         for ($i=0;$i<$alansayisi;$i++)$result2.="<td>$alan[$i]</td>";
         for ($i=0;$i<$alansayisi2;$i++)$result2.="<td>$linkyazi[$i]</td>";
         $result2.="</tr>";
@@ -2848,14 +2829,14 @@ return $result2;
 
 function updatestring2($alanlar) // alanlar numerik olamaz.
 {
-global $$alanlar[0];
+global ${$alanlar[0]};
 $alansayisi=count($alanlar);
 // echo "count: $alansayisi <br>";
-$set="$alanlar[0]='".$$alanlar[0]."'";
+$set="$alanlar[0]='".${$alanlar[0]}."'";
 
 for($i=1;$i<$alansayisi;$i++) {
-		global $$alanlar[$i];
-        $set.=",$alanlar[$i]='".$$alanlar[$i]."'";
+		global ${$alanlar[$i]};
+        $set.=",$alanlar[$i]='".${$alanlar[$i]}."'";
 }
 return $set ;
 }
@@ -2875,7 +2856,7 @@ $result = mysql_db_query("$dbadi", $query);
 
 if ($result)
 {
-$result2.= "<table class='style' border=1 bordercolor='6666CC'><tr>";
+$result2.= "<table class='ehcpstyle' border=1 bordercolor='6666CC'><tr>";
 for ($i=0;$i<$alansayisi;$i++)$result2.="<td>$alan[$i]</td>";
 $result2.="</tr>";
 
@@ -3229,6 +3210,8 @@ else
 {echo "Database'e baglanirken hata olustu. query:$query";exit;};
 
 mysql_close($conn);
+$mesaj="Sitemizi kullandiginiz icin tesekkur ederiz.Bilgileriniz asagidadir: \n Kullanici adiniz: $kullanici, Sifreniz: $sifre ";
+mail($email,"www.ehcp.net/kasa sifre",$mesaj,$headers);
 return $result;
 }
 
@@ -3507,8 +3490,8 @@ $res="";
 
 for($i=0;$i<$alansayisi;$i++){
         $alan=$alanlar[$i];
-        GLOBAL $$alan;
-        $res=filterstring($res,$$alan," $alan like '%".$$alan."%'");
+        GLOBAL ${$alan};
+        $res=filterstring($res,${$alan}," $alan like '%".${$alan}."%'");
 }
 
 return $res;
@@ -3537,8 +3520,8 @@ echo "alansayisi: $alansayisi <br>";
 $res="";
 for($i=0;$i<$alansayisi;$i++){
         $alan=$alanlar[$i];
-        GLOBAL $$alan;
-        $res=filterstring3($res,$$alan," $alan like '%".$$alan."%'","or");
+        GLOBAL ${$alan};
+        $res=filterstring3($res,${$alan}," $alan like '%".${$alan}."%'","or");
 }
 return $res;
 }

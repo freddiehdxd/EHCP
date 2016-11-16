@@ -6,7 +6,7 @@ IF YOU SEE THIS ON BROWSER,  IMMADIATELY STOP WEBSERVER with /etc/init.d/apache2
 IF YOU SEE THIS INSTEAD OF A WEB PAGE, THEN YOU PROBABLY DIDN'T INSTALL PHP EXTENSION, PLEASE RE-RUN EHCP INSTALL SCRIPT OR MANUALLY INSTALL APACHE2-PHP EXTENSION..
 
 *
-by I.Bahattin Vidinli,
+by Ehcp Developer
 mail&msn: info@ehcp.net
 
 see classapp.php for real application.
@@ -18,8 +18,6 @@ include_once("config/dbutil.php"); # this should be removed later...
 #include_once("config/adodb/adodb.inc.php"); # adodb database abstraction layer.. hope database abstracted...
 include_once("classapp.php"); # real application class
 
-
-degiskenal(array("op"));
 global $commandline;
 $commandline=false;
 $user = $_SERVER['HTTP_USER_AGENT'];
@@ -32,15 +30,13 @@ if($argv and $argc and (is_array($argv))and (!$user)) {
 } else {
         session_start();
 }
-//echo "argc: $argc <br>\n";
 
 $app = new Application();
+if(!$op) $app->getVariable("op");
+
 $app->cerceve="standartcerceve";
 $app->usertable="domainusers";
-$app->userfields=array("id","domainname","username","email","quota");
+$app->userfields=["id","domainname","username","email","quota"];
 $app->op=strtolower($op);
 $app->run();
-
-
-
 ?>

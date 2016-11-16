@@ -26,6 +26,11 @@ ehcp_start(){
 	
 	cd /var/www/new/ehcp
 
+	# fix file ownerships, if there are any issues..
+	find ./ -type d -exec chmod a+rx {} \;
+	find ./ -type f -exec chmod a+r {} \;
+
+
 	if [ -f path ] ; then # when running inside cron, we need default path. this path variable is filled when installing, in install.sh
 		export PATH=`cat path`
 	else

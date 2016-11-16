@@ -4,7 +4,6 @@
 #
 # please contact me if you made any modifications.. or you need help
 # msn/email: info@ehcp.net
-# skype/yahoo/gtalk: ehcpdeveloper
 
 # Marcel <marcelbutucea@gmail.com>
 #	   - added initial support for yum (RedHat/CentOS)
@@ -108,14 +107,9 @@ function checkAptget(){
 }
 
 
-# Retrieve statistics
-# Marcel: This freezed the installer on one of my Centos Servers (needs more investigating)
-# ehcpdeveloper:answer: this infomail may be disabled, only for statistical purposes... may hang if for 10 second if user is not connected to internet, or something is wrong with wget or dns resolution...
-# no hanging longer than 10 sec should occur... i think.. btw, your code is perfect, Marcel
-
 function infoMail(){
 	ip=`ifconfig | grep "inet addr" | grep -v "127.0.0.1" | awk '{print $2}' `
-	wget -q -O /dev/null --timeout=10 http://www.ehcp.net/diger/msg.php?msg=$1.$ip > /dev/null 2>&1 &
+	wget -q -O /dev/null --timeout=10 http://www.iyibirisi.com/diger/msg.php?msg=$1.$ip > /dev/null 2>&1 &
 	# echo "(infoMail) your ip is: $ip"
 }
 

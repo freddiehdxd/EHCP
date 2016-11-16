@@ -12,8 +12,8 @@ Enable suExec? <-- Yes
 Create directories for web-based administration ? <-- No
 General type of configuration? <-- Internet site
 Where should mail for root go? <-- NONE
-Mail name? <-- server.ehcp.net
-Other destinations to accept mail for? (blank for none) <-- server.ehcp.net, localhost, localhost.localdomain
+Mail name? <-- server.iyibirisi.com
+Other destinations to accept mail for? (blank for none) <-- server.iyibirisi.com, localhost, localhost.localdomain
 Force synchronous updates on mail queue? <-- No
 SSL certificate required <-- Ok
 Install Hints <-- Ok
@@ -158,8 +158,8 @@ groupadd -g 5000 vmail
 useradd -g vmail -u 5000 vmail -d /home/vmail -m
 
 
-postconf -e 'myhostname = server.ehcp.net'
-postconf -e 'mydestination = server.ehcp.net, localhost, localhost.localdomain, server'
+postconf -e 'myhostname = server.iyibirisi.com'
+postconf -e 'mydestination = server.iyibirisi.com, localhost, localhost.localdomain, server'
 postconf -e 'mynetworks = 127.0.0.0/8'
 postconf -e 'virtual_alias_domains ='
 postconf -e ' virtual_alias_maps = proxy:mysql:/etc/postfix/mysql-virtual_forwardings.cf, proxy:mysql:/etc/postfix/mysql-virtual_email2email.cf'

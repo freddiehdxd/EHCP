@@ -7,7 +7,7 @@ IF YOU SEE THIS ON BROWSER,  IMMADIATELY STOP WEBSERVER with /etc/init.d/apache2
 IF YOU SEE THIS INSTEAD OF A WEB PAGE, THEN YOU PROBABLY DIDN'T INSTALL PHP EXTENSION, PLEASE RE-RUN EHCP INSTALL SCRIPT OR MANUALLY INSTALL APACHE2-PHP EXTENSION..
 
 * 
-by I.Bahattin Vidinli, 
+by Ehcp Developer
 mail&msn: info@ehcp.net
 
 see classapp.php for real application.

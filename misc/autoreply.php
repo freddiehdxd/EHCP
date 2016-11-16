@@ -3,7 +3,7 @@
 /*
 
 
-by I.Bahattin Vidinli, 
+by Ehcp Developer
 mail&msn: info@ehcp.net
 
 see classapp.php for real application.

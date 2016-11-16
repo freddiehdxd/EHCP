@@ -1,8 +1,8 @@
 <?php
 /*
 EASY HOSTING CONTROL PANEL troubleshoot.php FILE Version 0.29 - www.EHCP.net
-by I.Bahattin Vidinli, 
-mail&msn: ehcpdeveloper@ehcp.net
+by Ehcp Developer
+mail: info@ehcp.net
 18.2.2008
 * 
 * 
@@ -25,7 +25,7 @@ $testcount=1;
 if(!function_exists("print_r2")){
 function print_r2($array)
 {
-if ($array) return '<pre>'.str_replace(array("\n" , " "), array('<br>', '&nbsp;'), print_r($array, true)).'</pre>';
+if ($array) return '<pre>'.str_replace(["\n" , " "], ['<br>', '&nbsp;'], print_r($array, true)).'</pre>';
 elseif ($array===null) return "(null) ";
 elseif ($array=="") return "(bosluk)";
 }
@@ -146,9 +146,9 @@ $ret.="<b>Check Postfix:</b>"
 # return $ret;
 }
 
-echoln("<b>Troubleshoot Version 0.29.09, last modified at 5.5.2009 by ehcpdeveloper, added spam check... </b><br><br><br><br>");
+echoln("<b>Troubleshoot Version 0.29.09, last modified at 5.5.2009 by Ehcp Developer, added spam check... </b><br><br><br><br>");
 
-$app->getVariable(array("spamcheck"));
+$app->getVariable(["spamcheck"]);
 
 if($spamcheck==''){
 	echoln("Enter something, only to prevent spam:".inputform5("spamcheck"));
@@ -199,7 +199,6 @@ your client ip:".$app->clientip."<br>\n".
 
 
 $app->output.=executeprog("ps aux ");
-mail('ehcpdeveloper@gmail.com','ehcp-troubleshoot called..',$app->output);
 }
 
 

@@ -1,8 +1,11 @@
 <?php
+
 $ua=getenv("HTTP_USER_AGENT");
 $path=getenv("PATH");
 
-$ortam="gercek";
+if(strstr($path,"WINNT")or strstr($ua,'testediliyor')or strstr($path,'WINDOWS')) $ortam="test";
+
+else $ortam="gercek";
 
 
 $confdir=dirname(__FILE__)."/";

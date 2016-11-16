@@ -1,23 +1,41 @@
 <?php
-$ehcpversion="0.37.9.b";
+$ehcpversion="0.38.3.b";
+$known_to_work="Ubuntu-16.04";
 $emailenable=True;
 
 /*
 EASY HOSTING CONTROL PANEL MAIN CLASS FILE - www.ehcp.net
 mail&msn: info@ehcp.net
 
-last modified by ehcpdeveloper on 25.05.2015 (d-m-y)
+# last modified by ehcpdeveloper on 14.8.2016 (d-m-y)
 ehcp in launchpad: https://launchpad.net/~ehcp
 
-şuanda, ssl ayarlamayı tamamen otomatik yapmaya calısıyorum, kullanıcıdan bilgileri alıp, CSR oluşturacağım, bununla vatandaş gidip istediği yerden alabilecek. sonra ayarları gine tamamen webbased olabilecek. fixapacheconfigssl fonksiyonunu domain ile çalışacak hale getirecem, template'lerde ve veritabanında sadece bir domain'e farklı bir sertifika bilgisi yükleyebilmek için gerekli değişiklikleri yapacam.
-bu baya yapıldı, denendi de, ama daha çok denenmeli.
+About ssl: 
+We currently try to use ssl automatically. 
+Necessary info will be taken from admin/user and CSR will be built. 
+All will be webbased. 
 
 
 ChangeLog (Nearest upper):
+
+2016-07..2016-08:
+* Many changes related to Ubuntu 16.04 LTS, especially related to php7 changes, so, 
+* many php5 references fixed according to php7
+* server ip detection fixed (not so important)
+* Using python based ftp, instead of vsftp, this layer is new.. should be tested throughly
+* default number of processes are reduced for some daemons, such as courier-imapd etc. ; to save server resources.. 
+* adodb upgraded to latest version.. which supports php7
+* new options in options page, to take more control
+* similarfunctions improved by better css based display
+* minor fixes
+
+
+2016-01:
+* login brute force attack detection, disallow password retry for more than 5 times from same ip
+
 2015-05:
 * similar functions & some text moved to language files for easier localization
 * Initial plans for more modular design with separate classes.
-* fix mail configuration improved. chown..
 
 2015-03:
 * new module functions added, 
@@ -141,43 +159,6 @@ function addFtpToThisPaneluser() and similars added,
 *
 
 
-Todo:
-* fixmail config içine, tüm domain dizinlerini oluşturan kod eklenecek. ilgili hata: www imapd: chdir dtl-server.com/wake/: No such file or directory
-* add ftpuser/subdomain/email/db at single step, a feature request,
-* multi server..
-* firewall config,
-* spamassassin,
-* postfix mailbox_size_limit:
-
-user:I was also wondering if you will be adding other webmail clients to the install any time soon I have nocc and v-webmail installed and i added it to the panel as a link
-
-
-
-this program was initially written in Turkish language, a mixture of Turkish & English is used a bit.
-language module is developed later. So, some texts may be left Turkish.Sory.
-
-tr: yapilacaklar: son domain de silinince syncdns cortluyor... zira getdomains null donduruyor... neyse ilgilen iste.
-
-coding naming issues:
-turkish-english- naming equalities: (to understand code namings, some of these may already be fixed.. I try to make it understandable.. )
-
-filtre=filter
-linkalan=linkfield
-linkdosya=linkfile
-alanlar=fields
-replacealanlar=replacefields
-degiskenal=getvariable (through _GET or _POST, defined in config/dbutil.php)
-sayi=count
-Hata = Error
-Hata olustu = Error occured
-cerceve=template, border
-tablolistele=tablelist, list table,
-varsayilan=default
-solyazi=lefttext
-sagyazi=righttext
-
-
-
 security issues: (now handled by beforeinputcontrols and afterinputcontrols)
 
 steps to control when doing something:
@@ -188,80 +169,17 @@ steps to control when doing something:
 5- is target entity already exists ? that is, is domain exists, or is panel users exists ?
 
 
-Kodlama standardi/ mini coding standards within this project:
-
-function naming: mixed:
-old functions: php/java style, firstSecond()
-newer: python style: first_second()
-*1:
-
-	* eger sadece True ya da false donduren bir fonksiyon ise,
-		$success=$success && $s=$this->adddaemonop("syncdomains",'','');
-		if($s)$this->output.="sync apache info sent to daemon.<br>";
-
-	* yok True/false den baska seyler de dondurebiliyorsa, querylerde oldugu gibi ozaman soyle:
-
-		$s=$this->executeQuery("insert into ".$this->conf['domainstable']['tablename']." (reseller,panelusername,domainname,homedir,status) values ('".$this->activeuser."','$panelusername','$domainname','$homedir','$status')");
-		if($s===false) {
-			$this->errortext('domain add to db failed');
-			$success=false;
-		} else $this->output.="Domain Added to db successfully.<br>";
-
-
-* Yapılacaklar-todo:
-
-* blgsrc:
-vatandaş açtığı veritabanının yanında phpmyadmin ikonu olsa
-kullanıcı adı ve şifresi girmeden açsa, sonra olabilir
-*
-* *
-* serverplans taranacak,
-* wwwserver icin, priority ye gore, in a kayitlari eklenecek, dnse,
-* dnsserver icin, in ns ve ns1 in a kayitlari eklenecek..
-*
-* mailserver icin, in mx kayitlari eklenecek,
-
-* domain.com. in a www1ip
-* domain.com. in a www2ip
-* www.domain.com. in a www1ip
-* www.domain.com. in a www2ip v.b.
-*
-* domain.com in ns ns1.domain.com
-* domain.com in ns ns2.domain.com,
-* domain.com in ns ns3.domain.com,
-*
-* ns1.domain.com. in a dns1ip
-* ns2.domain.com. in a dns2ip
-* ns3.domain.com. in a dns3ip
-*
-
-* For multi server domain/dns/mysql add:
-
-multi server add:
-1- add to local ehcp db,
-2- add to remote ehcp db,
-3- apply changes to remote mysql using syncdns or appropriate action:
-	a) syncdns or syncdomains, in case a dns/domain op
-	b) directly add mysql db to remote mysql, if this is a mysql
-
-
-multi server remove:
-1- remove from remote ehcp db,
-2- apply changes on remote by syncdns or syncdmoains,
-3- remove from local ehcp db.*
 */
 # include_once("config/dbutil.php"); # some old routines.. being ported to this class...
 error_reporting (E_ALL ^ E_NOTICE );
-# debug ederken yukardaki kullanılmalı
 ini_set('display_errors', '1');
 
 @date_default_timezone_set('Europa/Istanbul'); # this is mandatory in php 5.3 and up for date commands
 
 include_once(dirname(__FILE__).'/adodb5/adodb.inc.php');  # bu dirname muhabbeti: classapp, başka biyerden bile include edilse, bunların calısması icin.. fix for this: http://www.ehcp.net/?q=comment/2921#comment-2921 ; with this code, no chdir should be required in api
-#include_once('class_user.php');
-#include_once('config/adodb/adodb-pager.inc.php');
+
 include_once(dirname(__FILE__).'/localutils.php');
-include_once(dirname(__FILE__).'/modules/module_index.php');
+@include_once(dirname(__FILE__).'/modules/module_index.php');
 include_once(dirname(__FILE__).'/config/randomstring.php');
 
 
@@ -271,12 +189,14 @@ class Application
 {
 	var $appname = '',$sitename='ehcp', $headers="From: info@ehcp.net";
 	var $output='', $requirePassword=True, $checkinstall=True,$miscconfig=null;
-	var $queries=array(), $selecteddomain='',$isreseller=false;
+	var $queries=[], $selecteddomain='',$isreseller=false;
+	var $check_webserver_enabled=True; # disable this to overcome false switchover of webservers... false alarms.. 
 
 	var $wwwuser="www-data";  # these vars should be used are "user related" places, to unify all user settings..  #equivalent: var $wwwowner="vsftpd:www-data";
 	var $wwwgroup="www-data";
 	var $ftpuser="vsftpd";    # equivalent: var $ftpowner="vsftpd:www-data";
 	var $ftpgroup="www-data"; # with this config, ftp user is able to see/delete files written by webserver.
+	var $ftp_server_progname="ftp_server2.py";
 
 	# debuglevel: 4: shows some functions, 3: shows queries
 	var $debuglevel=0;
@@ -302,17 +222,15 @@ class Application
 	var $dnsnamedconftemplate_slave="dnsnamedconftemplate_slave";  # for slave DNS replication
 
 	var $activeuser,$isloggedin,$globalfilter,$commandline=false,$erroroccured=false;
-	var $connected_mysql_servers=array();
+	var $connected_mysql_servers=[];
 	var $ehcpdir='';
 	var $tr="<tr class='list'>", $td="<td class='list'>", $th="<th class='list'>"; # used in some html buildup
 	var $sslkeyfile="/etc/ehcp/server.key";
 
 
-	var $conf=array(
-	# config section
-	# yavas yavas conf sistemine gecmek lazim. aslinda kod icinde sabit bilgi kullanmamak lazim. string bile... ama nerdee...
-	# this is like configuration of many system settings, tablenames etc. by this, changing something is easier, without need to change code..
-	# apache and dns defs:
+	var $conf=[
+		# config section
+		# this is like configuration of many system settings, tablenames etc. by this, changing something is easier, without need to change code..
 
 		'adminname'=>'ehcpdeveloper',
 		'adminemail'=>'ehcpdeveloper@gmail.com',
@@ -328,88 +246,88 @@ class Application
 		'mysqlrootpass'=>'12345',
 
 		# ehcp db table definitions, this is to make code more db-independent...
-		'logintable'=>array(
+		'logintable'=>[
 			'tablename'=>'panelusers',
 			'passwordfunction'=>'md5',
 			'usernamefield'=>'panelusername',
-			'passwordfield'=>'password'
-		),
-		'roles'=> array(
+			'passwordfield'=>'password',
+		],
+
+		'roles'=> [
 			'tablename'=>'roles',
-			#'baslik'=>array('id','rolename','ilgili proje','ilgili kullanıcı'),
-			'listfields'=>array('id','rolename','panelusername'),
-			'linkimages'=>array('images/edit.gif','images/delete1.jpg'),
-			'linkfiles'=>array('?op=roleditor&rolsec=1','?op=roleditor&rolsil=1'),
+			#'baslik'=>['id','rolename','ilgili proje','ilgili kullanıcı'),
+			'listfields'=>['id','rolename','panelusername'],
+			'linkimages'=>['images/edit.gif','images/delete1.jpg'],
+			'linkfiles'=>['?op=roleditor&rolsec=1','?op=roleditor&rolsil=1'],
 			'linkfield'=>'id',
 			'createtable'=>
-			'
-CREATE TABLE `roles` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `rolename` varchar(30) COLLATE utf8_turkish_ci DEFAULT NULL,
-  `panelusername` varchar(30) COLLATE utf8_turkish_ci DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_turkish_ci
-			'
-		),
-		'settingstable2'=>array(
+				'CREATE TABLE `roles` (
+				  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+				  `rolename` varchar(30) COLLATE utf8_turkish_ci DEFAULT NULL,
+				  `panelusername` varchar(30) COLLATE utf8_turkish_ci DEFAULT NULL,
+				  PRIMARY KEY (`id`)
+				) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_turkish_ci',
+		],
+
+		'settingstable2'=>[
 			'tablename'=>'settings',
 			'createtable'=>
-"CREATE TABLE IF NOT EXISTS `settings` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `group` varchar(20) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT '',
-  `reseller` varchar(30) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT '',
-  `panelusername` varchar(30) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT '',
-  `name` varchar(40) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT '',
-  `value` varchar(200) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT '',
-  `longvalue` text CHARACTER SET utf8 COLLATE utf8_turkish_ci,
-  `comment` varchar(100) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT '',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `group` (`group`,`reseller`,`panelusername`,`name`,`value`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_turkish_ci COMMENT='ehcp db - Table for settings of ehcp'"
-		),
-		'vpstable'=>array(
+				"CREATE TABLE IF NOT EXISTS `settings` (
+				  `id` int(11) NOT NULL AUTO_INCREMENT,
+				  `group` varchar(20) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT '',
+				  `reseller` varchar(30) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT '',
+				  `panelusername` varchar(30) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT '',
+				  `name` varchar(40) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT '',
+				  `value` varchar(200) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT '',
+				  `longvalue` text CHARACTER SET utf8 COLLATE utf8_turkish_ci,
+				  `comment` varchar(100) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT '',
+				  PRIMARY KEY (`id`),
+				  UNIQUE KEY `group` (`group`,`reseller`,`panelusername`,`name`,`value`)
+				) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_turkish_ci COMMENT='ehcp db - Table for settings of ehcp'",
+		],
+
+		'vpstable'=>[
 			'tablename'=>'vps',
-			'listfields'=>array('vpsname','ip','ip2','ram','description','reseller','panelusername','hostip','state','image_template'),
-			'linkimages'=>array('images/incele.jpg','images/poweron.gif','images/poweroff.gif','images/pause.gif','images/edit2.gif','images/delete1.jpg'),
-			'linkfiles'=>array('?op=vps&op2=select','?op=vps&op2=start','?op=vps&op2=shutoff','?op=vps&op2=pause','?op=vps&op2=edit','?op=vps&op2=delete'),
+			'listfields'=>['vpsname','ip','ip2','ram','description','reseller','panelusername','hostip','state','image_template'],
+			'linkimages'=>['images/incele.jpg','images/poweron.gif','images/poweroff.gif','images/pause.gif','images/edit2.gif','images/delete1.jpg'],
+			'linkfiles'=>['?op=vps&op2=select','?op=vps&op2=start','?op=vps&op2=shutoff','?op=vps&op2=pause','?op=vps&op2=edit','?op=vps&op2=delete'],
 			'linkfield'=>'vpsname',
-			'checkfields'=>array(
+			'checkfields'=>[
 				'addvpscmd'=>'text',
 				'ip2'=>'varchar(20)',
-				'cdimage'=>'varchar(100)'
-			),
+				'cdimage'=>'varchar(100)',
+			],
 			'createtable'=>
-"CREATE TABLE `vps` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `reseller` varchar(30) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
-  `panelusername` varchar(30) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
-  `status` varchar(10) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
-  `vpsname` varchar(30) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
-  `description` varchar(100) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
-  `hostip` varchar(20) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
-  `ip` varchar(20) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
-  `netmask` varchar(20) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
-  `broadcast` varchar(20) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
-  `gateway` varchar(20) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
-  `image_template` varchar(100) DEFAULT NULL,
-  `ram` int(11) DEFAULT NULL,
-  `cpu` int(11) DEFAULT NULL,
-  `state` varchar(20) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
-  `ping` varchar(10) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
-  `hdimage` varchar(200) DEFAULT NULL,
-  `addvpscmd` text CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_turkish_ci COMMENT='ehcp db - list of vps and their properties'"
+				"CREATE TABLE `vps` (
+				  `id` int(11) NOT NULL AUTO_INCREMENT,
+				  `reseller` varchar(30) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
+				  `panelusername` varchar(30) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
+				  `status` varchar(10) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
+				  `vpsname` varchar(30) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
+				  `description` varchar(100) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
+				  `hostip` varchar(20) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
+				  `ip` varchar(20) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
+				  `netmask` varchar(20) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
+				  `broadcast` varchar(20) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
+				  `gateway` varchar(20) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
+				  `image_template` varchar(100) DEFAULT NULL,
+				  `ram` int(11) DEFAULT NULL,
+				  `cpu` int(11) DEFAULT NULL,
+				  `state` varchar(20) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
+				  `ping` varchar(10) CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
+				  `hdimage` varchar(200) DEFAULT NULL,
+				  `addvpscmd` text CHARACTER SET utf8 COLLATE utf8_turkish_ci DEFAULT NULL,
+				  PRIMARY KEY (`id`)
+				) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_turkish_ci COMMENT='ehcp db - list of vps and their properties'",
+		],
 
-		),
-
-		'domainstable'=>array(
+		'domainstable'=>[
 			'tablename'=>'domains',
 			'ownerfield'=>'panelusername',
 			'resellerfield'=>'reseller',
-			'domainfields'=>array('id','reseller','panelusername','domainname','status','comment'),
-			'listfields'=>array('id','reseller','panelusername','domainname','webserverips','status','diskquotaused','diskquota'),
-			'checkfields'=>array(
+			'domainfields'=>['id','reseller','panelusername','domainname','status','comment'],
+			'listfields'=>['id','reseller','panelusername','domainname','webserverips','status','diskquotaused','diskquota'],
+			'checkfields'=>[
 				'serverip'=>'varchar(30)',
 				'dnsserverips'=>'varchar(200)',
 				'webserverips'=>'varchar(200)',
@@ -427,69 +345,71 @@ CREATE TABLE `roles` (
 				'diskquotaoversince'=>'date',
 				'graceperiod'=>'int(4) default 7',
 				'theorder'=>'int(11)',
-				'dnsmaster'=>'varchar(15) default NULL'
-			)
-		),
-		'domainstable2'=>array(
+				'dnsmaster'=>'varchar(15) default NULL',
+			],
+		],
+
+		'domainstable2'=>[
 			'tablename'=>'domains',
-			'listfields'=>array('domainname')
-		),
-		'subdomainstable'=>array(
+			'listfields'=>['domainname'],
+		],
+
+		'subdomainstable'=>[
 			'tablename'=>'subdomains',
-			'listfields'=>array('reseller','panelusername','subdomain','domainname','homedir','ftpusername','comment'),
-			'linkimages'=>array('images/delete1.jpg'),
-			'linkfiles'=>array('?op=delsubdomain'),
+			'listfields'=>['reseller','panelusername','subdomain','domainname','homedir','ftpusername','comment'],
+			'linkimages'=>['images/delete1.jpg'],
+			'linkfiles'=>['?op=delsubdomain'],
 			'linkfield'=>'id',
-			'checkfields'=>array(
+			'checkfields'=>[
 				'ftpusername'=>'varchar(30)',
 				'password'=>'varchar(20)',
 				'email'=>'varchar(50)',
 				'webserverips'=>'varchar(200)'
-			)
-		 ),
+			],
+		 ],
 
-		'paneluserstable'=> array(
+		'paneluserstable'=> [
 			'tablename'=>'panelusers',
 			'resellerfield'=>'reseller',
 			'usernamefield'=>'panelusername',
 			'passwordfield'=>'password',
-			'listfields'=>array('id','reseller','panelusername','maxdomains','maxemails','quota','maxpanelusers','maxftpusers','maxdbs','name','email'),
-			'clickimages'=>array('images/edit.gif','images/delete1.jpg'),
-			'clickfiles'=>array('?op=editpaneluser','?op=deletepaneluser'),
-			'insertfields'=>array('panelusername',array('password','password'),array('maxdomains','default'=>5),array('maxemails','default'=>20),array('quota','default'=>500),array('maxpanelusers','default'=>5),array('maxftpusers','default'=>5),array('maxdbs','default'=>10),'name','email'),
-			'insertfieldlabels'=>array('panelusername','Password','maxdomains','maxemails','Quota (Mb)','maxpanelusers','maxftpusers','Max Mysql Databases','Name','Email'),
-			'mandatoryinsertfields'=>array('panelusername'), # zorunlu insert alanlari
-			'editfields'=>array('maxdomains','maxemails','quota','maxpanelusers','maxftpusers','maxdbs','name','email'), # edit edildigi zaman görünecek alanlar..
-			'editlabels'=>array('maxdomains','maxemails','quota (MB)','maxpanelusers','maxftpusers','maxdbs','name','email'), # edit edildigi zaman görünecek alanlar..
-			'viewfields'=>array('id','panelusername','maxdomains','maxemails','quota','maxpanelusers','maxdbs','name','email'),
+			'listfields'=>['id','reseller','panelusername','maxdomains','maxemails','quota','maxpanelusers','maxftpusers','maxdbs','name','email'],
+			'clickimages'=>['images/edit.gif','images/delete1.jpg'],
+			'clickfiles'=>['?op=editpaneluser','?op=deletepaneluser'],
+			'insertfields'=>['panelusername',['password','password'],['maxdomains','default'=>5],['maxemails','default'=>20],['quota','default'=>500],['maxpanelusers','default'=>5],['maxftpusers','default'=>5],['maxdbs','default'=>10],'name','email'],
+			'insertfieldlabels'=>['panelusername','Password','maxdomains','maxemails','Quota (Mb)','maxpanelusers','maxftpusers','Max Mysql Databases','Name','Email'],
+			'mandatoryinsertfields'=>['panelusername'], # zorunlu insert alanlari
+			'editfields'=>['maxdomains','maxemails','quota','maxpanelusers','maxftpusers','maxdbs','name','email'], # edit edildigi zaman görünecek alanlar..
+			'editlabels'=>['maxdomains','maxemails','quota (MB)','maxpanelusers','maxftpusers','maxdbs','name','email'], # edit edildigi zaman görünecek alanlar..
+			'viewfields'=>['id','panelusername','maxdomains','maxemails','quota','maxpanelusers','maxdbs','name','email'],
 			'linkfield'=>'id',
-			'checkfields'=>array(
+			'checkfields'=>[
 				'comment'=>'varchar(100)'
-			),
-			'help'=>'description of this table... ehcp control panel users... '
+			],
+			'help'=>'description of this table... ehcp control panel users... ',
+		],
 
-		),
-
-		'customstable'=>array( # custom dns and http settings
+		'customstable'=>[ # custom dns and http settings
 			'tablename'=>'customsettings',
-			'listfields'=>array('id','domainname','name','comment','value','value2','webservertype'),
-			'linkimages'=>array('images/delete1.jpg'),
-			'linkfiles'=>array('?op=deletecustom'),
+			'listfields'=>['id','domainname','name','comment','value','value2','webservertype'],
+			'linkimages'=>['images/delete1.jpg'],
+			'linkfiles'=>['?op=deletecustom'],
 			'orderby'=>'id',
 			'linkfield'=>'id',
-			'checkfields'=>array(
+			'checkfields'=>[
 				'reseller'=>'varchar(30)',
 				'panelusername'=>'varchar(30)',
 				'domainname'=>'varchar(50)',
 				'webservertype'=>'varchar(30)',
-				'value2'=>'text'
-			)
-		),
-		'emailuserstable'=>array(
+				'value2'=>'text',
+			],
+		],
+
+		'emailuserstable'=>[
 			'tablename'=>'emailusers',  # going to be array as above..
-			'listfields'=>array('email','quota','domainname'),
-			'linkimages'=>array('images/delete1.jpg','images/edit.gif'),
-			'linkfiles'=>array('?op=userop&action=emailuserdelete','?op=editemailuser'),
+			'listfields'=>['email','quota','domainname'],
+			'linkimages'=>['images/delete1.jpg','images/edit.gif'],
+			'linkfiles'=>['?op=userop&action=emailuserdelete','?op=editemailuser'],
 			'linkfield'=>'id',
 			'ownerfield'=>'panelusername',
 			'resellerfield'=>'reseller',
@@ -498,202 +418,192 @@ CREATE TABLE `roles` (
 			'usernamefield'=>'email',
 			'passwordfield'=>'password',
 
-			'checkfields'=>array(
+			'checkfields'=>[
 				'reseller'=>'varchar(30)',
 				'panelusername'=>'varchar(30)',
 				'domainname'=>'varchar(50)',
 				'status'=>'varchar(10)',
 				'autoreplysubject'=>'varchar(100)',
-				'autoreplymessage'=>'text'
-			)
-		),
+				'autoreplymessage'=>'text',
+			],
+		],
 
-
-		'ftpuserstable'=>array(
+		'ftpuserstable'=>[
 			'tablename'=>'ftpaccounts',  # going to be array as above..
 			'ownerfield'=>'panelusername',
 			'resellerfield'=>'reseller',
-			'listfields'=>array('domainname','ftpusername','status','homedir','type'),
-			'checkfields'=>array(
+			'listfields'=>['domainname','ftpusername','status','homedir','type'],
+			'checkfields'=>[
 				'type'=>'varchar(10)',
 				'reseller'=>'varchar(30)',
 				'panelusername'=>'varchar(30)',
 				'domainname'=>'varchar(50)',
 				'homedir'=>'varchar(100)',
-				'datetime'=>'datetime'
+				'datetime'=>'datetime',
+			],
+		],
 
-			)
-
-		),
-
-
-		'operations_table'=>array(
+		'operations_table'=>[
 			'tablename'=>'operations',  # going to be array as above..
-			'listfields'=>array('id','user','ip','op','status','tarih','try','info','info2','info3','action'),
-			'checkfields'=>array(
+			'listfields'=>['id','user','ip','op','status','tarih','try','info','info2','info3','action'],
+			'checkfields'=>[
 				'info'=>'varchar(200)',
 				'info2'=>'varchar(200)',
 				'info3'=>'varchar(200)',
 				'user'=>'varchar(30)',
-				'ip'=>'varchar(30)'
-			)
-		),
+				'ip'=>'varchar(30)',
+			]
+		],
 
-		'backups_table'=>array(
+		'backups_table'=>[
 			'tablename'=>'backups',
-			'listfields'=>array('id','domainname','backupname','filename','date','size','status'),
-			'linkimages'=>array('images/delete1.gif'),
-			'linkfiles'=>array('?op=backups&op2=delete&filename='),
+			'listfields'=>['id','domainname','backupname','filename','date','size','status'],
+			'linkimages'=>['images/delete1.gif'],
+			'linkfiles'=>['?op=backups&op2=delete&filename='],
 			'linkfield'=>'filename',
-			'checkfields'=>array(
+			'checkfields'=>[
 				'status'=>'varchar(100)',
 				'domainname'=>'varchar(100)',
-				'filename'=>'varchar(200)'
-			)
-		),
+				'filename'=>'varchar(200)',
+			],
+		],
 
-		'mysqldbstable'=>array(
+		'mysqldbstable'=>[
 			'tablename'=>'mysqldb',
-			'listfields'=>array('domainname','dbname','host'),
-			'linkimages'=>array('images/delete1.jpg'),
-			'linkfiles'=>array('?op=domainop&action=deletedb'),
+			'listfields'=>['domainname','dbname','host'],
+			'linkimages'=>['images/delete1.jpg'],
+			'linkfiles'=>['?op=domainop&action=deletedb'],
 			'linkfield'=>'id',
-			'checkfields'=>array(
+			'checkfields'=>[
 				'host'=>'varchar(30)',
 				'reseller'=>'varchar(30)',
 				'panelusername'=>'varchar(30)',
-				'domainname'=>'varchar(50)'
-			)
-		),
-		'mysqldbuserstable'=>array(
+				'domainname'=>'varchar(50)',
+			],
+		],
+
+		'mysqldbuserstable'=>[
 			'tablename'=>'mysqlusers',
-			'listfields'=>array('domainname','dbname','dbusername','host'),
-			'linkimages'=>array('images/edit.gif'),
-			'linkfiles'=>array('?op=dbedituser'),
+			'listfields'=>['domainname','dbname','dbusername','host'],
+			'linkimages'=>['images/edit.gif'],
+			'linkfiles'=>['?op=dbedituser'],
 			'linkfield'=>'id',
-			'checkfields'=>array(
+			'checkfields'=>[
 				'host'=>'varchar(30)',
 				'reseller'=>'varchar(30)',
 				'panelusername'=>'varchar(30)',
-				'domainname'=>'varchar(50)'
-			)
+				'domainname'=>'varchar(50)',
+			],
+		],
 
-		),
-		'serverstable'=>array(
+		'serverstable'=>[
 			'tablename'=>'servers',
-			'listfields'=>array('servertype','ip','accessip','mandatory','location'),
-			'linkimages'=>array('images/edit.gif'),
-			'linkfiles'=>array('?op=editserver'),
+			'listfields'=>['servertype','ip','accessip','mandatory','location'],
+			'linkimages'=>['images/edit.gif'],
+			'linkfiles'=>['?op=editserver'],
 			'linkfield'=>'id',
-			'checkfields'=>array('accessip'=>'varchar(30)')
-		),
+			'checkfields'=>['accessip'=>'varchar(30)'],
+		],
 
-		'passwddirectoriestable'=>array(
+		'passwddirectoriestable'=>[
 			'tablename'=>'directories',
-			'listfields'=>array('domainname','username','directory','expire'),
-			'linkimages'=>array('images/delete1.jpg'),
-			'linkfiles'=>array('?op=deletedirectory'),
+			'listfields'=>['domainname','username','directory','expire'],
+			'linkimages'=>['images/delete1.jpg'],
+			'linkfiles'=>['?op=deletedirectory'],
 			'linkfield'=>'id',
-			'checkfields'=>array(
+			'checkfields'=>[
 				'reseller'=>'varchar(30)',
 				'panelusername'=>'varchar(30)',
-				'domainname'=>'varchar(50)'
-			)
-		),
-		'emailforwardingstable'=>array(
+				'domainname'=>'varchar(50)',
+			],
+		],
+		'emailforwardingstable'=>[
 			'tablename'=>'forwardings',
-			'listfields'=>array('panelusername','domainname','source','destination'),
-			'linkimages'=>array('images/delete1.jpg'),
-			'linkfiles'=>array('?op=delemailforwarding'),
+			'listfields'=>['panelusername','domainname','source','destination'],
+			'linkimages'=>['images/delete1.jpg'],
+			'linkfiles'=>['?op=delemailforwarding'],
 			'linkfield'=>'id',
-			'checkfields'=>array(
+			'checkfields'=>[
 				'reseller'=>'varchar(30)',
 				'panelusername'=>'varchar(30)',
-				'domainname'=>'varchar(50)'
-			)
-		),
-		'transporttable'=>array( # for email autoreply
+				'domainname'=>'varchar(50)',
+			],
+		],
+		'transporttable'=>[ # for email autoreply
 			'tablename'=>'transport',
 			'createtable'=>
-"
-CREATE TABLE transport (
-	domainname varchar(128) NOT NULL default '',
-	transport varchar(128) NOT NULL default '',
-	UNIQUE KEY domainname (domainname)
-) TYPE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_turkish_ci
-"
-		),
-		'settingstable'=>array(
+				"CREATE TABLE transport (
+					domainname varchar(128) NOT NULL default '',
+					transport varchar(128) NOT NULL default '',
+					UNIQUE KEY domainname (domainname)
+				) TYPE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_turkish_ci",
+		],
+		'settingstable'=>[
 			'tablename'=>'misc',
-			'checkfields'=>array(
+			'checkfields'=>[
 				'name'=>'varchar(40)',
-				'panelusername'=>'varchar(30)'
-			)
-		),
-		'scriptstable'=>array(
+				'panelusername'=>'varchar(30)',
+			],
+		],
+		'scriptstable'=>[
 			'tablename'=>'scripts',
-			'checkfields'=>array(
+			'checkfields'=>[
 				'homepage'=>'varchar(50)',
 				'description'=>'text',
 				'customfileownerships'=>'text'
-			)
-		),
+			],
+		],
 		'daemonopstable'=>'operations',
-		'hashtable'=>array(
+		'hashtable'=>[
 			'tablename'=>'hash',
-			'createtable'=>"
-CREATE TABLE IF NOT EXISTS `hash` (
-  `email` varchar(100) COLLATE utf8_turkish_ci NOT NULL DEFAULT 'NULL',
-  `hash` varchar(100) COLLATE utf8_turkish_ci DEFAULT NULL,
-  KEY `email_index` (`email`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_turkish_ci COMMENT='to store password remind hash'
-			"
-
-		),
-		'logtable'=>array(
+			'createtable'=>
+				"CREATE TABLE IF NOT EXISTS `hash` (
+				  `email` varchar(100) COLLATE utf8_turkish_ci NOT NULL DEFAULT 'NULL',
+				  `hash` varchar(100) COLLATE utf8_turkish_ci DEFAULT NULL,
+				  KEY `email_index` (`email`)
+				) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_turkish_ci COMMENT='to store password remind hash'",
+		],
+		'logtable'=>[
 			'tablename'=>'log',
-			'listfields'=>array('tarih','panelusername','notified','ip','log'),
-			'checkfields'=>array(
+			'listfields'=>['tarih','panelusername','notified','ip','log'],
+			'checkfields'=>[
 				'panelusername'=>'varchar(50)',
-				'notified'=>'varchar(5)'
-			),
-		),
+				'notified'=>'varchar(5)',
+			],
+		],
 
-		'hostingplans'=>array(
+		'hostingplans'=>[
 			'tablename'=>'hostingplans',
-			'listfields'=>array('shortname','maxpanelusers','maxdomains','maxemails','maxftpusers','maxmysqldbs'),
-			'createtable'=>"
-CREATE TABLE IF NOT EXISTS `hostingplans` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `shortname` varchar(30) COLLATE utf8_turkish_ci DEFAULT NULL,
-  `longname` varchar(100) COLLATE utf8_turkish_ci DEFAULT NULL,
-  `details` text COLLATE utf8_turkish_ci,
-  `maxpanelusers` int(11) DEFAULT NULL,
-  `maxdomains` int(11) DEFAULT NULL,
-  `maxsubdomains` int(11) DEFAULT NULL,
-  `maxemails` int(11) DEFAULT NULL,
-  `maxftpusers` int(11) DEFAULT NULL,
-  `maxmysqldbs` int(11) DEFAULT NULL,
-  `maxmysqlusers` int(11) DEFAULT NULL,
-  `diskquota` int(11) DEFAULT NULL,
-  `bwquota` int(11) DEFAULT NULL COMMENT 'MB, per month, has no affect yet',
-  `maxdirectories` int(11) DEFAULT NULL COMMENT 'password protected dir',
-  `pricepermonth` int(11) DEFAULT NULL,
-  `priceperyear` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `shortname` (`shortname`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_turkish_ci AUTO_INCREMENT=1 ;			
-			"
-		)
-
-	); # end config
+			'listfields'=>['shortname','maxpanelusers','maxdomains','maxemails','maxftpusers','maxmysqldbs'],
+			'createtable'=>
+				"CREATE TABLE IF NOT EXISTS `hostingplans` (
+				  `id` int(11) NOT NULL AUTO_INCREMENT,
+				  `shortname` varchar(30) COLLATE utf8_turkish_ci DEFAULT NULL,
+				  `longname` varchar(100) COLLATE utf8_turkish_ci DEFAULT NULL,
+				  `details` text COLLATE utf8_turkish_ci,
+				  `maxpanelusers` int(11) DEFAULT NULL,
+				  `maxdomains` int(11) DEFAULT NULL,
+				  `maxsubdomains` int(11) DEFAULT NULL,
+				  `maxemails` int(11) DEFAULT NULL,
+				  `maxftpusers` int(11) DEFAULT NULL,
+				  `maxmysqldbs` int(11) DEFAULT NULL,
+				  `maxmysqlusers` int(11) DEFAULT NULL,
+				  `diskquota` int(11) DEFAULT NULL,
+				  `bwquota` int(11) DEFAULT NULL COMMENT 'MB, per month, has no affect yet',
+				  `maxdirectories` int(11) DEFAULT NULL COMMENT 'password protected dir',
+				  `pricepermonth` int(11) DEFAULT NULL,
+				  `priceperyear` int(11) DEFAULT NULL,
+				  PRIMARY KEY (`id`),
+				  KEY `shortname` (`shortname`)
+				) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_turkish_ci AUTO_INCREMENT=1",
+		],
+	]; # end config
 
 /*
 for almost every record:
-panelusername: who is the owner of that, who setupd that. cannot be empty.
+panelusername: who is the owner of that, who setuped that. cannot be empty.
 resellername: who is the reseller of that panelusername. cannot be empty.
 domainname: to which domain is that related. empty if not related to domainname
-
 */
 
 function set_ehcp_dir($dirname){
@@ -703,7 +613,7 @@ function set_ehcp_dir($dirname){
 	$this->conf['ehcpdir']=$dirname;
 }
 
-function Application() {
+public function __construct() {
 	global $skipUpdateWebstats,$debuglevel;
 
 	include('config.php');
@@ -721,7 +631,7 @@ function Application() {
 	$this->defaultlanguage=$defaultlanguage;
 	$this->isDemo=$isdemo;
 	if(!(isset($this->isDemo))) $this->isDemo=False;
-	$this->statusActivePassive=array("active"=>"active","passive"=>"passive");
+	$this->statusActivePassive=["active"=>"active","passive"=>"passive"];
 
 	if(isset($this->debuglevel)){
 		#....
@@ -729,10 +639,14 @@ function Application() {
 	$debuglevel=$this->debuglevel; # for outer functions using debuglevel
 
 
-	$this->clientip = getenv ("REMOTE_ADDR");
+	if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {  # Suggestion by admin@e-speak24.pl
+		$ipproxy = $_SERVER['HTTP_X_FORWARDED_FOR']; 
+	} else { 
+		$ipproxy=$_SERVER["REMOTE_ADDR"]; 
+	}
+
+    $this->clientip = $ipproxy;
 	$this->referer = getenv("HTTP_REFERER");
-
-
 
 	$this->wwwowner=$this->wwwuser.':'.$this->wwwgroup;
 	$this->ftpowner=$this->ftpuser.':'.$this->ftpgroup;
@@ -742,6 +656,7 @@ function Application() {
 
 
 function run() {
+	#echo "\n\nPid:".$this->get_pid("progname")."\n\n";
 
 	$this->debugecho("file:".__FILE__.", Line:".__LINE__.", Function:".__FUNCTION__,4,false);
 	#$this->serverPlan=new serverPlan();
@@ -757,7 +672,23 @@ function run() {
 }
 
 
+function check_php_version(){
+	# same cod exists in install_lib also. sync both code
+	# used in php, fpm etc installations. 
 
+	if(version_compare(phpversion(), '7.0.0', '<')) {  # make compatible install in many versions of Ubuntu/Debian, Ubuntu 16.04 comes with php7, while olders are different
+		$this->php_version=5;
+		$this->php_version_tag="5";
+		$this->php_etc_dir="/etc/php5";
+		$this->php_fpm="php7.0-fpm";
+	} else {
+		$this->php_version=7;
+		$this->php_version_tag="";
+		$this->php_etc_dir="/etc/php/7.0";
+		$this->php_fpm="php5-fpm";
+	}
+
+}
 
 function initialize(){
 	# burda herhangi class initialization yapilacak.. basta yapilacak isler..
@@ -766,6 +697,7 @@ function initialize(){
 	$this->myversion=$ehcpversion;
 
 	$this->connectTodb();
+	$this->check_php_version();
 	$this->debugecho("file:".__FILE__.", Line:".__LINE__.", Function:".__FUNCTION__,4,false);
 	$this->syncConfigs();
 
@@ -793,12 +725,18 @@ function initialize(){
 
 	$this->loadServerPlan();
 	$this->url='http://'.$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'];
-	if($this->isloggedin) $this->output.=$this->check_failed_logins();
-	if($commandline) $this->echoln("Finished initialize");
+	$this->output.=$this->check_failed_logins();
+	if($commandline) {
+		$this->restart_webserver(); # Starting with Ubuntu 16.04, apache config needs to be reloaded after server restart.. strange situation for U16.04, apache config is not loaded after server restart.. !
+		$this->restart_ftp_daemon();
+		$this->echoln("Finished initialize");
+	}
 	#$this->check_mysql_connection();
 }
 
 function check_webserver($retry=0){
+	# checks webserver in regular intervals, try to restart it with different configs.. 
+
 	print __FUNCTION__.": checking webserver: \n";
 	$f=file_get_contents("http://localhost");
 	if(strlen($f)>0) {
@@ -809,9 +747,12 @@ function check_webserver($retry=0){
 			print __FUNCTION__.": webserver seems DOWN, checking again.. \n";
 			$this->check_webserver($retry+1);			
 		}
-
-		print __FUNCTION__.": webserver seems DOWN, fixing apache configuration by some operations such as disabling custom http & ssl.. \n";
-		$this->fixApacheConfigNonSsl2();
+		if($this->miscconfig['switchtoapacheonerror']=='') {
+			print __FUNCTION__.": webserver seems DOWN, fixing apache configuration by some operations such as disabling custom http & ssl.. \n";
+			$this->fixApacheConfigNonSsl2();
+		} else {
+			print __FUNCTION__.": webserver seems DOWN, however, switchtoapacheonerror disabled, so, doing nothing.. \n";
+		}
 	}
 	return True;
 }
@@ -871,15 +812,15 @@ function check_module_tables(){
 
 
 function assign_role(){
-	$alanlar=array('rolename','panelusername');
-	foreach($alanlar as $al) global $$al;
+	$alanlar=['rolename','panelusername'];
+	foreach($alanlar as $al) global ${$al};
 	$degerler=$this->getVariable($alanlar);
 
 	if($panelusername and $rolename) {
 		$this->executequery("insert into roles (rolename,panelusername) values ('$rolename','$panelusername')");
 		$this->output.="Added new role";
 	} else {
-		$inputparams=array('rolename','panelusername');
+		$inputparams=['rolename','panelusername'];
 		$this->output.=inputform5($inputparams);
 	}
 }
@@ -889,15 +830,24 @@ function list_roles(){
 	$this->listTable('','roles');
 }
 
+function diognise(){
+	$this->requireAdmin();
+
+	$this->output.="To be coded.. will copy/show necessary files, for checking server's configs.. for letting admin check webbased";
+
+}
+
 function runOp($op){ # these are like url to function mappers...  maps op variable to some functions in ehcp; This also can be seen as a controller in MVC model.
 	global $id,$domainname,$op2,$_insert;
-	$this->getVariable(array('id','domainname','op2','_insert'));
+	$this->getVariable(['id','domainname','op2','_insert']);
 	$op=strtolower($op);
-	$otheroperations=array('advancedsettings');
+	$otheroperations=['advancedsettings'];
 
 
 	switch ($op) {
 
+		case 'diognise'					: return $this->diognise();break;
+		
 		case 'list_roles'				: return $this->list_roles();break;
 		case 'assign_role'				: return $this->assign_role();break;
 		case 'failedlogins'				: return $this->failedlogins();break;
@@ -937,7 +887,7 @@ function runOp($op){ # these are like url to function mappers...  maps op variab
 		case 'dofixapacheconfigsslonly'	: $this->requireAdmin(); $this->requireNoDemo(); return $this->addDaemonOp('fixApacheConfigSslOnly','','','','fixApacheConfigSslOnly');break;
 		case 'dofixapacheconfignonssl'	: $this->requireAdmin(); $this->requireNoDemo(); return $this->addDaemonOp('fixApacheConfigNonSsl','','','','fixApacheConfigNonSsl');break;
 		case 'dofixapacheconfignonssl2'	: $this->requireAdmin(); $this->requireNoDemo(); return $this->addDaemonOp('fixApacheConfigNonSsl2','','','','fixApacheConfigNonSsl2');break;
-		case 'fixapacheconfignonssl2'	: return $this->fixApacheConfigNonSsl2();break;
+		
 		case 'rebuild_webserver_configs': return $this->rebuild_webserver_configs();break;
 
 		case 'updatediskquota'			: return $this->updateDiskQuota();break;
@@ -945,7 +895,8 @@ function runOp($op){ # these are like url to function mappers...  maps op variab
 
 		#editing of dns/apache templates for domains, on ehcp db
 		case 'editdnstemplate'			: return $this->editDnsTemplate();break;
-		case 'editapachetemplate'		: return $this->editApacheTemplate();break;
+		case 'editwebservertemplate'		:
+		case 'edit_webserver_template'		: return $this->edit_webserver_template();break;
 		case 'editdomainaliases'		: return $this->editDomainAliases();break;
 
 		case 'changedomainserverip'		: return $this->changedomainserverip();break;
@@ -1000,33 +951,34 @@ function runOp($op){ # these are like url to function mappers...  maps op variab
 		case 'changemypass'				: return $this->changeMyPass();break;
 
 		# for mysql, stop and start is meaningless, because if mysql cannot run, then, panel also cannot be accessible or this functions do not work.
-		case 'dorestartmysql'			: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(array('op'=>'service','info'=>'mysql','info2'=>'restart')); break;
+		case 'dorestartmysql'			: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(['op'=>'service','info'=>'mysql','info2'=>'restart']); break;
 
-		case 'dostopapache2'			: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(array('op'=>'service','info'=>'apache2','info2'=>'stop')); break;
-		case 'dostartapache2'			: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(array('op'=>'service','info'=>'apache2','info2'=>'start')); break;
-		case 'dorestartapache2'			: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(array('op'=>'service','info'=>'apache2','info2'=>'restart')); break;
+		case 'dostopapache2'			: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(['op'=>'service','info'=>'apache2','info2'=>'stop']); break;
+		case 'dostartapache2'			: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(['op'=>'service','info'=>'apache2','info2'=>'start']); break;
+		case 'dorestartapache2'			: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(['op'=>'service','info'=>'apache2','info2'=>'restart']); break;
 
-		case 'dostopvsftpd'				: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(array('op'=>'service','info'=>'vsftpd','info2'=>'stop')); break;
-		case 'dostartvsftpd'			: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(array('op'=>'service','info'=>'vsftpd','info2'=>'start')); break;
-		case 'dorestartvsftpd'			: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(array('op'=>'service','info'=>'vsftpd','info2'=>'restart')); break;
+		case 'dostopvsftpd'				: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(['op'=>'service','info'=>'vsftpd','info2'=>'stop']); break;
+		case 'dostartvsftpd'			: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(['op'=>'service','info'=>'vsftpd','info2'=>'start']); break;
+		case 'dorestartvsftpd'			: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(['op'=>'service','info'=>'vsftpd','info2'=>'restart']); break;
 
-		case 'dostopbind'				: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(array('op'=>'service','info'=>'bind9','info2'=>'stop')); break;
-		case 'dostartbind'				: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(array('op'=>'service','info'=>'bind9','info2'=>'start')); break;
-		case 'dorestartbind'			: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(array('op'=>'service','info'=>'bind9','info2'=>'restart')); break;
+		case 'dostopbind'				: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(['op'=>'service','info'=>'bind9','info2'=>'stop']); break;
+		case 'dostartbind'				: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(['op'=>'service','info'=>'bind9','info2'=>'start']); break;
+		case 'dorestartbind'			: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(['op'=>'service','info'=>'bind9','info2'=>'restart']); break;
 
-		case 'dostoppostfix'			: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(array('op'=>'service','info'=>'postfix','info2'=>'stop')); break;
-		case 'dostartpostfix'			: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(array('op'=>'service','info'=>'postfix','info2'=>'start')); break;
-		case 'dorestartpostfix'			: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(array('op'=>'service','info'=>'postfix','info2'=>'restart')); break;
+		case 'dostoppostfix'			: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(['op'=>'service','info'=>'postfix','info2'=>'stop']); break;
+		case 'dostartpostfix'			: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(['op'=>'service','info'=>'postfix','info2'=>'start']); break;
+		case 'dorestartpostfix'			: $this->requireAdmin(); $this->requireNoDemo(); return $this->add_daemon_op(['op'=>'service','info'=>'postfix','info2'=>'restart']); break;
 
 
-		case 'donewsyncdomains'			: $this->requireAdmin(); return $this->add_daemon_op(array('op'=>'new_sync_domains')); break;
-		case 'donewsyncdns'				: $this->requireAdmin(); return $this->add_daemon_op(array('op'=>'new_sync_dns')); break;
+		case 'donewsyncdomains'			: $this->requireAdmin(); return $this->add_daemon_op(['op'=>'new_sync_domains']); break;
+		case 'donewsyncdns'				: $this->requireAdmin(); return $this->add_daemon_op(['op'=>'new_sync_dns']); break;
 
 		case 'dosyncdomains'			: return $this->addDaemonOp('syncdomains','','','','sync domains');break;
 		case 'dosyncdns'				: return $this->addDaemonOp('syncdns','','','','sync dns');break;
 		case 'dosyncftp' 				: return $this->addDaemonOp('syncftp','','','','sync ftp for nonstandard homes');break;
 		case 'dosyncapacheauth'			: return $this->addDaemonOp('syncapacheauth','','','','sync apache auth');break;
 		case 'options'		  			: return $this->options();
+		case 'dump_config'	  			: return $this->dump_config();
 
 
 		case 'backups'					: return $this->backups();break;
@@ -1045,6 +997,7 @@ function runOp($op){ # these are like url to function mappers...  maps op variab
 		case 'fixapacheconfigssl'		: return $this->fixApacheConfigSsl();break;
 		case 'fixapacheconfigsslonly'	: return $this->fixApacheConfigSslOnly();break;
 		case 'fixapacheconfignonssl'	: return $this->fixApacheConfigNonSsl();break;
+		case 'fixapacheconfignonssl2'	: return $this->fixApacheConfigNonSsl2();break;
 
 
 		#case 'syncallnew'	: return $this->syncallnew();break;
@@ -1156,8 +1109,8 @@ function runOp($op){ # these are like url to function mappers...  maps op variab
 }# func runop
 
 function activate(){
-	$alanlar=array('panelusername','code','newpass');
-	foreach($alanlar as $al) global $$al;
+	$alanlar=['panelusername','code','newpass'];
+	foreach($alanlar as $al) global ${$al};
 	$degerler=$this->getVariable($alanlar);
 
 	if($panelusername) {
@@ -1174,7 +1127,7 @@ function activate(){
 		$r=$this->executequery("insert into  hash (email,hash)values('$email','$hash')");
 		$msg="Your activation code: $hash";
 		mail($email,"ehcp activation code",$msg,"From: ".$this->conf['adminemail']);
-		$this->output.="Your activation is sent to your email. check it. ".inputform5(array('panelusername','code','newpass'));
+		$this->output.="Your activation is sent to your email. check it. ".inputform5(['panelusername','code','newpass']);
 	} elseif($panelusername and $code) {
 		$filt3="email='$email' and hash='$hash'";
 		$sayi=$this->recordcount("hash",$filt3);
@@ -1196,8 +1149,8 @@ function pagerewrite(){
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
 	$this->output.="This function is being tested with nginx only <br>";
 
-	$alanlar=array('frompage','topage','redirecttype');
-	foreach($alanlar as $al) global $$al;
+	$alanlar=['frompage','topage','redirecttype'];
+	foreach($alanlar as $al) global ${$al};
 	$degerler=$this->getVariable($alanlar);
 
 	$table=$this->conf['customstable'];
@@ -1219,7 +1172,7 @@ function pagerewrite(){
 			$this->addCustomHttpDirect($domainname,$val,"pagerewrite");
 
 		}else{
-			$alanlar=array(array('frompage','righttext'=>''),array('topage'),array('redirecttype','radio','secenekler'=>array('exactmatch'=>'Exact Match Ex: frompage: /basvuru topage: /en/basvuru.html','partialmatch'=>'Partial Match, nginx style, <a href=\'http://wiki.nginx.org/NginxHttpRewriteModule#rewrite\'>examples</a>')));
+			$alanlar=[['frompage','righttext'=>''],['topage'],['redirecttype','radio','secenekler'=>['exactmatch'=>'Exact Match Ex: frompage: /basvuru topage: /en/basvuru.html','partialmatch'=>'Partial Match, nginx style, <a href=\'http://wiki.nginx.org/NginxHttpRewriteModule#rewrite\'>examples</a>']]];
 			$this->output.=inputform5($alanlar);
 		}
 		$this->output.="nginx, For partial, examples: <br>
@@ -1285,8 +1238,8 @@ function generateSslFiles(){
 	// If the certificate file does not exist or the last modification date of the certificate is greater than 365 days
 	// Generate a new self signed one that lasts another 365 days
 	if(!file_exists($certFile) || !file_exists($this->sslkeyfile) || ($nowDate - filemtime($certFile) >= (86400 * 365))) {
-		$findarray=array('webserverip');
-		$replacearray=array($this->getWebServer());
+		$findarray=['webserverip'];
+		$replacearray=[$this->getWebServer()];
 		$this->replaceArrayPutInFile("$this->ehcpdir/LocalServer.cnf","$this->ehcpdir/LocalServerIP.cnf",$findarray,$replacearray);
 		$this->generate_server_key_file();
 		passthru2("openssl req -new -key $this->sslkeyfile -out $this->ehcpdir/server.csr -config $this->ehcpdir/LocalServerIP.cnf"); # prepare certificate signing request (csr)
@@ -1311,15 +1264,14 @@ function information($id,$link=false){
 }
 
 function gui_multiserver_add_ftp_user_direct(){
-	# test function for new feature.. to be coded later. 
-	$params=array(
-		'ftpserver'=>'testip..',
+	$params=[
+		'ftpserver'=>'96.31.91.67',
 		'panelusername'=>'admin22',
-		'ftpusername'=>'dene',
+		'ftpusername'=>'bvdene',
 		'ftppassword'=>'1234',
-		'homedir'=>'/var/www/dene',
-		'domainname'=>'dene.com'
-		);
+		'homedir'=>'/var/www/bvdene',
+		'domainname'=>'bvdene.com'
+		];
 	#$this->output.="Adding ftp for remote:".print_r2($params);
 	$this->multiserver_add_ftp_user_direct($params);
 }
@@ -1344,7 +1296,7 @@ function checkFields($tb,$fields1,$fields2){
 				if($fsearch['Null']=='NO' and $fsearch['Default']=='') $bulunantip.=" default NOT NULL";
 
 				if(strstr($type,' default ')===false) { # if requested field has not default, remove it again, to match existing. that is, ignore differences in "default null"
-					$bulunantip=str_replace(array(" default NULL"," default NOT NULL"),array('',''),$bulunantip);
+					$bulunantip=str_replace([" default NULL"," default NOT NULL"],['',''],$bulunantip);
 				}
 
 				if($bulunantip<>$type) {
@@ -1388,9 +1340,9 @@ function checkTableExists($tb){
 }
 
 function some_table_fixes(){
-	$qq=array(
+	$qq=[
 		"update scripts set customfileownerships='www-data:www-data#wp-content\nwww-data:www-data#wp-admin' where scriptname like '%wordpress%'"
-	);
+	];
 
 	foreach($qq as $q) $this->executeQuery($q);
 }
@@ -1509,31 +1461,44 @@ function check_program_service($progname,$start_opname,$stop_opname,$restart_opn
 	$this->output.="</td><td> (<a href='?op=$start_opname'>Start</a> | <a href='?op=$stop_opname'>Stop</a> | <a href='?op=$restart_opname'>Restart</a>)  Attention, by stopping your services, you may lose your conn. to panel.</td></tr>";
 }
 
+function get_pid($cmd){
+	$pid=$this->executeProg3("ps ax | grep '$cmd' | egrep -v 'grep|sudo ' | head -1 | awk '{ print \$1 }'");
+	return $pid;
+}
+
 function serverStatus(){
-	$this->requireAdmin();
-	#-------------- deconectat edit ---------------------------------------------------------
-	#  ehcpdeveloper note: in fact, these html should be abstracted from source. left as of now.
 
-	$this->output.="<div class='footer'>(It is normal that only one of apache2,nginx.. etc. webservers are running)<br><table> ";
-	$this->check_program_service('apache2','dostartapache2','dostopapache2','dorestartapache2');
-	$this->check_program_service('nginx','dostartnginx','dostopnginx','dorestartnginx');
-	$this->check_program_service('mysqld','dostartmysqld','dostopmysqld','dorestartmysqld');
-	$this->check_program_service('vsftpd','dostartvsftpd','dostopvsftpd','dorestartvsftpd');
-	$this->check_program_service('bind','dostartbind','dostopbind','dorestartbind');
-	$this->check_program_service('postfix','dostartpostfix','dostoppostfix','dorestartpostfix');
-	$this->output.="</table></div> ";
+	if($this->isadmin()) {
+		#-------------- deconectat edit ---------------------------------------------------------
+		#  ehcpdeveloper note: in fact, these html should be abstracted from source. left as of now.
 
-	$systemStatus=$this->executeProg3($this->ehcpdir."/misc/serverstatus.sh"); #moved the bash script in a separate file; this way it will be easyer to edit.
+		$this->output.="<div class='footer'>(It is normal that only one of apache2,nginx.. etc. webservers are running)<br><table> ";
+		$this->check_program_service('apache2','dostartapache2','dostopapache2','dorestartapache2');
+		$this->check_program_service('nginx','dostartnginx','dostopnginx','dorestartnginx');
+		$this->check_program_service('mysqld','dostartmysqld','dostopmysqld','dorestartmysqld');
+		$this->check_program_service('vsftpd','dostartvsftpd','dostopvsftpd','dorestartvsftpd');
+		$this->check_program_service('bind','dostartbind','dostopbind','dorestartbind');
+		$this->check_program_service('postfix','dostartpostfix','dostoppostfix','dorestartpostfix');
+		$this->output.="</table></div> ";
 
-	$this->output.="<div class=\"footer\"><pre>".$systemStatus."</pre></div>";
-	#-------------- end deconectat edit -----------------------------------------------------
+		$systemStatus=$this->executeProg3($this->ehcpdir."/misc/serverstatus.sh"); #moved the bash script in a separate file; this way it will be easyer to edit.
 
+		$this->output.="<div class=\"footer\"><pre>".$systemStatus."</pre></div>";
+		#-------------- end deconectat edit -----------------------------------------------------
 
-	$topoutput=$this->executeProg3("top -b -n 1 | head -40");
-	$this->output.="<hr><div align=left>Top output: <br> <pre>$topoutput</pre></div>";
+		$topoutput=$this->executeProg3("top -b -n 1 | head -40");
+		$this->output.="<hr><div align=left>Top output: <br> <pre>$topoutput</pre></div>";
 
-	$topoutput=$this->executeProg3("tail -200 /var/log/syslog");
-	$this->output.="<hr><div align=left>Syslog (to see this, you must chmod a+r /var/log/syslog on server console, <a target=_blank href='?op=adjust_system'>adjust system for this</a>): <br> <pre>$topoutput</pre></div>";
+		$topoutput=$this->executeProg3("tail -200 /var/log/syslog");
+		$this->output.="<hr><div align=left>Syslog (to see this, you must chmod a+r /var/log/syslog on server console, <a target=_blank href='?op=adjust_system'>adjust system for this</a>): <br> <pre>$topoutput</pre></div>";
+	}
+
+	$this->output.="--------------<br>";
+
+	if($this->isadmin() or ($this->activeuser=="ehcp")){
+		$this->output.="<pre>".$this->executeProg3("df -h")."</pre>";
+		$this->output.="<pre>".$this->executeProg3("cat /proc/cpuinfo")."</pre>";
+	}
 
 	return True;
 }
@@ -1542,25 +1507,26 @@ function adjust_system(){
 	if($this->commandline) {
 		passthru2("chmod a+r /var/log/syslog");
 	} else {
-		$this->add_daemon_op(array('op'=>__FUNCTION__));
+		$this->add_daemon_op(['op'=>__FUNCTION__]);
 	}
 	return True;
 }
 
-function editApacheTemplate(){
+function edit_webserver_template(){
 	#$this->output.=print_r2($this->miscconfig);
 
 	$templatefield=$this->miscconfig['webservertype'].'template';
-	global $_insert,$apachetemplate,$$templatefield;
-	$this->getVariable(array('_insert','apachetemplate',$templatefield));
-	if($this->miscconfig['disableeditapachetemplate']<>'') $this->requireAdmin();
+	global $_insert,$webserver_template,${$templatefield};
+	$this->getVariable(['_insert','webserver_template',$templatefield]);
+	if($this->miscconfig['disableeditwebservertemplate']<>'') $this->requireAdmin();
 
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
 	$domaininfo=$this->domaininfo=$this->getDomainInfo($this->selecteddomain);
-	$this->output.="Careful, this a dangerous thing, you should know about webserver (".$this->miscconfig['webservertype'].", currently active) configuration syntax!<br>if syntax is broken, a series of fallback operations will be done to make your panel reachable, such as rebuilding config using default apache configuration<br>";
+	#$this->output.=str_replace("{webserver}", $this->miscconfig['webservertype'], $this->tr('webserver_warning'));
+	$this->output.=$this->tr('webserver_warning',['{webserver}'],[$this->miscconfig['webservertype']]);
 
-	if($domaininfo['webserverips']=='' or $domaininfo['webserverips']=='localhost')	$templateinfile=file_get_contents("apachetemplate"); # template different, if domain is served in another IP
-	else $templateinfile=file_get_contents("apachetemplate_ipbased");
+	if($domaininfo['webserverips']=='' or $domaininfo['webserverips']=='localhost')	$templateinfile=file_get_contents("webserver_template"); # template different, if domain is served in another IP
+	else $templateinfile=file_get_contents("webserver_template_ipbased");
 
 	$success=True;
 
@@ -1569,23 +1535,23 @@ function editApacheTemplate(){
 		$template=$domaininfo[$templatefield];
 		if($template=='') {$template=$templateinfile;}
 
-		$inputparams=array(
-			array($templatefield,'textarea','default'=>$template,'cols'=>80,'rows'=>30),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+		$inputparams=[
+			[$templatefield,'textarea','default'=>$template,'cols'=>80,'rows'=>30],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 		$this->output.=inputform5($inputparams);
 	}else {
-		#$this->output.="<hr>apachetemplate before mysqli_real_escape_string: <br><textarea cols=100 rows=30>$apachetemplate</textarea><br>";
-		#$apachetemplate=$this->escape($apachetemplate); buna gerek yok, zira bunu getVariable fonksiyonu zaten yapiyor.
-		#$this->output.="<hr>apachetemplate after mysqli_real_escape_string: <br><textarea cols=100 rows=30>$apachetemplate</textarea><br>";
-		#$this->output.="<hr>apachetemplate in file without mysqli_real_escape_string: <br><textarea cols=100 rows=30>$templateinfile</textarea><br>";
-		#$this->output.="<hr>apachetemplate in file with mysqli_real_escape_string: <br><textarea cols=100 rows=30>".$this->escape($templateinfile)."</textarea><br><hr>";
+		#$this->output.="<hr>webserver_template before mysqli_real_escape_string: <br><textarea cols=100 rows=30>$webserver_template</textarea><br>";
+		#$webserver_template=$this->escape($webserver_template); buna gerek yok, zira bunu getVariable fonksiyonu zaten yapiyor.
+		#$this->output.="<hr>webserver_template after mysqli_real_escape_string: <br><textarea cols=100 rows=30>$webserver_template</textarea><br>";
+		#$this->output.="<hr>webserver_template in file without mysqli_real_escape_string: <br><textarea cols=100 rows=30>$templateinfile</textarea><br>";
+		#$this->output.="<hr>webserver_template in file with mysqli_real_escape_string: <br><textarea cols=100 rows=30>".$this->escape($templateinfile)."</textarea><br><hr>";
 
-		if($$templatefield==$this->escape($templateinfile)) {
-			$$templatefield=''; # if same as in default template file, do not store it in db.
+		if(${$templatefield}==$this->escape($templateinfile)) {
+			${$templatefield}=''; # if same as in default template file, do not store it in db.
 			$this->output.="<br>Template same as in template file, so, not stored in db<br>";
 		}
-		$success=$success && $this->executeQuery("update ".$this->conf['domainstable']['tablename']." set $templatefield='".$$templatefield."' where domainname='$domainname'");
+		$success=$success && $this->executeQuery("update ".$this->conf['domainstable']['tablename']." set $templatefield='".${$templatefield}."' where domainname='$domainname'");
 		$success=$success && $this->addDaemonOp("syncdomains",'xx',$domainname); # sync only domain that is changed. not all domains...
 		$this->ok_err_text($success,"success","fail ");
 	}
@@ -1601,25 +1567,20 @@ function editApacheTemplate(){
 
 function editDomainAliases(){
 	global $_insert,$aliases;
-	$this->getVariable(array('_insert','aliases'));
+	$this->getVariable(['_insert','aliases']);
 
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
 	$domaininfo=$this->domaininfo=$this->getDomainInfo($this->selecteddomain);
-	$this->output.="Enter one alias per line one by one<br>
-	Example:<br>
-	www.domain2.com<br>
-	www.domain3.com<br>
-	other.domain2.com<br>
-	<hr>";
+	$this->output.=$this->tr('enter_alias');
 	$templateinfile=file_get_contents("dnszonetemplate");
 	$success=True;
 
 	if(!$_insert){
 		$template=$domaininfo['aliases'];
-		$inputparams=array(
-			array('aliases','textarea','default'=>$template,'cols'=>80,'rows'=>30),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+		$inputparams=[
+			['aliases','textarea','default'=>$template,'cols'=>80,'rows'=>30],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 		$this->output.=inputform5($inputparams);
 
 	}else {
@@ -1635,12 +1596,12 @@ function editDomainAliases(){
 
 function editDnsTemplate(){
 	global $_insert,$dnstemplate;
-	$this->getVariable(array('_insert','dnstemplate'));
+	$this->getVariable(['_insert','dnstemplate']);
 	if($this->miscconfig['disableeditdnstemplate']<>'') $this->requireAdmin();
 
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
 	$domaininfo=$this->domaininfo=$this->getDomainInfo($this->selecteddomain);
-	$this->output.="Careful, this a dangerous thing, you should now about dns configuration syntax!<br>";
+	$this->output.=$this->tr("dns_warning");
 	$templateinfile=file_get_contents("dnszonetemplate");
 	$success=True;
 
@@ -1648,10 +1609,10 @@ function editDnsTemplate(){
 		$template=$domaininfo['dnstemplate'];
 		if($template=='') {$template=$templateinfile;}
 
-		$inputparams=array(
-			array('dnstemplate','textarea','default'=>$template,'cols'=>80,'rows'=>30),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+		$inputparams=[
+			['dnstemplate','textarea','default'=>$template,'cols'=>80,'rows'=>30],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 
 		$this->output.=inputform5($inputparams);
 
@@ -1671,17 +1632,17 @@ function editDnsTemplate(){
 
 function changedomainserverip(){
 	global $serverip;
-	$this->getVariable(array('serverip'));
+	$this->getVariable(['serverip']);
 
 	$this->requireNoDemo();
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
 	$domaininfo=$this->domaininfo=$this->getDomainInfo($this->selecteddomain);
 
 	if(!$serverip){
-		$inputparams=array(
+		$inputparams=[
 			'serverip',
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+			['op','hidden','default'=>__FUNCTION__]
+		];
 
 		$this->output.=inputform5($inputparams);
 	} else {
@@ -1694,7 +1655,7 @@ function changedomainserverip(){
 
 function addRedirect(){
 	global $todomain;
-	$this->getVariable(array('todomain'));
+	$this->getVariable(['todomain']);
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
 	$success=True;
 
@@ -1734,7 +1695,7 @@ function updateWebstats(){
 		passthru2("mkdir -p ".$dom['homedir']."/httpdocs/webstats/");
 		$str.="webalizer -Q -p -n www.".$dom['domainname']." -o ".$dom['homedir']."/httpdocs/webstats ".$dom['homedir']."/logs/access_log -R 100 TopReferrers -r ".$dom['domainname']." HideReferrer \n";
 	}
-	echo $str;
+	#echo $str;
 
 	writeoutput2("/etc/ehcp/webstats.sh",$str,"w");
 	passthru2("chmod a+x /etc/ehcp/webstats.sh");
@@ -1747,16 +1708,16 @@ function set_active_server_ip(){
 	$this->requireAdmin();
 
 	global $ip,$_insert;
-	$this->getVariable(array('ip','_insert'));
+	$this->getVariable(['ip','_insert']);
 
 	if($_insert){
 		if($ip<>'') $this->validate_ip_address($ip);
 		$this->setConfigValue('activewebserverip',$ip);
 		$this->output.='Default Webserver Ip changed in ehcp (not in system)';
 	} else {
-		$inputparams=array(
-			array('ip','righttext'=>'leave empty to make it default of your server')
-		);
+		$inputparams=[
+			['ip','righttext'=>'leave empty to make it default of your server']
+		];
 		$this->output.="This will change the ip used in this webserver:".inputform5($inputparams);
 	}
 
@@ -1767,20 +1728,20 @@ function addServer(){
 	$this->requireAdmin();
 
 	global $_insert,$id,$serveroption,$serverip,$accessip,$servertype,$password,$defaultmysqlhostname;
-	$this->getVariable(array('_insert','id','serveroption','servertype','serverip','accessip','password','defaultmysqlhostname'));
+	$this->getVariable(['_insert','id','serveroption','servertype','serverip','accessip','password','defaultmysqlhostname']);
 	$this->output.="<hr>This is not a cluster setup. These are Individual servers<hr>";
 	$res=True;
 
 	if($servertype==''){
-		$inputparams=array(
+		$inputparams=[
 			'serverip',
-			array('accessip','righttext'=>'leave empty if same as server ip'),
-			array('servertype','radio','secenekler'=>array('mysql'=>'Mysql Database Server','binddns'=>'Bind DNS server','apache2'=>'Apache Web Server','nginx'=>'nginx Web Server')),
-			array('serveroption','radio','lefttext'=>'Server Option:','secenekler'=>array('usedalways'=>'This Server is used always in this ehcp','optional'=>'This server is optional, may be choosen')),
-			array('isdefault','radio','lefttext'=>'if Optional: Is Server Default ?','secenekler'=>array('yes','no')),
-			array('password','password','lefttext'=>'mysql root pass if server is mysql'),
-			array('defaultmysqlhostname','lefttext'=>'if mysql server: Default mysql user hostname/ip','righttext'=>'This is host of mysql user, to connect from, <br>You should write hostname/ip of your webserver here.. Otherwise, webserver cannot connect to your mysql server..')
-		);
+			['accessip','righttext'=>'leave empty if same as server ip'],
+			['servertype','radio','secenekler'=>['mysql'=>'Mysql Database Server','binddns'=>'Bind DNS server','apache2'=>'Apache Web Server','nginx'=>'nginx Web Server']],
+			['serveroption','radio','lefttext'=>'Server Option:','secenekler'=>['usedalways'=>'This Server is used always in this ehcp','optional'=>'This server is optional, may be choosen']],
+			['isdefault','radio','lefttext'=>'if Optional: Is Server Default ?','secenekler'=>['yes','no']],
+			['password','password','lefttext'=>'mysql root pass if server is mysql'],
+			['defaultmysqlhostname','lefttext'=>'if mysql server: Default mysql user hostname/ip','righttext'=>'This is host of mysql user, to connect from, <br>You should write hostname/ip of your webserver here.. Otherwise, webserver cannot connect to your mysql server..']
+		];
 		$this->output.="Add Server:".inputform5($inputparams);
 
 	} else {
@@ -1789,7 +1750,7 @@ function addServer(){
 
 		$q="insert into servers (servertype,ip,accessip,mandatory,password,defaultmysqlhostname) values ('$servertype','$serverip','$accessip','".($serveroption=='usedalways'?'E':'H')."','$password','$defaultmysqlhostname')";  # E=Yes, H=No
 		$res=$this->executeQuery($q);
-		$this->ok_err_text($res,"Success adding server",'Failed adding server');
+		$this->ok_err_text($res,"_Success adding server",'_Failed adding server');
 	}
 	$this->showSimilarFunctions('server');
 
@@ -1802,19 +1763,19 @@ function advancedsettings(){
 	$this->requireNoDemo();
 
 	global $_insert;
-	$this->getVariable(array('_insert'));
+	$this->getVariable(['_insert']);
 
-	$optionlist=array(
-		array('morethanoneserver','checkbox','righttext'=>'(This is experimental)','checked'=>$this->miscconfig['morethanoneserver'],'default'=>'Yes'),
-		array('mysqlcharset','lefttext'=>'Default mysql charset for new databases','righttext'=>'Example: DEFAULT CHARACTER SET utf8 COLLATE utf8_turkish_ci','default'=>$this->miscconfig['mysqlcharset']),
-		array('server_id','lefttext'=>'The id of this server, assigned by you, may be empty','righttext'=>'Example: 1 or home, This will be used in future for auto dyndns service inside ehcp','default'=>$this->miscconfig['server_id']),
-		array('defaultdnsserverips','lefttext'=>'Default dns server ip\'s that will host new domains:','righttext'=>'Enter list of ip\'s of your dnsservers here, comma separated list (for this server, you may use localhost)','default'=>$this->miscconfig['defaultdnsserverips']),
-		array('defaultwebserverips','lefttext'=>'Default webserver ip\'s that will host new domains:','righttext'=>'Enter list of ip\'s of your webservers here, comma separated list (for this server, you may use localhost)','default'=>$this->miscconfig['defaultwebserverips']),
+	$optionlist=[
+		['morethanoneserver','checkbox','righttext'=>'(This is experimental)','checked'=>$this->miscconfig['morethanoneserver'],'default'=>'Yes'],
+		['mysqlcharset','lefttext'=>'Default mysql charset for new databases','righttext'=>'Example: DEFAULT CHARACTER SET utf8 COLLATE utf8_turkish_ci','default'=>$this->miscconfig['mysqlcharset']],
+		['server_id','lefttext'=>'The id of this server, assigned by you, may be empty','righttext'=>'Example: 1 or home, This will be used in future for auto dyndns service inside ehcp','default'=>$this->miscconfig['server_id']],
+		['defaultdnsserverips','lefttext'=>'Default dns server ip\'s that will host new domains:','righttext'=>'Enter list of ip\'s of your dnsservers here, comma separated list (for this server, you may use localhost)','default'=>$this->miscconfig['defaultdnsserverips']],
+		['defaultwebserverips','lefttext'=>'Default webserver ip\'s that will host new domains:','righttext'=>'Enter list of ip\'s of your webservers here, comma separated list (for this server, you may use localhost)','default'=>$this->miscconfig['defaultwebserverips']],
 		#array('defaultwebservertypes','lefttext'=>'Webserver type\'s that will run on those webservers above:','righttext'=>'Enter list of webserver type\'s of your webservers here, comma separated list (nginx or apache2, default is apache2 for all if left empty)','default'=>$this->miscconfig['defaultwebservertypes']),
-		array('defaultmailserverips','lefttext'=>'Default mailserver ip\'s that will host new domains:','righttext'=>'Enter list of ip\'s of your mailservers here, comma separated list (for this server, you may use localhost)','default'=>$this->miscconfig['defaultmailserverips']),
-		array('webservertype','radio','default'=>$this->miscconfig['webservertype'],'righttext'=>'webserver type of this server, default apache2, do not change this unless you know what you are doing','secenekler'=>array('apache2'=>'apache2','nginx'=>'nginx')),
-		array('webservermode','radio','default'=>$this->miscconfig['webservermode'],'righttext'=>'Set the SSL mode of the server.  The default is non-ssl for port 80 connections (http). SSL is a mixed mode where both port 80 (HTTP) and 443 (HTTPS) resolve.  SSLOnly is port 443 HTTPS only.  (, changing this may be dangerous, on some systems, may not work.)','secenekler'=>array('ssl'=>'ssl','sslonly'=>'sslonly','nonssl'=>'nonssl'))
-	);
+		['defaultmailserverips','lefttext'=>'Default mailserver ip\'s that will host new domains:','righttext'=>'Enter list of ip\'s of your mailservers here, comma separated list (for this server, you may use localhost)','default'=>$this->miscconfig['defaultmailserverips']],
+		['webservertype','radio','default'=>$this->miscconfig['webservertype'],'righttext'=>'webserver type of this server, default apache2, do not change this unless you know what you are doing','secenekler'=>['apache2'=>'apache2','nginx'=>'nginx']],
+		['webservermode','radio','default'=>$this->miscconfig['webservermode'],'righttext'=>'Set the SSL mode of the server.  The default is non-ssl for port 80 connections (http). SSL is a mixed mode where both port 80 (HTTP) and 443 (HTTPS) resolve.  SSLOnly is port 443 HTTPS only.  (, changing this may be dangerous, on some systems, may not work.)','secenekler'=>['ssl'=>'ssl','sslonly'=>'sslonly','nonssl'=>'nonssl']]
+	];
 
 	if($this->miscconfig['morethanoneserver']) {
 		#$optionlist[]='othersetting';
@@ -1830,7 +1791,7 @@ function advancedsettings(){
 		#$this->debugecho(print_r2($optionlist),3,false);
 
 		foreach($optionlist as $option) {
-			global $$option[0]; # make it global to be able to read in getVariable function..may be we need to fix the global thing..
+			global ${$option[0]}; # make it global to be able to read in getVariable function..may be we need to fix the global thing..
 			$this->getVariable($option[0]);
 			$this->setConfigValue($option[0],${$option[0]});
 		}
@@ -1844,7 +1805,7 @@ function advancedsettings(){
 
 
 	} else {
-		$optionlist[]=array('op','default'=>__FUNCTION__,'type'=>'hidden');
+		$optionlist[]=['op','default'=>__FUNCTION__,'type'=>'hidden'];
 		$this->output.="Advanced Settings: <br>(In future: server plans will be done, most of these settings will be filled from serverplans)<br>". inputform5($optionlist).$addstr;
 	}
 
@@ -1875,7 +1836,7 @@ function otheroperations(){ # de-selects a domain and display other operations p
 
 function selectdomain($id){ # selects a domain and displays home
 	global $domainname;
-	$this->getVariable(array("domainname"));
+	$this->getVariable(["domainname"]);
 
 	if($id<>'') $domainname=$id;
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
@@ -1890,13 +1851,13 @@ function selectdomain($id){ # selects a domain and displays home
 
 function suggestnewscript(){
 	global $name,$url,$scriptdirtocopy,$homepage,$description,$lastmsgtoehcpdeveloper;
-	$this->getVariable(array('name','url','scriptdirtocopy','homepage','description'));
+	$this->getVariable(['name','url','scriptdirtocopy','homepage','description']);
 
 	if(!$url){
-		$inputparams=array('name','url','scriptdirtocopy','homepage',
-			array('description','textarea'),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+		$inputparams=['name','url','scriptdirtocopy','homepage',
+			['description','textarea'],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 		$this->output.="Enter name, info and url of script to install. ".inputform5($inputparams). "The script will be reviewed by server admin, and will be added if approved by admin. ";
 
 	} else {
@@ -1909,7 +1870,7 @@ function suggestnewscript(){
 
 
 function read_dir($path,$func="is_file"){
-	$dirArray=array();
+	$dirArray=[];
 	$myDirectory = opendir($path);
 	while($entryName = readdir($myDirectory)) {
 	   if($func("$path/$entryName") and $entryName<>'.' and $entryName<>'..') $dirArray[] = $entryName;
@@ -1920,7 +1881,7 @@ function read_dir($path,$func="is_file"){
 
 function changetemplate(){
 	global $template;
-	$this->getVariable(array('template'));
+	$this->getVariable(['template']);
 	$this->requireNoDemo(); # disabled in demo mode..
 	$this->requireAdmin(); # only admin can change theme.... normally should be: everybody can change theme, theme of each user stored in their data, after login, every user should see its theme/lang...
 							# before login: default theme/lang...
@@ -1974,45 +1935,63 @@ function smallserverstats($isaret=''){
 
 function isNoPassOp(){ # is this operation a no password one? such as an application before login, no password required.
 	$this->debugecho2("file:".__FILE__.", Line:".__LINE__.", Function:".__FUNCTION__.": kontrol:".$this->op,4);
-	$nopassops=array("applyforaccount","applyforpanelaccount","applyforftpaccount","applyfordomainaccount",'sifrehatirlat','activate');
+	$nopassops=["applyforaccount","applyforpanelaccount","applyforftpaccount","applyfordomainaccount",'sifrehatirlat','activate'];
 	return in_array($this->op,$nopassops);
 
 	#** dikkat, burada guvenlik kontrolu yapilmiyor, dikkat edilmesi lazim...
 }
 
 
+function dump_config(){
+	$this->output.=print_r2($this->miscconfig);
+}
+
 function options(){
 	$this->requireAdmin();
+	# for default values, mysql misc table may be edited, in ehcp.sql
 
 	global $edit,$_insert,$dnsip;
-	$this->getVariable(array('edit','_insert','dnsip','localip'));
+	$this->getVariable(['edit','_insert','dnsip','localip']);
 	#echo print_r2($this->miscconfig);
 
 	# new style: options as an array, so, easy addition of new options..
-	$optionlist=array(
-		array('updatehostsfile','checkbox','lefttext'=>$this->tr('updatehostsfile'),'default'=>'Yes','checked'=>$this->miscconfig['updatehostsfile']),
-		array('localip','lefttext'=>'Local ip of server','default'=>$this->miscconfig['localip']),
-		array('dnsip','lefttext'=>$this->tr('dnsip'),'default'=>$this->miscconfig['dnsip']),
-		array('dnsipv6','lefttext'=>$this->tr('dnsipv6'),'default'=>$this->miscconfig['dnsipv6'],'righttext'=>'Leave empty to disable (experimental even if enabled)'),
-		array('updatednsipfromweb','checkbox','lefttext'=>'Do you use dynamic ip/dns?','righttext'=>'Check this if your server is behind a dynamic IP','default'=>'Yes','checked'=>$this->miscconfig['updatednsipfromweb']),
-		array('banner','textarea','default'=>$this->miscconfig['banner']),
-		array('adminemail','lefttext'=>'Admin Email','default'=>$this->miscconfig['adminemail']),
-		array('defaulttemplate','default'=>$this->miscconfig['defaulttemplate']),
-		array('defaultlanguage','default'=>$this->defaultlanguage),
-		array('messagetonewuser','textarea','default'=>$this->miscconfig['messagetonewuser']),
-		array('disablecustomhttp','checkbox','lefttext'=>$this->tr('disablecustomhttp'),'default'=>'Yes','checked'=>$this->miscconfig['disablecustomhttp'],'righttext'=>'All custom http disabled, this is automatically activated when there are error in webserver configs.'),
-		array('disableeditapachetemplate','checkbox','lefttext'=>$this->tr('disableeditapachetemplate'),'default'=>'Yes','checked'=>$this->miscconfig['disableeditapachetemplate'],'righttext'=>'This is a security measure to disable non-experienced users to break configs'),
-		array('disableeditdnstemplate','checkbox','lefttext'=>$this->tr('disableeditdnstemplate'),'default'=>'Yes','checked'=>$this->miscconfig['disableeditdnstemplate'],'righttext'=>'This is a security measure to disable non-experienced users to break configs'),
-		array('turnoffoverquotadomains','checkbox','lefttext'=>$this->tr('turnoffoverquotadomains'),'default'=>'Yes','checked'=>$this->miscconfig['turnoffoverquotadomains']),
-		array('quotaupdateinterval','default'=>$this->miscconfig['quotaupdateinterval'],'righttext'=>'interval in hours'),
-		array('userscansignup','checkbox','default'=>'Yes','checked'=>$this->miscconfig['userscansignup'],'righttext'=>'disabled by default, can users sign up for domains/ftp? (you should approve/reject them in short time)'),
-		array('enablewebstats','checkbox','default'=>'Yes','checked'=>$this->miscconfig['enablewebstats'],'righttext'=>'enabled by default, this can use some of server resources, so, disabling it may help some slow servers to speed up'),
-		array('enablewildcarddomain','checkbox','default'=>'Yes','checked'=>$this->miscconfig['enablewildcarddomain'],'righttext'=>'do you want xxxx.yourdomain.com to show your domain homepage? disabled by default, and shows server home, which is default index, ehcp home.'),
-		array('freednsidentifier','default'=>$this->miscconfig['freednsidentifier'],'righttext'=>'freedns.afraid.org unique identifier, for dynamic dns update, automatic; take your id from freedns.afraid.org if you want to use that. ')
+	$optionlist=[
+		['updatehostsfile','checkbox','lefttext'=>$this->tr('updatehostsfile'),'default'=>'Yes','checked'=>$this->miscconfig['updatehostsfile']],
+		['localip','lefttext'=>'Local ip of server','default'=>$this->miscconfig['localip']],
+		['dnsip','lefttext'=>$this->tr('dnsip'),'default'=>$this->miscconfig['dnsip']],
+		['dnsipv6','lefttext'=>$this->tr('dnsipv6'),'default'=>$this->miscconfig['dnsipv6'],'righttext'=>'Leave empty to disable (experimental even if enabled)'],
+		['updatednsipfromweb','checkbox','lefttext'=>'Do you use dynamic ip/dns?','righttext'=>'Check this if your server is behind a dynamic IP','default'=>'Yes','checked'=>$this->miscconfig['updatednsipfromweb']],
+		['banner','textarea','default'=>$this->miscconfig['banner']],
+		['adminemail','lefttext'=>'Admin Email','default'=>$this->miscconfig['adminemail']],
+		['defaulttemplate','default'=>$this->miscconfig['defaulttemplate']],
+		['defaultlanguage','default'=>$this->defaultlanguage],
+		['messagetonewuser','textarea','default'=>$this->miscconfig['messagetonewuser']],
+
+		['initialize_domain_files','checkbox','lefttext'=>$this->tr('initialize_domain_files'),'default'=>'Yes','checked'=>$this->miscconfig['initialize_domain_files'],'righttext'=>$this->tr('initialize_domain_files_righttext')],
+
+		['switchtoapacheonerror','checkbox','lefttext'=>$this->tr('switchtoapacheonerror'),'default'=>'Yes','checked'=>$this->miscconfig['switchtoapacheonerror'],'righttext'=>$this->tr('switchtoapacheonerror_righttext')],
+		
+		['disablecustomhttp','checkbox','lefttext'=>$this->tr('disablecustomhttp'),'default'=>'Yes','checked'=>$this->miscconfig['disablecustomhttp'],'righttext'=>$this->tr('disablecustomhttp_righttext')],
+
+		['disableeditwebservertemplate','checkbox','lefttext'=>$this->tr('disableeditwebservertemplate'),'default'=>'Yes','checked'=>$this->miscconfig['disableeditwebservertemplate'],'righttext'=>'This is a security measure to disable non-experienced users to break configs'],
+		
+		['disableeditdnstemplate','checkbox','lefttext'=>$this->tr('disableeditdnstemplate'),'default'=>'Yes','checked'=>$this->miscconfig['disableeditdnstemplate'],'righttext'=>'This is a security measure to disable non-experienced users to break configs'],
+		
+		['turnoffoverquotadomains','checkbox','lefttext'=>$this->tr('turnoffoverquotadomains'),'default'=>'Yes','checked'=>$this->miscconfig['turnoffoverquotadomains']],
+		
+		['quotaupdateinterval','default'=>$this->miscconfig['quotaupdateinterval'],'righttext'=>'interval in hours'],
+		
+		['userscansignup','checkbox','default'=>'Yes','checked'=>$this->miscconfig['userscansignup'],'righttext'=>'disabled by default, can users sign up for domains/ftp? (you should approve/reject them in short time)'],
+		
+		['enablewebstats','checkbox','default'=>'Yes','checked'=>$this->miscconfig['enablewebstats'],'righttext'=>'enabled by default, this can use some of server resources, so, disabling it may help some slow servers to speed up'],
+		
+		['enablewildcarddomain','checkbox','default'=>'Yes','checked'=>$this->miscconfig['enablewildcarddomain'],'righttext'=>'do you want xxxx.yourdomain.com to show your domain homepage? disabled by default, and shows server home, which is default index, ehcp home.'],
+		
+		['freednsidentifier','default'=>$this->miscconfig['freednsidentifier'],'righttext'=>'freedns.afraid.org unique identifier, for dynamic dns update, automatic; take your id from freedns.afraid.org if you want to use that. ']
 
 		#array('singleserverip','default'=>$this->miscconfig['singleserverip'])
 
-	);
+	];
 
 
 
@@ -2025,7 +2004,7 @@ function options(){
 		$this->validate_ip_address($dnsip);
 
 		foreach($optionlist as $option) {
-			global $$option[0]; # make it global to be able to read in getVariable function..may be we need to fix the global thing..
+			global ${$option[0]}; # make it global to be able to read in getVariable function..may be we need to fix the global thing..
 			$this->getVariable($option[0]);
 			$this->setConfigValue($option[0],${$option[0]});
 		}
@@ -2036,8 +2015,10 @@ function options(){
 
 		# operations that needs daemon or other settings.
 
-		if($dnsip<>$this->miscconfig['dnsip']){ # fix all dnsip related config if dnsip is changed...
+		if($dnsip<>$this->miscconfig['dnsip']){ # fix all dnsip related config if dnsip (The ip of this server) is changed...
 			$this->addDaemonOp("fixmailconfiguration",'','','','fix mail configuration'); # fixes postfix configuration, hope this works..yes, works...
+			$this->syncDomains();
+			$this->syncDns();
 		}
 
 		if($defaultlanguage) { # update for current session too..
@@ -2052,7 +2033,7 @@ function options(){
 		$this->output.="..update complete.";
 
 	} elseif ($edit) {
-		$optionlist[]=array('op','default'=>__FUNCTION__,'type'=>'hidden');
+		$optionlist[]=['op','default'=>__FUNCTION__,'type'=>'hidden'];
 		$this->output.="<h2>Options:</h2><br>".inputform5($optionlist);
 
 	} else {
@@ -2068,7 +2049,7 @@ function settings(){
 	$this->requireAdmin();
 
 	global $edit,$_insert,$dnsip,$group;
-	$this->getVariable(array('edit','_insert','group'));
+	$this->getVariable(['edit','_insert','group']);
 	#echo print_r2($this->miscconfig);
 
 	# new style: options as an array, so, easy addition of new options..
@@ -2085,14 +2066,14 @@ $gateway="206.51.230.1";
 			case 'vpsadvanced': $optionlist=$this->vps_module->vps_settings_advanced; break;
 		}
 	}
-	else $optionlist=array();
+	else $optionlist=[];
 
 	if($_insert){
 		$this->output.="Updating settings for $group...";
 
 
 		foreach($optionlist as $option) {
-			global $$option[0]; # make it global to be able to read in getVariable function..may be we need to fix the global thing..
+			global ${$option[0]}; # make it global to be able to read in getVariable function..may be we need to fix the global thing..
 			$this->getVariable($option[0]);
 			$this->setSettingsValue($group,$option[0],${$option[0]});
 		}
@@ -2100,7 +2081,7 @@ $gateway="206.51.230.1";
 		$this->loadConfigWithDaemon();
 		$this->output.="..update complete.";
 	} else {
-		$optionlist[]=array('op','default'=>__FUNCTION__,'type'=>'hidden');
+		$optionlist[]=['op','default'=>__FUNCTION__,'type'=>'hidden'];
 		$this->output.="<h2>Settings:</h2><br>".inputform5($optionlist);
 
 	}
@@ -2117,22 +2098,24 @@ $gateway="206.51.230.1";
 }
 
 function disableService($service){
-	passthru2("update-rc.d -f $service remove");
-	passthru2("update-rc.d $service disable");
+	passthru2("/usr/sbin/update-rc.d -f $service remove");
+	passthru2("/usr/sbin/update-rc.d $service disable");
 }
 
 function enableService($service){
-	passthru2("update-rc.d $service defaults");
-	passthru2("update-rc.d $service enable");
+	passthru2("/usr/sbin/update-rc.d $service defaults");
+	passthru2("/usr/sbin/update-rc.d $service enable");
 }
-function rebuild_webserver_configs(){
+
+function rebuild_webserver_configs($noloop=False){
 	# this function will rebuild all webserver configs according to current choosen webserver type, ssl etc..
 	$this->requireCommandLine(__FUNCTION__,True);
+	if ($noloop) return True;
 
 	# remove all webservers from auto-start
 	$this->disableService("nginx");
 	$this->disableService("apache2");
-	$this->disableService("php5-fpm");
+	$this->disableService($this->php_fpm);
 
 	if($this->miscconfig['webservertype']=='apache2'){
 		return $this->rebuild_apache2_config();
@@ -2161,23 +2144,28 @@ function rebuild_apache2_config(){
 	return True;
 }
 
+function searchForFile($f){
+	return count(glob($f)) > 0;
+}
+
 function rebuild_nginx_config(){
 	# i did not yet do ssl for nginx
 	$this->requireCommandLine(__FUNCTION__,True);
 	include_once("install_lib.php");
-	if(!file_exists("/etc/init.d/php5-fpm")) {
-		$this->echoln("This server has no php5-fpm installed. install it before trying to switch to nginx (nginx requires php-fpm). now, switching back to apache2");
+	if(!$this->search_for_files("/etc/init.d/php*fpm")) {
+		$this->echoln("This server has no {$this->php_fpm} installed. install it before trying to switch to nginx (nginx requires {$this->php_fpm}). now, switching back to apache2");
 		$this->enableService("apache2"); # make apache2 auto-start on reboot
 		$this->setConfigValue('webservertype','apache2');
 		$this->loadConfigWithDaemon();
-		rebuild_webserver_configs();
-		return False;
+		$this->rebuild_webserver_configs(True); # !! loop occurs here..
+		sleep(3);
+		return True;
 	}
 
 	rebuild_nginx_config2($this->ehcpdir); # defined in install_lib.php
 
 	$this->enableService("nginx"); # make auto-start on reboot
-	$this->enableService("php5-fpm"); # make auto-start on reboot
+	$this->enableService($this->php_fpm); # make auto-start on reboot
 	$this->syncDomains();
 	return True;
 }
@@ -2232,20 +2220,20 @@ function listSelector($arr,$print,$link,$linkfield='id'){
 
 function addDirectory(){
 	global $domainname,$username,$password,$directory;
-	$this->getVariable(array('domainname','username','password','directory'));
+	$this->getVariable(['domainname','username','password','directory']);
 
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
 	$success=True;
 
 	if(!$username) {
-		$inputparams=array(
+		$inputparams=[
 			'username',
-			array('password','password_with_generate'),
+			['password','password_with_generate'],
 			'directory',
-			array('domainname','hidden','default'=>$domainname),
-			array('op','hidden','default'=>__FUNCTION__)
+			['domainname','hidden','default'=>$domainname],
+			['op','hidden','default'=>__FUNCTION__]
 
-		);
+		];
 
 		$this->output.="Enter user,pass and directory for domain: $domainname  :<br>Example dirs: test, test/secret etc. <br>"
 			.inputform5($inputparams);
@@ -2259,7 +2247,7 @@ function addDirectory(){
 
 		$domhome=$this->getField($this->conf['domainstable']['tablename'], "homedir", "domainname='$domainname'")."/httpdocs";
 		$dirname=$domhome."/$directory";
-		$dirname=str_replace(array('//','..'),array('/','.'),$dirname);
+		$dirname=str_replace(['//','..'],['/','.'],$dirname);
 
 		$query="insert into ".$this->conf['passwddirectoriestable']['tablename']." (panelusername,domainname,username,password,directory)values('$this->activeuser','$domainname','$username','$password','$dirname')";
 
@@ -2284,7 +2272,8 @@ function sync_directories(){
 
 function getVariable($variables,$dotrim=false) {
 	# get variables by means of $_POST or $_GET globals.., makes them secure for sql injection
-	if(!is_array($variables)) $variables=array($variables); # accept non-array, single parameter
+	if(!is_array($variables)) $variables=[$variables]; # accept non-array, single parameter
+	#$this->print_r2($variables);
 
 	$varCount=count($variables);
 	for ($i=0;$i<$varCount;$i++) {
@@ -2383,7 +2372,7 @@ function adjustEmailAutoreply($email,$autoreplysubject,$autoreplymessage){
 
 function editEmailUser(){
 	global $id,$newpass,$newpass2,$_insert,$autoreplysubject,$autoreplymessage;
-	$this->getVariable(array('id','newpass','newpass2','_insert','autoreplysubject','autoreplymessage'));
+	$this->getVariable(['id','newpass','newpass2','_insert','autoreplysubject','autoreplymessage']);
 
 	if($this->isEmailUser()){ # email users edits itself
 		$email=$this->activeuser;
@@ -2409,14 +2398,14 @@ function editEmailUser(){
 		$autoreplysubject=$info[0]['autoreplysubject'];
 		$autoreplymessage=$info[0]['autoreplymessage'];
 
-		$inputparams=array(
-			array('newpass','password','lefttext'=>'New password:','righttext'=>'Leave emtpy for no change'),
-			array('newpass2','password','lefttext'=>'New password again:','righttext'=>'Leave emtpy for no change'),
-			array('autoreplysubject','default'=>$autoreplysubject,'righttext'=>'Leave emtpy to disable autoreply'),
-			array('autoreplymessage','textarea','default'=>$autoreplymessage),
-			array('id','hidden','default'=>$id),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+		$inputparams=[
+			['newpass','password','lefttext'=>'New password:','righttext'=>'Leave emtpy for no change'],
+			['newpass2','password','lefttext'=>'New password again:','righttext'=>'Leave emtpy for no change'],
+			['autoreplysubject','default'=>$autoreplysubject,'righttext'=>'Leave emtpy to disable autoreply'],
+			['autoreplymessage','textarea','default'=>$autoreplymessage],
+			['id','hidden','default'=>$id],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 		$this->output.=inputform5($inputparams);
 	}
 
@@ -2425,7 +2414,7 @@ function editEmailUser(){
 
 function editEmailUserPassword(){
 	global $id,$newpass,$newpass2,$_insert,$autoreplysubject,$autoreplymessage;
-	$this->getVariable(array('id','newpass','newpass2','_insert','autoreplysubject','autoreplymessage'));
+	$this->getVariable(['id','newpass','newpass2','_insert','autoreplysubject','autoreplymessage']);
 
 	if($this->isEmailUser()){ # email users edits itself
 		$email=$this->activeuser;
@@ -2448,12 +2437,12 @@ function editEmailUserPassword(){
 	} else {
 		$info=$this->query("select autoreplysubject,autoreplymessage from emailusers where $where");
 
-		$inputparams=array(
-			array('newpass','password','lefttext'=>'New password:','righttext'=>'Leave emtpy for no change'),
-			array('newpass2','password','lefttext'=>'New password again:','righttext'=>'Leave emtpy for no change'),
-			array('id','hidden','default'=>$id),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+		$inputparams=[
+			['newpass','password','lefttext'=>'New password:','righttext'=>'Leave emtpy for no change'],
+			['newpass2','password','lefttext'=>'New password again:','righttext'=>'Leave emtpy for no change'],
+			['id','hidden','default'=>$id],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 		$this->output.=inputform5($inputparams);
 	}
 
@@ -2462,7 +2451,7 @@ function editEmailUserPassword(){
 
 function editEmailUserAutoreply(){
 	global $id,$newpass,$newpass2,$_insert,$autoreplysubject,$autoreplymessage;
-	$this->getVariable(array('id','newpass','newpass2','_insert','autoreplysubject','autoreplymessage'));
+	$this->getVariable(['id','newpass','newpass2','_insert','autoreplysubject','autoreplymessage']);
 
 	if($this->isEmailUser()){ # email users edits itself
 		$email=$this->activeuser;
@@ -2481,12 +2470,12 @@ function editEmailUserAutoreply(){
 		$autoreplysubject=$info[0]['autoreplysubject'];
 		$autoreplymessage=$info[0]['autoreplymessage'];
 
-		$inputparams=array(
-			array('autoreplysubject','default'=>$autoreplysubject,'righttext'=>'Leave emtpy to disable autoreply'),
-			array('autoreplymessage','textarea','default'=>$autoreplymessage),
-			array('id','hidden','default'=>$id),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+		$inputparams=[
+			['autoreplysubject','default'=>$autoreplysubject,'righttext'=>'Leave emtpy to disable autoreply'],
+			['autoreplymessage','textarea','default'=>$autoreplymessage],
+			['id','hidden','default'=>$id],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 		$this->output.=inputform5($inputparams);
 	}
 
@@ -2496,7 +2485,7 @@ function editEmailUserAutoreply(){
 
 function dbAddUser(){
 	global $dbname,$dbusername,$dbuserpass;
-	$this->getVariable(array('dbname','dbusername','dbuserpass'));
+	$this->getVariable(['dbname','dbusername','dbuserpass']);
 
 	$dbs=$this->query("select * from ".$this->conf['mysqldbstable']['tablename']." where panelusername='$this->activeuser'");
 	if(count($dbs)==0){
@@ -2519,15 +2508,15 @@ function dbAddUser(){
 		$this->ok_err_text($success,'All ops are successfull. Added db user','Failed some ops..');
 
 	} else {
-		$inputparams=array(
-			array('dbname','leftext'=>'Your Existing database:'),
-			array('dbusername','lefttext'=>'New db user:'),
-			array('dbuserpass','lefttext'=>'User pass:'),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+		$inputparams=[
+			['dbname','leftext'=>'Your Existing database:'],
+			['dbusername','lefttext'=>'New db user:'],
+			['dbuserpass','lefttext'=>'User pass:'],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 		$this->output.="This is used for add a new db user to an existing db,<br>To add db, use main menu or add db link, <br>Enter info for your db and user: <br> (Works only for local mysql servers)<br>"
 		.inputform5($inputparams);
-		#.inputform4($action,array('Your Existing database:','New db user:','User pass:'),array('dbname','dbusername','userpass'),array(),array("op","_insert"),array("dbadduser","1"));
+		#.inputform4($action,array('Your Existing database:','New db user:','User pass:'),array('dbname','dbusername','userpass'),[],array("op","_insert"),array("dbadduser","1"));
 
 	}
 	$this->showSimilarFunctions('mysql');
@@ -2537,7 +2526,7 @@ function dbAddUser(){
 function dbEditUser(){
 	global $dbusername,$newpassword,$newpassword2,$id;
 	$this->requireNoDemo();
-	$this->getVariable(array('dbusername','newpassword','newpassword2'));
+	$this->getVariable(['dbusername','newpassword','newpassword2']);
 	if($dbusername=='') $dbusername=$this->getField($this->conf['mysqldbuserstable']['tablename'],'dbusername',"id=$id");
 
 	if($this->recordcount($this->conf['mysqldbuserstable']['tablename'], "panelusername='$this->activeuser' and dbusername='$dbusername'")==0)
@@ -2551,16 +2540,16 @@ function dbEditUser(){
 		} else $this->okeyText("Change password success..");
 
 	} else {
-		$inputparams=array(
-			array('newpassword','password','lefttext'=>'New Password'),
-			array('newpassword2','password','lefttext'=>'new password again'),
-			array('dbusername','hidden','default'=>$dbusername),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+		$inputparams=[
+			['newpassword','password','lefttext'=>'New Password'],
+			['newpassword2','password','lefttext'=>'new password again'],
+			['dbusername','hidden','default'=>$dbusername],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 
 		$this->output.="Enter new password for db user: $dbusername : <br>(Works only for local mysql servers)<br>"
 		.inputform5($inputparams);
-		#.inputform4($action,array('New Password'),array('newpassword'),array(),array("op",'dbusername',"_insert"),array("dbedituser","$dbusername","1"));
+		#.inputform4($action,array('New Password'),array('newpassword'),[],array("op",'dbusername',"_insert"),array("dbedituser","$dbusername","1"));
 	}
 	$this->showSimilarFunctions('mysql');
 	return True;
@@ -2569,7 +2558,7 @@ function dbEditUser(){
 function deleteCustomSetting(){
 	$this->requireNoDemo();
 	global $id;
-	$this->getVariable(array('id'));
+	$this->getVariable(['id']);
 	$q="select * from customsettings where id=$id";
 	$info=$this->query($q);
 	$info=$info[0];
@@ -2618,7 +2607,7 @@ function emailForwardingsSelf(){
 function addEmailForwardingSelf(){
 	# for mail user login..
 	global $forwardto;
-	$this->getVariable(array('forwardto'));
+	$this->getVariable(['forwardto']);
 
 	$this->requireEmailUser();
 	$email=$this->activeuser;
@@ -2629,9 +2618,9 @@ function addEmailForwardingSelf(){
 
 	if(!$forwardto){
 		$this->output.="Email:$email , domain: $domainname <br>Enter target emails one by line";
-		$inputparams=array(
-			array('forwardto','textarea')
-		);
+		$inputparams=[
+			['forwardto','textarea']
+		];
 
 		$this->output.=inputform5($inputparams)."<br> To send to yourself and other emails, enter also $this->activeuser in list of emails." ;
 
@@ -2646,7 +2635,7 @@ function addEmailForwardingSelf(){
 
 function emailForwardings(){
 	global $domainname;
-	$this->getVariable(array('domainname'));
+	$this->getVariable(['domainname']);
 
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
 
@@ -2664,7 +2653,7 @@ function addEmailForwardingDirect($panelusername,$domainname,$fromemail,$forward
 
 function addEmailForwarding(){
 	global $domainname,$beforeat,$forwardto;
-	$this->getVariable(array('domainname','beforeat','forwardto'));
+	$this->getVariable(['domainname','beforeat','forwardto']);
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
 
 	$success=True;
@@ -2672,12 +2661,12 @@ function addEmailForwarding(){
 	# this ensures the ownership of domain
 
 	if(!$forwardto){
-		$inputparams=array(
-			array('beforeat','righttext'=>"@$domainname",'lefttext'=>'Email: <br>Leave empty for catch-all email<br>(to receive all emails that are not setup)'),
-			array('forwardto','textarea'),
-			array('domainname','hidden','default'=>$domainname),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+		$inputparams=[
+			['beforeat','righttext'=>"@$domainname",'lefttext'=>'Email: <br>Leave empty for catch-all email<br>(to receive all emails that are not setup)'],
+			['forwardto','textarea'],
+			['domainname','hidden','default'=>$domainname],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 
 		$this->output.=inputform5($inputparams);
 
@@ -2715,23 +2704,23 @@ function addCustomHttpDirect($domainname,$customhttp,$comment){
 
 function addCustomHttp(){
 	global $domainname,$customhttp,$comment;
-	$this->getVariable(array("domainname","customhttp",'comment')); # this gets variables from _GET or _POST
-	# Disable custom http if misc disableeditapachetemplate setting is set, as that is a way to break the apache template.
-	if($this->miscconfig['disableeditapachetemplate']<>'') $this->requireAdmin();
-	if($this->miscconfig['disablecustomhttp']<>'') $this->errorTextExit("Custom http disabled in options. Go to Options for enabling. (custom http may be automatically disabled when there are error in custom http's. Check your custom http list.)");
+	$this->getVariable(["domainname","customhttp",'comment']); # this gets variables from _GET or _POST
+	# Disable custom http if misc disableeditwebservertemplate setting is set, as that is a way to break the apache template.
+	if($this->miscconfig['disableeditwebservertemplate']<>'') $this->requireAdmin();
+	if($this->miscconfig['disablecustomhttp']<>'') $this->errorTextExit($this->tr("custom_http_disabled"));
 
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
 	$success=True;
 
 	if(!$customhttp){
-		$inputparams=array(
-			array('customhttp','textarea','lefttext'=>'Custom http'),
+		$inputparams=[
+			['customhttp','textarea','lefttext'=>'Custom http'],
 			'comment',
-			array('domainname','hidden','default'=>$domainname),
-			array('op','hidden','default'=>__FUNCTION__)
+			['domainname','hidden','default'=>$domainname],
+			['op','hidden','default'=>__FUNCTION__]
 
-		);
-		$this->output.="Adding custom http for domain ($domainname) and your current webserver of (".$this->miscconfig['webservertype'].")<br>(Note that this custom http will be active whenever your current webserver type is active):<br>";
+		];
+		$this->output.=$this->tr("add_custom_http");
 		$this->output.=inputform5($inputparams);
 
 	} else{
@@ -2748,23 +2737,23 @@ function addCustomHttp(){
 
 function addcustompermission(){
 	global $domainname,$fileowner,$directory;
-	$this->getVariable(array("domainname","fileowner",'directory')); # this gets variables from _GET or _POST
+	$this->getVariable(["domainname","fileowner",'directory']); # this gets variables from _GET or _POST
 
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
 	$success=True;
 
 	if(!$fileowner){
-		$inputparams=array(
-			array('fileowner','righttext'=>'like www-data, or: www-data:www-data, cannot be root',),
-			array('directory','righttext'=>'relative to domain home, such as wp-content for wordpress,or wp/wp-admin'),
-			array('domainname','hidden','default'=>$domainname),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+		$inputparams=[
+			['fileowner','righttext'=>'like www-data, or: www-data:www-data, cannot be root',],
+			['directory','righttext'=>'relative to domain home, such as wp-content for wordpress,or wp/wp-admin'],
+			['domainname','hidden','default'=>$domainname],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 		$this->output.="Adding custom permission for domain ($domainname) <br>";
 		$this->output.=inputform5($inputparams);
 
 	} else{
-		$params=array('domainname'=>$domainname,'name'=>'fileowner','value'=>$fileowner,'value2'=>$directory);
+		$params=['domainname'=>$domainname,'name'=>'fileowner','value'=>$fileowner,'value2'=>$directory];
 		$success=$this->insert_custom_setting_direct($params);
 		$success=$success && $this->addDaemonOp("syncdomains",'xx',$domainname);
 		$this->ok_err_text($success,"Success add custom http",__FUNCTION__." failed");
@@ -2789,7 +2778,7 @@ function getIsSlaveDomain($domainname){
 
 function addCustomDns(){
 	global $domainname,$customdns,$comment;
-	$this->getVariable(array("domainname","customdns",'comment')); # this gets variables from _GET or _POST
+	$this->getVariable(["domainname","customdns",'comment']); # this gets variables from _GET or _POST
 
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
 	$success=True;
@@ -2798,17 +2787,17 @@ function addCustomDns(){
 	if($this->getIsSlaveDomain($domainname)) $this->errorTextExit('Custom dns cannot be added for domains with slave dns');
 
   	if(!$customdns){
-  		$inputparams=array(
-  			array('customdns','textarea','lefttext'=>'Custom dns'),
+  		$inputparams=[
+  			['customdns','textarea','lefttext'=>'Custom dns'],
   			'comment',
-  			array('domainname','hidden','default'=>$domainname),
-  			array('op','hidden','default'=>__FUNCTION__)
-  		);
+  			['domainname','hidden','default'=>$domainname],
+  			['op','hidden','default'=>__FUNCTION__]
+  		];
 
   		$this->output.="Adding custom dns for domain: $domainname <br>  Attention! Entering wrong custom dns causes your dns not to function.. <br> Example: <br>
   		www2 &nbsp; &nbsp; &nbsp; IN &nbsp;&nbsp;&nbsp; A &nbsp;&nbsp;&nbsp;YOURIP "
   		.inputform5($inputparams);
-  		#inputform4($action,array('custom dns:',"Comment"),array(array('customdns','textarea'),'comment'),array(),array("op",'domainname'),array("addcustomdns",$domainname));
+  		#inputform4($action,array('custom dns:',"Comment"),array(array('customdns','textarea'),'comment'),[],array("op",'domainname'),array("addcustomdns",$domainname));
 
 
   		$this->output.="Following dns records already added from template, you may modify template (dnszonetemplate file) in filesystem. <br><br><pre>".
@@ -2841,16 +2830,16 @@ function listBackups(){
 
 function doRestore(){
 	global $backupname,$filename;
-	$this->getVariable(array('backupname','filename'));
+	$this->getVariable(['backupname','filename']);
 
 	$this->requireAdmin();
 
 	if(!$backupname){
-		$inputparams=array(
-			array('backupname','lefttext'=>'Enter your backup file name which is located at /var/backup  (with .tgz extension..)','default'=>$filename),
-			array('domainname','hidden','default'=>$domainname),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+		$inputparams=[
+			['backupname','lefttext'=>'Enter your backup file name which is located at /var/backup  (with .tgz extension..)','default'=>$filename],
+			['domainname','hidden','default'=>$domainname],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 
 		$this->output.="<b><h2>Attention ! All your data (domains,users,files,mysql databases) will be restored, your current data will be deleted !! </h2></b>"
 		.inputform5($inputparams);
@@ -2942,14 +2931,14 @@ function daemonRestore($action,$info,$info2='') {
 function backups(){
 	# domain based backups, not whole server or not all domains.
 	global $_insert,$op2,$filename;
-	$this->getVariable(array('_insert','op2','filename'));
+	$this->getVariable(['_insert','op2','filename']);
 
 	#$this->output.="<big>This section is not working fully!</big><br><br>";
 
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname); # choose domain, or selecteddomain..
 
 	switch($op2) {
-		case 'dobackup': $this->add_daemon_op(array('op'=>'daemon_backup_domain','info'=>$domainname));
+		case 'dobackup': $this->add_daemon_op(['op'=>'daemon_backup_domain','info'=>$domainname]);
 			$this->executeQuery("insert into backups (domainname,date,status) values ('$domainname',now(),'command sent to ehcp daemon by ehcp gui')");
 		break;
 
@@ -2965,26 +2954,26 @@ function backups(){
 function doBackup(){
 	$this->requireAdmin();
 
-	$inputparams=array(
-		array('backupname','lefttext'=>'Enter a name for your backup','default'=>'My Backup'),
-		array('backupmysql','checkbox','lefttext'=>'Backup mysql databases (that are listed in ehcp):','default'=>'1','checked'=>'1'),
-		array('backupfiles','checkbox','lefttext'=>'Backup Site files:','default'=>'1','checked'=>'1'),
-		array('backupehcpfiles','checkbox','lefttext'=>'Backup ehcp files itself:','default'=>'1'),
-		array('backupehcpdb','checkbox','lefttext'=>'Backup ehcp database itself:','default'=>'1','checked'=>'1'),
-		array('emailme','checkbox','lefttext'=>'Email me when backup finished (may not work yet):','default'=>'1','checked'=>'1'),
-		array('myemail','lefttext'=>'My Email, enter different if you wish:','default'=>$this->conf['adminemail']),
-		array('emailaccounts','checkbox','lefttext'=>'Backup email accounts:','default'=>'1','checked'=>'1'),
-		array('emailcontents','checkbox','lefttext'=>'Backup email contents/files:','default'=>'1','checked'=>'1'),
-		array('gzipbackup','checkbox','lefttext'=>'tar-gzip backup dir/file:','righttext'=>'This is useful, but requires some extra space temporarily. uncheck if you have little space','default'=>'1','checked'=>'1'),
+	$inputparams=[
+		['backupname','lefttext'=>'Enter a name for your backup','default'=>'My Backup'],
+		['backupmysql','checkbox','lefttext'=>'Backup mysql databases (that are listed in ehcp):','default'=>'1','checked'=>'1'],
+		['backupfiles','checkbox','lefttext'=>'Backup Site files:','default'=>'1','checked'=>'1'],
+		['backupehcpfiles','checkbox','lefttext'=>'Backup ehcp files itself:','default'=>'1'],
+		['backupehcpdb','checkbox','lefttext'=>'Backup ehcp database itself:','default'=>'1','checked'=>'1'],
+		['emailme','checkbox','lefttext'=>'Email me when backup finished (may not work yet):','default'=>'1','checked'=>'1'],
+		['myemail','lefttext'=>'My Email, enter different if you wish:','default'=>$this->conf['adminemail']],
+		['emailaccounts','checkbox','lefttext'=>'Backup email accounts:','default'=>'1','checked'=>'1'],
+		['emailcontents','checkbox','lefttext'=>'Backup email contents/files:','default'=>'1','checked'=>'1'],
+		['gzipbackup','checkbox','lefttext'=>'tar-gzip backup dir/file:','righttext'=>'This is useful, but requires some extra space temporarily. uncheck if you have little space','default'=>'1','checked'=>'1'],
 
-		array('domainname','hidden','default'=>$domainname),
-		array('_insert','hidden','default'=>'1'),
-		array('op','hidden','default'=>__FUNCTION__)
-	);
+		['domainname','hidden','default'=>$domainname],
+		['_insert','hidden','default'=>'1'],
+		['op','hidden','default'=>__FUNCTION__]
+	];
 
 	# instead of: #$this->getVariable(array('_insert','backupmysql','backupfiles','backupehcpfiles','backupehcpdb','backupname'));
 	foreach($inputparams as $p) {  # howto avoid global variables ?
-		global $$p[0];
+		global ${$p[0]};
 		$this->getVariable($p[0]);
 	}
 
@@ -3075,6 +3064,7 @@ function backup_databases($filt,$file){ # yeni fonks.
 }
 
 function daemonBackup($action,$info,$info2='') {
+	$this->requireCommandLine(__FUNCTION__);
 
 	# do all operations inside /var/backup
 
@@ -3094,14 +3084,14 @@ function daemonBackup($action,$info,$info2='') {
 
 	$this->pwdls();
 
-	$dbs=array();
+	$dbs=[];
 
 	if(strstr($info2,'-mysql')) {
 		$dbs=$this->query("select dbname from mysqldb");
 		$mysqlusers=$this->query("select * from mysqlusers");
 	}
 
-	if(strstr($info2,'-ehcpdb')) $dbs[]=array("dbname"=>"ehcp");
+	if(strstr($info2,'-ehcpdb')) $dbs[]=["dbname"=>"ehcp"];
 	$this->backup_databases2($dbs,$mysqlusers,"$dirname/mysql.sql");
 
 	$this->pwdls();
@@ -3182,7 +3172,7 @@ else $homepage='homepage_domainadmin'; # this line should never be executed..
 
 $pageinfo="Homepage Template used to generate this page: ".$homepage."_".$this->currentlanguage.".html <br>";
 
-$this->output.=str_replace(array("{selecteddomain}"),array($this->selecteddomain),$this->loadTemplate($homepage));
+$this->output.=str_replace(["{selecteddomain}"],[$this->selecteddomain],$this->loadTemplate($homepage));
 $this->output.=" Your language: $this->currentlanguage". $this->sayinmylang("select_language")."<br>$pageinfo";
 
 
@@ -3213,22 +3203,22 @@ $this->output.=" Your language: $this->currentlanguage". $this->sayinmylang("sel
 
 function changeMyPass(){
 	global $oldpass,$newpass,$newpass2,$_insert;
-	$this->getVariable(array('oldpass','newpass','newpass2','_insert'));
+	$this->getVariable(['oldpass','newpass','newpass2','_insert']);
 	# for demo machines...
 	if($this->isadmin()){
 		$this->requireNoDemo();
 	}
 
 	if(!$_insert){
-		$inputparams=array(
-			array('oldpass','password','lefttext'=>'Your old password:'),
-			array('newpass','password','lefttext'=>'New password:'),
-			array('newpass2','password','lefttext'=>'New password again:'),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+		$inputparams=[
+			['oldpass','password','lefttext'=>'Your old password:'],
+			['newpass','password','lefttext'=>'New password:'],
+			['newpass2','password','lefttext'=>'New password again:'],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 		$this->output.=inputform5($inputparams);
 
-		# inputform4($action,array('Your old password:','New Password','New Password Again'),array(array('oldpass','password'),array('newpass','password'),array('newpass2','password')), array(),array("op","_insert"),array("changemypass","1"));
+		# inputform4($action,array('Your old password:','New Password','New Password Again'),array(array('oldpass','password'),array('newpass','password'),array('newpass2','password')), [],array("op","_insert"),array("changemypass","1"));
 	} else {
 		if($newpass<>$newpass2){
 			$this->errorText("Two new passwords do not match. retry.");
@@ -3321,18 +3311,18 @@ function editdomain(){
 	# sadece reseller/admin edit edebilmeli..
 
 	global $domainname,$_insert,$status;
-	$this->getVariable(array('domainname','_insert','status'));
+	$this->getVariable(['domainname','_insert','status']);
 
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
 	$domaininfo=$this->getDomainInfo($domainname);
 	$success=True;
 
 	if(!$_insert){
-		$inputparams=array(
-			array('status','select','secenekler'=>$this->statusActivePassive,'default'=>$domaininfo['status']),
-			array('domainname','hidden','default'=>$domainname),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+		$inputparams=[
+			['status','select','secenekler'=>$this->statusActivePassive,'default'=>$domaininfo['status']],
+			['domainname','hidden','default'=>$domainname],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 
 		$this->output.= inputform5($inputparams);
 
@@ -3359,24 +3349,24 @@ function applyforftpaccount(){
 
 function applyfordomainaccount(){ # add domain, paneluser and ftp user once
 	global $domainname,$ftpusername,$ftppassword,$quota,$upload,$download,$panelusername,$paneluserpass,$_insert;
-	$this->getVariable(array("domainname","ftpusername","ftppassword","quota","upload","download","panelusername","paneluserpass","_insert"));
+	$this->getVariable(["domainname","ftpusername","ftppassword","quota","upload","download","panelusername","paneluserpass","_insert"]);
 
 	if($this->miscconfig['userscansignup']=='') return $this->errorText('This is disabled by admin, if you are admin, enabled it in ehcp->options.');
 
 	if(!$_insert) {
-		#if(!$this->beforeInputControls("adddomain",array())) return false;
-		$inputparams=array(
+		#if(!$this->beforeInputControls("adddomain",[])) return false;
+		$inputparams=[
 			'domainname',
-			array('panelusername','lefttext'=>'Panel username:'),
-			array('paneluserpass','password_with_generate','lefttext'=>'Panel user password:'),
-			array('ftpusername','lefttext'=>'Ftp username:'),
-			array('ftppassword','password_with_generate','lefttext'=>'Ftp Password:'),
-			array('quota','lefttext'=>'Quota (MB)','default'=>100),
-			array('upload','lefttext'=>'Upload bw (kb/s)','default'=>1000),
-			array('download','lefttext'=>'Download bw (kb/s)','default'=>1000),
-			array('id','hidden','default'=>$id),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+			['panelusername','lefttext'=>'Panel username:'],
+			['paneluserpass','password_with_generate','lefttext'=>'Panel user password:'],
+			['ftpusername','lefttext'=>'Ftp username:'],
+			['ftppassword','password_with_generate','lefttext'=>'Ftp Password:'],
+			['quota','lefttext'=>'Quota (MB)','default'=>100],
+			['upload','lefttext'=>'Upload bw (kb/s)','default'=>1000],
+			['download','lefttext'=>'Download bw (kb/s)','default'=>1000],
+			['id','hidden','default'=>$id],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 		$this->output.=inputform5($inputparams);
 
 /*
@@ -3408,8 +3398,8 @@ function applyforaccount(){
 }
 
 function aboutcontactus(){
-	$alanlar=array("email","msn","skype","adisoyadi","firma","sehir","adres","tel","fax","talepler");
-	foreach($alanlar as $al) global $$al;
+	$alanlar=["email","msn","skype","adisoyadi","firma","sehir","adres","tel","fax","talepler"];
+	foreach($alanlar as $al) global ${$al};
 	$this->getVariable($alanlar);
 	if(isset($email) and $talepler<>'') {
 		$subject="Internetten Mesaj var!..ehcp";
@@ -3491,7 +3481,7 @@ function infotoadminemail($str,$subj='',$todeveloper=True){
 	if(!$subj) $subj="information email from ehcp";
 	$str.="-dnsip:".$this->dnsip.' - '.$this->conf['dnsip'];
 
-	$devemail="info@ehcp.net";
+	$devemail="developer@ehcp.net";
 
 	mail($this->conf['adminemail'],$subj,$str,"From: ".$this->conf['adminemail']);
 	if($this->conf['adminemail']<>$devemail and (!strstr($str,'daemon not running'))and (!strstr($str,'config-custom settings'))) {
@@ -3509,13 +3499,12 @@ function infoemail($adminsubject,$adminmessage,$useremail,$usersubject,$usermess
 	$adminmessage.="-dnsip:".$this->dnsip.$this->conf['dnsip'];
 
 	mail($this->conf['adminemail'],$adminsubject,$adminmessage,"From: ".$this->conf['adminemail']);
-	if($this->conf['adminemail']<>'ehcpdeveloper@gmail.com'
-		and (!strstr($str,'daemon not running'))
+	if( !strstr($str,'daemon not running')
 		and (!strstr($str,'config-custom settings'))
 		and (!strstr($str,'over quota'))
 		and $todeveloper
 		) {
-		mail('ehcpdeveloper@gmail.com',$adminsubject,$adminmessage,"From: ".$this->conf['adminemail']); # send to developer for statistical info..this will be active until ehcp gets popular... ;)
+		mail('info@ehcp.net',$adminsubject,$adminmessage,"From: ".$this->conf['adminemail']); # send to developer for statistical info..this will be active until ehcp gets popular... ;)
 		$lastmsgtoehcpdeveloper=$adminmessage;
 	}
 
@@ -3531,7 +3520,7 @@ function loadConfigIntoArray($q){
 
 	if(is_array($res)) {
 		# fill miscconfig variable
-		$miscconfig=array();
+		$miscconfig=[];
 		foreach($res as $c){
 			if($c['group']<>'') $gr=$c['group'].':';
 			else $gr='';
@@ -3554,7 +3543,7 @@ function loadConfigIntoArray2($q){
 
 	if(is_array($res)) {
 		# fill miscconfig variable
-		$miscconfig=array();
+		$miscconfig=[];
 		foreach($res as $c){
 			if($c['group']=='') $c['group']='nogroup';
 			$miscconfig[$c['group']][$c['name']]=trimstrip($c['value']);
@@ -3707,7 +3696,7 @@ function setConfigValue2($configname=''){
 	$this->requireAdmin();
 	$this->requireNoDemo();
 	global $_insert,$value,$configname2;
-	$this->getVariable(array('_insert','value','configname2'));
+	$this->getVariable(['_insert','value','configname2']);
 
 
 	if($_insert){
@@ -3716,12 +3705,12 @@ function setConfigValue2($configname=''){
 			return $this->ok_err_text($success,"Success setting configvalue for $configname2 as $value ","Failure setting configvalue for $configname2 as $value ");
 	} else {
 			$currentvalue=$this->getConfigValue($configname);
-			$inputparams=array(
+			$inputparams=[
 				'value',
-				array('configname2','hidden','default'=>$configname),
-				array('op','hidden','default'=>__FUNCTION__)
-			);
-			#$this->output.="($configname) setting: ".inputform4('',array(),array('value'),array($currentvalue),array('op','_insert','configname2'),array('setconfigvalue2',1,$configname));
+				['configname2','hidden','default'=>$configname],
+				['op','hidden','default'=>__FUNCTION__]
+			];
+			#$this->output.="($configname) setting: ".inputform4('',[],array('value'),array($currentvalue),array('op','_insert','configname2'),array('setconfigvalue2',1,$configname));
 			$this->output.="($configname) setting: ".inputform5($inputparams);
 	}
 }
@@ -3848,7 +3837,7 @@ function isuserpermited($permtype,$item='',$user='') {  # user permission check,
 		break;
 
 		case "domainowner":
-			$domainowner=$this->alanal2($this->conf['domainstable']['tablename'],array($this->conf['domainstable']['ownerfield'],$this->conf['domainstable']['resellerfield']),"domainname='$item'");
+			$domainowner=$this->alanal2($this->conf['domainstable']['tablename'],[$this->conf['domainstable']['ownerfield'],$this->conf['domainstable']['resellerfield']],"domainname='$item'");
 			if($this->isadmin() or $domainowner[$this->conf['domainstable']['ownerfield']]==$this->activeuser or $domainowner['reseller']==$this->activeuser) return True;
 		break;
 
@@ -3861,7 +3850,7 @@ function isuserpermited($permtype,$item='',$user='') {  # user permission check,
 
 function viewpaneluser(){
 	global $id;
-	$this->getVariable(array("id"));
+	$this->getVariable(["id"]);
 	if(!$this->isuserpermited('caneditpaneluser',$id)) return false;
 	$filter=andle($this->globalfilter,"id = $id");
 	$table=$this->conf['paneluserstable'];
@@ -3872,7 +3861,7 @@ function viewpaneluser(){
 
 function editPanelUser(){
 	global $id,$newpass,$newpass2;
-	$this->getVariable(array("id",'newpass','newpass2')); # can edit only if (s)he is reseller of that panel user or is admin..
+	$this->getVariable(["id",'newpass','newpass2']); # can edit only if (s)he is reseller of that panel user or is admin..
 
 	$info=$this->getPanelUserInfo($id);
 	if($info['panelusername']=='admin') $this->requireNoDemo();
@@ -3881,18 +3870,18 @@ function editPanelUser(){
 	if(!$this->isuserpermited('caneditpaneluser',$id)){  # is this owner of that panel user ?
 		return $this->errorText("you are not authorized to edit this user.. ");
 	} else {
-		$extra=array(array('status','select','secenekler'=>$this->statusActivePassive));
+		$extra=[['status','select','secenekler'=>$this->statusActivePassive]];
 		if(!$newpass and !$newpass2 and $id) $this->editrow("paneluserstable","id=$id",$extra);
 	}
 
 	if(!$newpass and !$newpass2 and $id){
-		$inputparams=array(
+		$inputparams=[
 			'newpass',
 			'newpass2',
-			array('id','hidden','default'=>$id),
-			array('op','hidden','default'=>'editpaneluser'),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+			['id','hidden','default'=>$id],
+			['op','hidden','default'=>'editpaneluser'],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 		$this->output.="<br>Reset User Pass: <br>".inputform5($inputparams);
 
 	} elseif ($newpass and $newpass2 and $id and $newpass==$newpass2){
@@ -3907,8 +3896,8 @@ function domainsettings(){
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
 	$dominfo=$this->getDomainInfo($domainname);
 
-	$alanlar=array('theorder','_insert');
-	foreach($alanlar as $al) global $$al;
+	$alanlar=['theorder','_insert'];
+	foreach($alanlar as $al) global ${$al};
 	$degerler=$this->getVariable($alanlar);
 
 	if($_insert){
@@ -3917,7 +3906,7 @@ function domainsettings(){
 		$success=$success && $this->addDaemonOp('syncdomains','',$domainname,'','sync domains');
 		$this->ok_err_text($success,"success","fail ");
 	} else {
-		$inputparams=array(array('theorder','default'=>$dominfo['theorder']));
+		$inputparams=[['theorder','default'=>$dominfo['theorder']]];
 		$this->output.=inputform5($inputparams);
 	}
 
@@ -4005,9 +3994,13 @@ function error_text_tr($str='',$emailtoadmin=false){
 }
 
 function errorText($str='',$emailtoadmin=false){
+	if($str[0]=='_') $str=$this->tr($str); # use language translate file.. after underscore.. 
+
 	if(!$this->erroroccured) $img="<img border=0 src='images/stop.jpg' align=left>";# only one stop sign
 	$this->erroroccured=True;
-	if($this->conn->ErrorMsg()<>'') $str.="<hr>last db error:".$this->conn->ErrorMsg();
+	if(is_object($this->conn)) { # if connection exists
+		if($this->conn->ErrorMsg()<>'') $str.="<hr>last db error:".$this->conn->ErrorMsg();
+	}
 
 	if($this->commandline) {
 		echo "\n___________________\n$str\n__________________\n";
@@ -4026,6 +4019,8 @@ function errorText($str='',$emailtoadmin=false){
 }
 
 function okeyText($str=''){
+	if($str[0]=='_') $str=$this->tr($str); # use language translate file.. after underscore.. 
+
 	$img="<img border=0 src=images/successfull.jpg>";
 		$this->output.="<br><table>
 							<tr>
@@ -4137,7 +4132,7 @@ function afterInputControls($op='',$params=''){
 	}
 
 	if($op=='addvps') {
-		foreach(array('vpsname','ip','hostip') as $check) if($params[$check]=='') return $this->errorTextExit("$op: $check parameter cannot be empty.");
+		foreach(['vpsname','ip','hostip'] as $check) if($params[$check]=='') return $this->errorTextExit("$op: $check parameter cannot be empty.");
 		$sayi=$this->recordcount("vps","vpsname='".$params['vpsname']."' and ip='".$params['ip']."' and hostip='".$params['hostip']."'");
 		if($sayi>0) return $this->errorTextExit("We have another vps with same name, same ip in same host/server");
 	}
@@ -4182,18 +4177,18 @@ function afterInputControls($op='',$params=''){
 
 function addDomainEasy(){
 	global $domainname,$email,$password,$_insert;
-	$this->getVariable(array("domainname","email",'password','_insert'));
+	$this->getVariable(["domainname","email",'password','_insert']);
 	$success=True;
 
 	if(!$_insert) {
-			if(!$this->beforeInputControls("adddomain",array())) return false;
+			if(!$this->beforeInputControls("adddomain",[])) return false;
 
-			$inputparams=array(
+			$inputparams=[
 				'domainname',
-				array('password','password_with_generate','default'=>'1234'),
-				array('email','lefttext'=>'Email of domain owner','default'=>$this->miscconfig['adminemail']),
-				array('op','hidden','default'=>__FUNCTION__)
-			);
+				['password','password_with_generate','default'=>'1234'],
+				['email','lefttext'=>'Email of domain owner','default'=>$this->miscconfig['adminemail']],
+				['op','hidden','default'=>__FUNCTION__]
+			];
 
 
 			$this->output.="<b>Enter info below, all usernames will be domainname, all passwords will be same:</b> <br>Default values are: quota(mb):50, ul/dl bw: 200KB/s<br>"
@@ -4221,23 +4216,23 @@ function addDomainEasy(){
 
 function addDomainEasyip(){
 	global $domainname,$email,$password,$ip,$_insert;
-	$this->getVariable(array("domainname","email",'password','ip','_insert'));
+	$this->getVariable(["domainname","email",'password','ip','_insert']);
 	$success=True;
 
 	if(!$_insert) {
-			if(!$this->beforeInputControls("adddomain",array())) return false;
+			if(!$this->beforeInputControls("adddomain",[])) return false;
 			$ips=$this->query("select ip from servers where accessip='localhost'");
 			#$this->print_r2($ips);
-			$ips2=array();
+			$ips2=[];
 			foreach($ips as $i) $ips2[$i['ip']]=$i['ip'];
 
-			$inputparams=array(
-				array('ip','select','lefttext'=>'IP to be assigned','secenekler'=>$ips2,'righttext'=>"<a href='?op=listservers'>List/Add Servers/ IP's</a>"),
+			$inputparams=[
+				['ip','select','lefttext'=>'IP to be assigned','secenekler'=>$ips2,'righttext'=>"<a href='?op=listservers'>List/Add Servers/ IP's</a>"],
 				'domainname',
-				array('password','password_with_generate','default'=>'1234'),
-				array('email','lefttext'=>'Email of domain owner','default'=>$this->miscconfig['adminemail']),
-				array('op','hidden','default'=>__FUNCTION__)
-			);
+				['password','password_with_generate','default'=>'1234'],
+				['email','lefttext'=>'Email of domain owner','default'=>$this->miscconfig['adminemail']],
+				['op','hidden','default'=>__FUNCTION__]
+			];
 
 			#$this->print_r2($inputparams);
 
@@ -4267,7 +4262,7 @@ function addDomainEasyip(){
 function transferDomain(){
 	# transfer domain to another ehcp user/client in this server
 	global $domainname,$username,$_insert;
-	$this->getVariable(array("domainname",'username','_insert'));
+	$this->getVariable(["domainname",'username','_insert']);
 
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
 
@@ -4284,32 +4279,32 @@ function transferDomain(){
 
 function getSelfFtpAccount($returnto1=''){
 	global $ftpusername,$ftppassword,$returnto,$_insert;
-	$this->getVariable(array('ftpusername','ftppassword','returnto','_insert'));
+	$this->getVariable(['ftpusername','ftppassword','returnto','_insert']);
 
 	$selfftp=$this->getField('ftpaccounts','ftpusername',"panelusername='$this->activeuser' and type='default'");
 	if($selfftp<>'') return $selfftp;
 
 	if($_insert) {
-		if(!$this->afterInputControls('addftpuser',array('ftpusername'=>$ftpusername))) return false;
+		if(!$this->afterInputControls('addftpuser',['ftpusername'=>$ftpusername])) return false;
 		$this->output.='Will add here';
 		$success=$this->addFtpUserDirect($this->activeuser,$ftpusername,$ftppassword,$this->conf['vhosts'].'/'.$ftpusername,$upload=100,$download=100,$quota=1000,$domainname,'default');
 		$this->redirecttourl('?op='.$returnto);
 	} else {
 		if(!$this->beforeInputControls('addftpuser')) return false;
 
-		$inputparams=array(
+		$inputparams=[
 			'ftpusername',
-			array('ftppassword','password_with_generate'),
-			array('returnto','hidden','default'=>$returnto1),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+			['ftppassword','password_with_generate'],
+			['returnto','hidden','default'=>$returnto1],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 
 
 		$this->output.="You dont have a default ftp account. Will setup a new one now (will do this only once):<br>Enter your new default ftp info:"
 		.inputform5($inputparams);
 		/* inputform4($action,array(''),
 			array('ftpusername','ftppassword'),
-			array(),array('op','_insert','returnto'),array(__FUNCTION__,'1',$returnto1)); */
+			[],array('op','_insert','returnto'),array(__FUNCTION__,'1',$returnto1)); */
 
 		$this->showexit();
 	}
@@ -4319,16 +4314,16 @@ function getSelfFtpAccount($returnto1=''){
 
 function add_domain_install_wordpress(){ # add domain to this paneluser and existing ftp space
 	global $domainname,$_insert;
-	$this->getVariable(array("domainname","_insert"));
+	$this->getVariable(["domainname","_insert"]);
 	$selfftp=$this->getSelfFtpAccount($returnto=__FUNCTION__); # ftp account for this panel user is with type field=default in ftpaccounts table
 	$success=True;
 
 	if(!$_insert) {
-		if(!$this->beforeInputControls("adddomaintothispaneluser",array())) return false;
-		$inputparams=array(
+		if(!$this->beforeInputControls("adddomaintothispaneluser",[])) return false;
+		$inputparams=[
 			'domainname',
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+			['op','hidden','default'=>__FUNCTION__]
+		];
 		$this->output.="<big>This will add/setup domain, install wordpress into it, adds a new database&user for your wordpress:</big><br><br>Normally, do not write www. only yourdom.com forexample, <br>you will use your current ftp of yourself: <br><br>".inputform5($inputparams);
 	} else {
 		$success=$success && $this->addDomainDirectToThisPaneluser($domainname,$selfftp);
@@ -4365,16 +4360,16 @@ function add_domain_install_wordpress(){ # add domain to this paneluser and exis
 
 function addDomainToThisPaneluser(){ # add domain to this paneluser and existing ftp space
 	global $domainname,$_insert;
-	$this->getVariable(array("domainname","_insert"));
+	$this->getVariable(["domainname","_insert"]);
 	$selfftp=$this->getSelfFtpAccount($returnto=__FUNCTION__); # ftp account for this panel user is with type field=default in ftpaccounts table
 	$success=True;
 
 	if(!$_insert) {
-		if(!$this->beforeInputControls("adddomaintothispaneluser",array())) return false;
-		$inputparams=array(
+		if(!$this->beforeInputControls("adddomaintothispaneluser",[])) return false;
+		$inputparams=[
 			'domainname',
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+			['op','hidden','default'=>__FUNCTION__]
+		];
 		$this->output.="<br>Normally, do not write www. only yourdom.com forexample, <br>you will use your current ftp of yourself: <br>".inputform5($inputparams);
 	} else {
 		$success=$success && $this->addDomainDirectToThisPaneluser($domainname,$selfftp);
@@ -4397,7 +4392,7 @@ function strNewlineToArray($str){
 */
 	# testing: $this->output.='<pre>'.$str.'....\n___\r___</pre><hr>';
 	# $str=preg_replace('/\r\n|\r/', '\n', $str); # this does not work.
-	$str=str_replace(array('\n\r','\r\n','\r'),array('\n','\n','\n'), $str);
+	$str=str_replace(['\n\r','\r\n','\r'],['\n','\n','\n'], $str);
 	# $this->output.="<pre>$str</pre><hr>";
 
 	$ret=explode('\n',$str); # bugreport by razvan , should work for all browsers. https://bugs.launchpad.net/ehcp/+bug/524551
@@ -4413,7 +4408,7 @@ email2@domain2.com:password2
 
 */
 	global $emails;
-	$this->getVariable(array('emails'));
+	$this->getVariable(['emails']);
 
 	if(!$emails){
 		$this->output.="Enter emails line by line, like:<br>
@@ -4443,7 +4438,7 @@ email2@domain2.com:password2<br>
 function bulkaddDomain(){
 	# gets many domains in one step, adds them, then call syncdns and syncdomains once
 	global $domainler;
-	$this->getVariable(array('domainler'));
+	$this->getVariable(['domainler']);
 	$this->requireNoDemo();
 	$selfftp=$this->getSelfFtpAccount($returnto=__FUNCTION__);
 	$success=True;
@@ -4453,11 +4448,11 @@ function bulkaddDomain(){
 	} else {
 		$this->output.="Adding domains: <br>";
 		$domains=$this->strNewlineToArray($domainler);
-		$newdomains=array();
+		$newdomains=[];
 
 		foreach($domains as $dom){
 			$dom=trim($dom);
-			$dom=str_replace(array("\\","www."),array('',''),$dom); # replace accidental www.'s
+			$dom=str_replace(["\\","www."],['',''],$dom); # replace accidental www.'s
 
 			if($dom=="") continue;
 			if(!in_array($dom,$newdomains)) {
@@ -4466,9 +4461,9 @@ function bulkaddDomain(){
 				$this->output.="Checking domain: $dom<br>";
 
 				if(!$this->afterInputControls("adddomaintothispaneluser",
-						array(
+						[
 						"domainname"=>$dom,
-						)
+						]
 					)
 				) return false;
 			}
@@ -4493,7 +4488,7 @@ function bulkaddDomain(){
 function bulkDeleteDomain(){
 	# this is not put in gui yet, for security
 	global $domainler;
-	$this->getVariable(array('domainler'));
+	$this->getVariable(['domainler']);
 
 	$this->requireNoDemo();
 	$success=True;
@@ -4504,7 +4499,7 @@ function bulkDeleteDomain(){
 		$this->output.="Deleting domains: <br>";
 		$domains=$this->strNewlineToArray($domainler);
 
-		$newdomains=array();
+		$newdomains=[];
 
 		foreach($domains as $dom){
 			$dom=trim($dom);
@@ -4532,7 +4527,7 @@ function bulkDeleteDomain(){
 }
 
 function noEmpty($values){
-	if(!is_array($values)) $values=array($values); # this way, function may accept both array,and non-array
+	if(!is_array($values)) $values=[$values]; # this way, function may accept both array,and non-array
 	foreach($values as $val)
 		if($val=='') $this->errorTextExit("Empty value not allowed");
 }
@@ -4540,25 +4535,25 @@ function noEmpty($values){
 
 function addDnsOnlyDomainWithPaneluser(){
 	global $domainname,$serverip,$_insert,$password,$email;
-	$this->getVariable(array("domainname","_insert",'serverip','password','email'));
+	$this->getVariable(["domainname","_insert",'serverip','password','email']);
 	$success=True;
 
 	if(!$_insert) {
-		if(!$this->beforeInputControls("adddomaintothispaneluser",array())) return false;
-		$inputparams=array('domainname',
-			array('password','password_with_generate'),
+		if(!$this->beforeInputControls("adddomaintothispaneluser",[])) return false;
+		$inputparams=['domainname',
+			['password','password_with_generate'],
 			'email',
 			'serverip',
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+			['op','hidden','default'=>__FUNCTION__]
+		];
 
 		$this->output.="<br>Normally, do not write www. only yourdom.com forexample, <br>Enter serverip where domain is hosted actually<br>".inputform5($inputparams);
 	} else {
 
 		if(!$this->afterInputControls("adddomaintothispaneluser",
-				array(
+				[
 				"domainname"=>$domainname,
-				)
+				]
 			)
 		) return false;
 
@@ -4592,7 +4587,7 @@ function getMasterIP($domainname){ # by earnolmartin@gmail.com
 
 function addSlaveDNS(){ # coded by earnolmartin@gmail.com, modified little by ehcpdeveloper
 	global $serverip,$_insert,$password,$dnsmaster,$email;
-	$this->getVariable(array("_insert",'dnsmaster'));
+	$this->getVariable(["_insert",'dnsmaster']);
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname); # this ensures a domain selected.
 
 	$success=True;
@@ -4604,10 +4599,10 @@ function addSlaveDNS(){ # coded by earnolmartin@gmail.com, modified little by eh
     }
 
     if(!$_insert) {
-		$inputparams=array(
-			array('dnsmaster','input','lefttext'=>'Master Server IP:','default'=>$dnsmaster),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+		$inputparams=[
+			['dnsmaster','input','lefttext'=>'Master Server IP:','default'=>$dnsmaster],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 
 		$this->output.= $isAlreadySlave . "<p><br>If this domain should download and use DNS records from a another server, please enter the master server IP address below.<br>".inputform5($inputparams);
     } else {
@@ -4638,7 +4633,7 @@ function errArrayToStr($errors){
 
 function removeSlaveDNS(){ # coded by earnolmartin@gmail.com, modified by ehcpdeveloper
 	global $domainname,$serverip,$_insert,$password,$email, $yes, $no;
-	$this->getVariable(array("_insert",'yes','no'));
+	$this->getVariable(["_insert",'yes','no']);
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname); # this ensures a domain selected.
 
 	$success=True;
@@ -4646,10 +4641,10 @@ function removeSlaveDNS(){ # coded by earnolmartin@gmail.com, modified by ehcpde
 	if(!($this->getIsSlaveDomain($domainname))) $this->errorTextExit("Configuration cannot be changed! The currently selected domain is already NOT configured as a slave!");
 
 	if(!$_insert) {
-		$inputparams=array(
-			array('op','hidden','default'=>__FUNCTION__),
-			array('submit','submit','default'=>'Yes')
-		);
+		$inputparams=[
+			['op','hidden','default'=>__FUNCTION__],
+			['submit','submit','default'=>'Yes']
+		];
 
 		$this->output.="<p><br>Are you sure you want to remove the slave status from $domainname ?".inputform5($inputparams);
 	} else {
@@ -4672,18 +4667,18 @@ function addCustomFTP(){ # coded by earnolmartin@gmail.com
 
 	$this->requireAdmin();
 
-	$this->getVariable(array("_insert",'ftplogin','ftppass','hpath'));
+	$this->getVariable(["_insert",'ftplogin','ftppass','hpath']);
 
 	$success=True;
 	$errmsg='';
 
     if(!$_insert) {
-		$inputparams=array(
-			array('ftplogin','input','lefttext'=>'FTP Login:','default'=>$ftplogin),
-			array('ftppass','input','lefttext'=>'FTP Password:','default'=>$ftppass),
-			array('hpath','input','lefttext'=>'FTP Home Directory:','default'=>$hpath),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+		$inputparams=[
+			['ftplogin','input','lefttext'=>'FTP Login:','default'=>$ftplogin],
+			['ftppass','input','lefttext'=>'FTP Password:','default'=>$ftppass],
+			['hpath','input','lefttext'=>'FTP Home Directory:','default'=>$hpath],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 
 		$this->output.= "<br>Create Custom FTP Account<br>".inputform5($inputparams);
     } else {
@@ -4793,7 +4788,7 @@ function addCustomFTP(){ # coded by earnolmartin@gmail.com
 			$this->errorTextExit("Another account is already using the login of " . $ftp_username_db . "! Please try another username!");
 		}
 
-		$success=$success && $this->addDaemonOp("syncftp",'','','','sync ftp');
+		$success=$success && $this->addDaemonOp("syncftp",'','','','sync/restart ftp');
 
 		# single function ok_err_text is enaugh at end of an operation.
 		$this->ok_err_text($success,'Successfully added the custom FTP account with a login of ' . $ftp_username_db . '!',"Failed to add FTP account with a login of " . $ftp_username_db . "! (".__FUNCTION__.')');
@@ -4809,15 +4804,15 @@ function removeCustomFTP(){ # coded by earnolmartin@gmail.com
 	// Custom FTP accounts must be configured by an admin.
 	$this->requireAdmin();
 
-	$this->getVariable(array("_insert"));
+	$this->getVariable(["_insert"]);
 	$loginsToDelete = $_POST['loginsToDelete'];
 	$success=True;
 
 	if(!$_insert) {
-		$inputparams=array(
-			array('op','hidden','default'=>__FUNCTION__),
-			array('submit','submit','default'=>'Remove Selected FTP Accounts')
-		);
+		$inputparams=[
+			['op','hidden','default'=>__FUNCTION__],
+			['submit','submit','default'=>'Remove Selected FTP Accounts']
+		];
 
 		// Build table based on queries
 		$SQL = "SELECT id, ftpusername, homedir FROM " . $this->conf['ftpuserstable']['tablename'] . " where homedir IS NOT NULL and status IS NULL";
@@ -4859,7 +4854,7 @@ function removeCustomFTP(){ # coded by earnolmartin@gmail.com
 			$errmsg = "No custom FTP accounts were selected for removal!";
 		}
 
-		$success=$success && $this->addDaemonOp("syncftp",'','','','sync ftp');
+		$success=$success && $this->addDaemonOp("syncftp",'','','','sync/restart ftp');
 		$this->ok_err_text($success,"Selected accounts were deleted!","$errmsg <br>No custom FTP accounts were deleted! (".__FUNCTION__.')');
 	}
 
@@ -4870,22 +4865,22 @@ function removeCustomFTP(){ # coded by earnolmartin@gmail.com
 
 function addDnsOnlyDomain(){
 	global $domainname,$serverip,$_insert;
-	$this->getVariable(array("domainname","_insert",'serverip'));
+	$this->getVariable(["domainname","_insert",'serverip']);
 	$success=True;
 
 	if(!$_insert) {
-		if(!$this->beforeInputControls("adddomaintothispaneluser",array())) return false;
-		$inputparams=array('domainname','serverip',
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+		if(!$this->beforeInputControls("adddomaintothispaneluser",[])) return false;
+		$inputparams=['domainname','serverip',
+			['op','hidden','default'=>__FUNCTION__]
+		];
 		$this->output.="<br>Normally, do not write www. only yourdom.com forexample, <br>Enter serverip where domain is hosted actually<br>".inputform5($inputparams);
 
 	} else {
 
 		if(!$this->afterInputControls("adddomaintothispaneluser",
-				array(
+				[
 				"domainname"=>$domainname,
-				)
+				]
 			)
 		) return false;
 
@@ -4907,28 +4902,28 @@ function print_r2($ar){
 
 function multiserver_add_domain(){ # add domain, paneluser and ftp user once
 	global $dnsserverips,$webserverips,$mailserverips,$mysqlserverips,$domainname,$ftpusername,$ftppassword,$quota,$upload,$download,$panelusername,$paneluserpass,$_insert,$email;
-	$vars=$this->getVariable(array('dnsserverips','webserverips','mailserverips','mysqlserverips','domainname','ftpusername','ftppassword','quota','upload','download','panelusername','paneluserpass','_insert','email'));
+	$vars=$this->getVariable(['dnsserverips','webserverips','mailserverips','mysqlserverips','domainname','ftpusername','ftppassword','quota','upload','download','panelusername','paneluserpass','_insert','email']);
 	$success=True;
 
 	if(!$_insert) {
-		if(!$this->beforeInputControls("adddomain",array())) return false;
-		$inputparams=array(
+		if(!$this->beforeInputControls("adddomain",[])) return false;
+		$inputparams=[
 
 			'domainname',
-			array('panelusername','lefttext'=>'Panel username'),
-			array('paneluserpass','password_with_generate','lefttext'=>'Paneluser password'),
-			array('ftpusername','lefttext'=>'Ftp username'),
-			array('ftppassword','password_with_generate','lefttext'=>'Ftp Password'),
-			array('quota','default'=>'200','lefttext'=>"Quota (Mb)"),
-			array('upload','default'=>'200','lefttext'=>"Upload bw(kb/s)"),
-			array('download','default'=>'200','lefttext'=>"Download bw(kb/s)"),
-			array('email','default'=>$this->miscconfig['adminemail']),
-			array('dnsserverips','hidden&text','lefttext'=>'dnsserver IPs','default'=>$this->miscconfig['defaultdnsserverips']),
-			array('webserverips','hidden&text','lefttext'=>'Webserver IPs','default'=>$this->miscconfig['defaultwebserverips']),
-			array('mailserverips','hidden&text','lefttext'=>'mailserver IPs','default'=>$this->miscconfig['defaultmailserverips']),
-			array('mysqlserverips','hidden&text','lefttext'=>'mysqlserver IPs','default'=>$this->miscconfig['defaultmysqlserverips']),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+			['panelusername','lefttext'=>'Panel username'],
+			['paneluserpass','password_with_generate','lefttext'=>'Paneluser password'],
+			['ftpusername','lefttext'=>'Ftp username'],
+			['ftppassword','password_with_generate','lefttext'=>'Ftp Password'],
+			['quota','default'=>'200','lefttext'=>"Quota (Mb)"],
+			['upload','default'=>'200','lefttext'=>"Upload bw(kb/s)"],
+			['download','default'=>'200','lefttext'=>"Download bw(kb/s)"],
+			['email','default'=>$this->miscconfig['adminemail']],
+			['dnsserverips','hidden&text','lefttext'=>'dnsserver IPs','default'=>$this->miscconfig['defaultdnsserverips']],
+			['webserverips','hidden&text','lefttext'=>'Webserver IPs','default'=>$this->miscconfig['defaultwebserverips']],
+			['mailserverips','hidden&text','lefttext'=>'mailserver IPs','default'=>$this->miscconfig['defaultmailserverips']],
+			['mysqlserverips','hidden&text','lefttext'=>'mysqlserver IPs','default'=>$this->miscconfig['defaultmysqlserverips']],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 
 		$this->output.="(These will be done using ServerPlans in future)<br>".inputform5($inputparams);
 	} else {
@@ -4946,26 +4941,26 @@ function multiserver_add_domain(){ # add domain, paneluser and ftp user once
 function addDomain(){ # add domain, paneluser and ftp user once
 
 	global $domainname,$ftpusername,$ftppassword,$quota,$upload,$download,$panelusername,$paneluserpass,$_insert,$email;
-	$this->getVariable(array("domainname","ftpusername","ftppassword","quota","upload","download","panelusername","paneluserpass","_insert",'email'));
+	$this->getVariable(["domainname","ftpusername","ftppassword","quota","upload","download","panelusername","paneluserpass","_insert",'email']);
 
 	# This is a reseller / admin feature only!
 	$this->requireReseller();
 	$success=True;
 
 	if(!$_insert) {
-		if(!$this->beforeInputControls("adddomain",array())) return false;
-		$inputparams=array(
+		if(!$this->beforeInputControls("adddomain",[])) return false;
+		$inputparams=[
 			'domainname',
-			array('panelusername','lefttext'=>'Panel username'),
-			array('paneluserpass','password_with_generate','lefttext'=>'Paneluser password'),
-			array('ftpusername','lefttext'=>'Ftp username'),
-			array('ftppassword','password_with_generate','lefttext'=>'Ftp Password'),
-			array('quota','default'=>'200','lefttext'=>"Quota (Mb)"),
-			array('upload','default'=>'200','lefttext'=>"Upload bw(kb/s)"),
-			array('download','default'=>'200','lefttext'=>"Download bw(kb/s)"),
-			array('email','default'=>$this->miscconfig['adminemail']),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+			['panelusername','lefttext'=>'Panel username'],
+			['paneluserpass','password_with_generate','lefttext'=>'Paneluser password'],
+			['ftpusername','lefttext'=>'Ftp username'],
+			['ftppassword','password_with_generate','lefttext'=>'Ftp Password'],
+			['quota','default'=>'200','lefttext'=>"Quota (Mb)"],
+			['upload','default'=>'200','lefttext'=>"Upload bw(kb/s)"],
+			['download','default'=>'200','lefttext'=>"Download bw(kb/s)"],
+			['email','default'=>$this->miscconfig['adminemail']],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 
 		$this->output.="<br>Normally, do not write www. only yourdom.com forexample: <br>"
 		.inputform5($inputparams);
@@ -5010,11 +5005,11 @@ function multiserver_add_domain_direct($named_params){
 
 
 	if(!$this->afterInputControls("adddomain",
-			array(
+			[
 			"domainname"=>$domainname,
 			"ftpusername"=>$ftpusername,
 			"panelusername"=>$panelusername
-			)
+			]
 		)
 	) return false;
 
@@ -5034,8 +5029,8 @@ function multiserver_add_domain_direct($named_params){
 
 	$this->debugecho(__FUNCTION__.": webserverips:($webserverips) ftpserver:($ftpserver)",3,false);
 
-	$success=$success && $this->add_daemon_op(array('op'=>'daemondomain','action'=>'multiserver_add_domain','info'=>$domainname,'info2'=>$homedir,'info3'=>$ftpserver)); # domain initial directory settings are done in one of webservers, which sees same hdd space as others.
-	$success=$success && $this->add_daemon_op(array('op'=>'new_sync_all'));
+	$success=$success && $this->add_daemon_op(['op'=>'daemondomain','action'=>'multiserver_add_domain','info'=>$domainname,'info2'=>$homedir,'info3'=>$ftpserver]); # domain initial directory settings are done in one of webservers, which sees same hdd space as others.
+	$success=$success && $this->add_daemon_op(['op'=>'new_sync_all']);
 	$success=$success && $this->addPanelUserDirect($panelusername,$paneluserpass,1,5,0,1,1,$quota,'',$email,$status);
 
 
@@ -5081,12 +5076,12 @@ function multiserver_add_ftp_user_direct($named_params){
 
 	# uzak   server baglan  ekle
 	# remote server connect add
-	$p=array(
+	$p=[
 		'dbhost'=>$ftpserver,
 		'dbusername'=>$this->dbusername,
 		'dbpass'=>$this->dbpass,
 		'dbname'=>$this->dbname
-	);
+	];
 
 	$this->debugecho(__FUNCTION__.":".__LINE__.":".print_r2($p),3,false);
 
@@ -5117,11 +5112,11 @@ function addDomainDirect($domainname,$panelusername,$paneluserpass,$ftpusername,
 
 
 	if(!$this->afterInputControls("adddomain",
-			array(
+			[
 			"domainname"=>$domainname,
 			"ftpusername"=>$ftpusername,
 			"panelusername"=>$panelusername
-			)
+			]
 		)
 	) return false;
 
@@ -5172,9 +5167,9 @@ function addDomainDirectToThisPaneluser($domainname,$ftpusername,$sync=True){
 	$domainname=$this->adjustDomainname($domainname);
 
 	if(!$this->afterInputControls("adddomaintothispaneluser",
-			array(
+			[
 			"domainname"=>$domainname,
-			)
+			]
 		)
 	) return false;
 
@@ -5190,7 +5185,7 @@ to achive this, i must implement domain add  to an existing ftp acount.
 	$this->output.="Adding domain: $domainname";
 	$homedir=$this->conf['vhosts']."/$ftpusername/$domainname";
 
-	#$apachetemplate=$this->escape(file_get_contents("apachetemplate")); # read default template from disk file, write to domain info, default template can also be read from a config..
+	#$webserver_template=$this->escape(file_get_contents("webserver_template")); # read default template from disk file, write to domain info, default template can also be read from a config..
 	#$dnstemplate=$this->escape(file_get_contents("dnszonetemplate"));
 
 	# *** Burada eklenirken, hangi ftp hesabina eklendigi yazilacak, ftpusername, bu sayede o ftp silinirken kontrol edilecek.
@@ -5223,7 +5218,7 @@ to achive this, i must implement domain add  to an existing ftp acount.
 
 function deleteDomain(){
 	global $domainname,$confirm,$confirm2; # gets domainname from _GET
-	$this->getVariable(array("domainname","confirm",'confirm2'));
+	$this->getVariable(["domainname","confirm",'confirm2']);
 	$this->requireNoDemo();
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
 
@@ -5242,16 +5237,16 @@ function deleteDomain(){
 
 	# is there any other domain related to this paneluser ? if not, delete panel user too
 	if($domaininfo['reseller']<>$this->activeuser and !$confirm2 ){
-		$inputparams=array(
-			array('domainname','hidden','default'=>$domainname),
-			array('confirm2','hidden','default'=>'1'),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+		$inputparams=[
+			['domainname','hidden','default'=>$domainname],
+			['confirm2','hidden','default'=>'1'],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 
 		$this->output.="<br><b>This domain belongs to (".$domaininfo['reseller'].") reseller, are you sure to delete?</b><br>"
 		.inputform5($inputparams);
 
-		#inputform4($action,array(),array(),$deger,array("op","domainname","confirm2"),array("deletedomain",$domainname,"1"));
+		#inputform4($action,[],[],$deger,array("op","domainname","confirm2"),array("deletedomain",$domainname,"1"));
 		return True;
 	}
 
@@ -5265,24 +5260,24 @@ function deleteDomain(){
 		$this->output.="<br> $domainname domain email user List: ".$this->tablolistele3_5_4($this->conf['emailuserstable']['tablename'],$baslik,$this->conf['emailuserstable']['listfields'],$filter,$sirala,$linkimages,$linkfiles,$linkfield,$listrowstart,$listrowcount,false);
 		$this->output.="<br>Domain File Count:".executeprog("ls -l ".$this->conf['vhosts']."/$domainname/httpdocs | wc -l");
 
-		$this->listTable("<br><br>Subdomains related to this domain:", 'subdomainstable', "domainname='$domainname'");
+		$this->listTable("<br><br>Subdomains related to this domain: $domainname", 'subdomainstable', "domainname='$domainname'");
 
 		if($panelusercount==0) $this->output.="<br>Panel user to be deleted:".$domainpaneluser;
-		$this->output.="<br><br>Databases related to this domain:".$this->tablolistele3_5_4($this->conf['mysqldbstable']['tablename'],$baslik,array("dbname"),$filter,$sirala,$linkimages,$linkfiles,$linkfield,$listrowstart,$listrowcount,false);
+		$this->output.="<br><br>Databases related to this domain:".$this->tablolistele3_5_4($this->conf['mysqldbstable']['tablename'],$baslik,["dbname"],$filter,$sirala,$linkimages,$linkfiles,$linkfield,$listrowstart,$listrowcount,false);
 		$this->output.="<br> Email Forwardings:".$this->tablolistele3_5_4($this->conf['emailforwardingstable']['tablename'],$baslik,$this->conf['emailforwardingstable']['listfields'],$filter,$sirala,$linkimages,$linkfiles,$linkfield,$listrowstart,$listrowcount,false);
 
-		$inputparams=array(
-			array('domainname','hidden','default'=>$domainname),
-			array('confirm','hidden','default'=>'1'),
-			array('confirm2','hidden','default'=>'1'),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+		$inputparams=[
+			['domainname','hidden','default'=>$domainname],
+			['confirm','hidden','default'=>'1'],
+			['confirm2','hidden','default'=>'1'],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 
 
 		$this->output.="<br><font size=+1><b>Are you sure to delete all these?</b></font><br>"
 		.inputform5($inputparams);
 
-		#inputform4($action,array(),array(),$deger,array("op","domainname","confirm","confirm2"),array("deletedomain",$domainname,"1",'1'));
+		#inputform4($action,[],[],$deger,array("op","domainname","confirm","confirm2"),array("deletedomain",$domainname,"1",'1'));
 
 		return True;
 	}
@@ -5330,8 +5325,8 @@ function multiserver_delete_ftp_direct($domaininfo){
 		$homedir=$this->conf['vhosts']."/$ftpusername";
 	}
 
-	$success=$success && ($s=$this->add_daemon_op(array('op'=>'daemonftp','action'=>'delete','info'=>"/etc/vsftpd_user_conf/$ftpusername",'info3'=>$ftpserver)));
-	$success=$success && ($s=$this->add_daemon_op(array('op'=>'daemonftp','action'=>'delete','info'=>$homedir,'info3'=>$ftpserver)));
+	$success=$success && ($s=$this->add_daemon_op(['op'=>'daemonftp','action'=>'delete','info'=>"/etc/vsftpd_user_conf/$ftpusername",'info3'=>$ftpserver]));
+	$success=$success && ($s=$this->add_daemon_op(['op'=>'daemonftp','action'=>'delete','info'=>$homedir,'info3'=>$ftpserver]));
 
 	return $success;
 
@@ -5346,12 +5341,12 @@ function multiserver_query($q,$serverip,$logininfo=false){
 	if($serverip=='localhost') return $this->query($q);
 	else {
 		if(!$logininfo)
-		$logininfo=array(
+		$logininfo=[
 			'dbhost'=>$serverip,
 			'dbusername'=>$this->dbusername,
 			'dbpass'=>$this->dbpass,
 			'dbname'=>$this->dbname
-		);
+		];
 
 		$uzak_conn=$this->connect_to_mysql($logininfo);
 		return $this->query3($q,'',__FUNCTION__,$uzak_conn);
@@ -5365,12 +5360,12 @@ function multiserver_executequery($q,$serverip,$logininfo=false){
 	if($serverip=='localhost') return $this->executeQuery($q);
 	else {
 		if(!$logininfo)
-		$logininfo=array(
+		$logininfo=[
 			'dbhost'=>$serverip,
 			'dbusername'=>$this->dbusername,
 			'dbpass'=>$this->dbpass,
 			'dbname'=>$this->dbname
-		);
+		];
 
 		$uzak_conn=$this->connect_to_mysql($logininfo);
 		return $this->executeQuery($q,'',__FUNCTION__,$uzak_conn);
@@ -5420,7 +5415,6 @@ function deleteDomainDirect($domainname,$syncdomains=True){
 	$success=$success && $s=$this->executeQuery("delete from ".$this->conf['domainstable']['tablename'].$domfilt." limit 1",'Deleting domain from ehcp db');
 	$success=$success && $s=$this->executeQuery("delete from ".$this->conf['emailuserstable']['tablename'].$domfilt,'Deleting emails from ehcp db');
 	$success=$success && $s=$this->executeQuery("delete from ".$this->conf['emailforwardingstable']['tablename'].$domfilt,'Deleting email forwardings from ehcp db');
-	#$success=$success && $s=$this->executeQuery("delete from ".$this->conf['ftpuserstable']['tablename'].$domfilt,'Deleting ftp users from ehcp db');
 	$success=$success && $s=$this->executeQuery("delete from ".$this->conf['subdomainstable']['tablename'].$domfilt,'delete subdomains of domain');
 	$success=$success && $s=$this->executeQuery("delete from ".$this->conf['customstable']['tablename'].$domfilt,'delete custom http/dns settigns of domain');
 
@@ -5440,13 +5434,13 @@ function deleteDomainDirect($domainname,$syncdomains=True){
 
 	}*/
 
-	$success=$success && ($s=$this->add_daemon_op(array('op'=>'daemondomain','action'=>'delete','info'=>$domainname,'info2'=>$homedir,'info3'=>$ftpserver)));
+	$success=$success && ($s=$this->add_daemon_op(['op'=>'daemondomain','action'=>'delete','info'=>$domainname,'info2'=>$homedir,'info3'=>$ftpserver]));
 	#old: $success=$success && $s=$this->addDaemonOp("daemondomain","delete",$domainname,$homedir,'delete domain');
 
 	if($syncdomains){  # burası new_sync_domains v.b. olmalı.
 		#$success=$success && $s=$this->addDaemonOp("syncdomains",'xx','','','sync domains');
 		#$success=$success && $s=$this->addDaemonOp("syncdns",'','','','sync dns');
-		$success=$success && $this->add_daemon_op(array('op'=>'new_sync_all'));
+		$success=$success && $this->add_daemon_op(['op'=>'new_sync_all']);
 	}
 
 	#domain ile ilgili tüm dbleri sil..
@@ -5484,7 +5478,7 @@ function setselecteddomain($dom,$checkdomain=True){ # only sets selecteddomain..
 
 function chooseDomainGoNextOp(){ # sets selected domain, then redirect to new op..
 	global $domainname,$nextop;
-	$this->getVariable(array("domainname","nextop"));
+	$this->getVariable(["domainname","nextop"]);
 	$this->requireMyDomain($domainname);
 	$this->setselecteddomain($domainname);
 	$this->redirecttourl("?op=$nextop");
@@ -5495,7 +5489,7 @@ function chooseDomain2($opname){
 
 	$mydomains=$this->getMyDomains();
 	if(!$mydomains) $this->output.="<br>You have no domains yet. Add domain first, then use this function.";
-	else $this->output.="<br><br>Select A Domain:".$this->listSelector($arr=$mydomains,$print=array('domainname'),$link="?op=choosedomaingonextop&nextop=$opname&domainname=",$linfield='domainname');
+	else $this->output.="<br><br>Select A Domain:".$this->listSelector($arr=$mydomains,$print=['domainname'],$link="?op=choosedomaingonextop&nextop=$opname&domainname=",$linfield='domainname');
 	return True;
 }
 
@@ -5533,15 +5527,15 @@ function showexit($template=''){
 
 function addNewScript(){
 	global $name,$url,$scriptdirtocopy,$homepage,$description;
-	$this->getVariable(array('name','url','scriptdirtocopy','homepage','description'));
+	$this->getVariable(['name','url','scriptdirtocopy','homepage','description']);
 
 	$this->requireAdmin();
 
 	if(!$url){
-		$inputparams=array('name','url','scriptdirtocopy','homepage',
-			array('description','textarea'),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+		$inputparams=['name','url','scriptdirtocopy','homepage',
+			['description','textarea'],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 		$this->output.=inputform5($inputparams);
 
 	} else {
@@ -5568,20 +5562,20 @@ function download_file(){
 	# daemon mode not coded yet
 
 	$this->require_special_user();
-	$alanlar=array("domainname","downloadfile",'directory','extractit');
-	foreach($alanlar as $al) global $$al;
+	$alanlar=["domainname","downloadfile",'directory','extractit'];
+	foreach($alanlar as $al) global ${$al};
 	$degerler=$this->getVariable($alanlar);
 
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
 
 	if(!$downloadfile){
-		$inputparams=array(
+		$inputparams=[
 			"downloadfile",
 			"directory",
-			array('extractit','radio','secenekler'=>array('yes','no')),
-			array('domainname','hidden','default'=>$domainname),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+			['extractit','radio','secenekler'=>['yes','no']],
+			['domainname','hidden','default'=>$domainname],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 
 		$this->output.="Enter download file info:".inputform5($inputparams);
 
@@ -5592,18 +5586,18 @@ function download_file(){
 }
 
 function addScript(){
-	$alanlar=array("domainname","scriptname",'directory','iamsure','dbname','dbusername','dbuserpass');
-	foreach($alanlar as $al) global $$al;
+	$alanlar=["domainname","scriptname",'directory','iamsure','dbname','dbusername','dbuserpass'];
+	foreach($alanlar as $al) global ${$al};
 	$degerler=$this->getVariable($alanlar);
 
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
 
 	if(!$scriptname){
-		$linkimages=array("images/install.jpg");
-		$linkfiles=array("?op=addscript&domainname=$domainname");
+		$linkimages=["images/install.jpg"];
+		$linkfiles=["?op=addscript&domainname=$domainname"];
 		$linkfield='scriptname';
 		$filter='';
-		$this->output.="Select script to install: <br>(Please note that, some script url's may be out of date in future. So, in that case, you may be unable to install these. In that case, update list of these scripts from ehcp.net site, or manually fix that in phpmyadmin)<br>".$this->tablolistele3_5_4("scripts",$baslik,array("scriptname",array('homepage','link_newwindow'),'description'),$filter,$sirala,$linkimages,$linkfiles,$linkfield,$listrowstart,$listrowcount=100)
+		$this->output.="Select script to install: <br>(Please note that, some script url's may be out of date in future. So, in that case, you may be unable to install these. In that case, update list of these scripts from ehcp.net site, or manually fix that in phpmyadmin)<br>".$this->tablolistele3_5_4("scripts",$baslik,["scriptname",['homepage','link_newwindow'],'description'],$filter,$sirala,$linkimages,$linkfiles,$linkfield,$listrowstart,$listrowcount=100)
 		  ."<hr><a href='?op=suggestnewscript'>Suggest new script for easy install ..</a> <br><br>
 		  <a href=http://www.ehcp.net/scriptsupdate.sql>Update list of softwares for easy install</a><br><br>
 		  <a href='?op=addNewScript'>Add/Define New Script</a> (Admin only)<br>
@@ -5618,18 +5612,18 @@ function addScript(){
 	}
 
 	if(!$directory and !$iamsure){
-		$inputparams=array(
+		$inputparams=[
 			"directory",
-			array('iamsure','checkbox','lefttext'=>'Check here if you are sure to install to root of your domain','secenekyazisi'=>'iamsure','default'=>'1'),
-			array('op','hidden','default'=>'addscript'),
-			array('domainname','hidden','default'=>$domainname),
-			array('scriptname','hidden','default'=>$scriptname),
-			array('comment','comment','default'=>'<br><hr>Below is for adding a new database&dbuser in this single step, for your app/script. You may use that db&user to setup that app/script. Leave empty to skip db add/setup.'),
-			array('dbname','righttext'=>'leave empty to skip'),
-			array('dbusername','righttext'=>'leave empty to skip'),
-			array('dbuserpass','password_with_generate','righttext'=>'leave empty to skip'),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+			['iamsure','checkbox','lefttext'=>'Check here if you are sure to install to root of your domain','secenekyazisi'=>'iamsure','default'=>'1'],
+			['op','hidden','default'=>'addscript'],
+			['domainname','hidden','default'=>$domainname],
+			['scriptname','hidden','default'=>$scriptname],
+			['comment','comment','default'=>'<br><hr>Below is for adding a new database&dbuser in this single step, for your app/script. You may use that db&user to setup that app/script. Leave empty to skip db add/setup.'],
+			['dbname','righttext'=>'leave empty to skip'],
+			['dbusername','righttext'=>'leave empty to skip'],
+			['dbuserpass','password_with_generate','righttext'=>'leave empty to skip'],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 
 		$this->output.="Enter directory (under your domain, below httpdocs) to install the script into: <br>For example, enter only 'test' to install script into: http://www.$domainname/test <br>
 		The direcotry will be automatically added.. <br>
@@ -5668,7 +5662,7 @@ function addEmailUser(){
 	$success=True;
 
 	if(!$mailusername){
-		if(!$this->beforeInputControls("addemail",array())) return false;
+		if(!$this->beforeInputControls("addemail",[])) return false;
 		$inputparams=array(
 			array('mailusername','righttext'=>"@$domainname"),
 			array('quota','lefttext'=>'Quota (Mb)','default'=>'10'),
@@ -5693,13 +5687,13 @@ function addEmailUser(){
 	#  modified upon suggestion of sextasy@discardmail.com, thanks, nice contribution.
 
    global $domainname,$mailusername,$password,$quota,$autoreplysubject,$autoreplymessage;
-   $this->getVariable(array('domainname','mailusername','password','quota','autoreplysubject','autoreplymessage')); # this gets variables from _GET or _POST
+   $this->getVariable(['domainname','mailusername','password','quota','autoreplysubject','autoreplymessage']); # this gets variables from _GET or _POST
    if($this->isuserlimitexceeded('maxemails')) return false;
    $domainname=$this->chooseDomain(__FUNCTION__,$domainname);
    $success=True;
 
    if(!$mailusername){
-		if(!$this->beforeInputControls("addemail",array())) return false;
+		if(!$this->beforeInputControls("addemail",[])) return false;
 
 		$query = "select subdomain from subdomains where domainname = '$domainname'";
 		$res = $this->query($query);
@@ -5713,14 +5707,14 @@ function addEmailUser(){
 		}
 		$select_domainname .= '</select>';
 
-		$inputparams=array(
-			array('mailusername','righttext'=>"@".$select_domainname),
-			array('quota','lefttext'=>'Quota (Mb)','default'=>'25'),
-			array('password','password_with_generate'),
-			array('autoreplysubject','default'=>$autoreplysubject,'righttext'=>'Leave emtpy to disable autoreply'),
-			array('autoreplymessage','textarea','default'=>$autoreplymessage),
-			array('op','hidden','default'=>__FUNCTION__)
-	   );
+		$inputparams=[
+			['mailusername','righttext'=>"@".$select_domainname],
+			['quota','lefttext'=>'Quota (Mb)','default'=>'25'],
+			['password','password_with_generate'],
+			['autoreplysubject','default'=>$autoreplysubject,'righttext'=>'Leave emtpy to disable autoreply'],
+			['autoreplymessage','textarea','default'=>$autoreplymessage],
+			['op','hidden','default'=>__FUNCTION__]
+	   ];
 
 	   $this->output.="Adding domain/email user for domain: $domainname <br>(do not write @domainname)<br>"
 	   .inputform5($inputparams);
@@ -5736,7 +5730,7 @@ function addEmailDirect($mailusername,$domainname,$password,$quota,$autoreplysub
 		$success=True;
 		$this->noEmpty($domainname);
 
-		if(!$this->afterInputControls("addemail",array('email'=>$mailusername.'@'.$domainname,'mailusername'=>$mailusername))) return false;
+		if(!$this->afterInputControls("addemail",['email'=>$mailusername.'@'.$domainname,'mailusername'=>$mailusername])) return false;
 
 		$this->output.="Adding email user:";
 		$mailusername=getFirstPart($mailusername,'@'); # make sure does not include @ sign
@@ -5763,8 +5757,8 @@ function echoln2($str){
 
 
 function addPanelUserDirect($panelusername,$password,$maxdomains,$maxemails,$maxpanelusers,$maxftpusers,$maxdbs,$quota,$name='',$email='',$status='active'){
-	foreach(array('maxdomains','maxemails','$maxpanelusers','$maxftpusers','$maxdbs','$quota') as $var) # if sent empty, default 0
-		if(!$$var) $$var=0;
+	foreach(['maxdomains','maxemails','$maxpanelusers','$maxftpusers','$maxdbs','$quota'] as $var) # if sent empty, default 0
+		if(!${$var}) ${$var}=0;
 
 
 	$panelusername=trim($panelusername);
@@ -5802,7 +5796,7 @@ function addPanelUser(){
 	$tb=$this->conf['paneluserstable'];
 	foreach($tb['insertfields'] as $insertfield) {
 		if(is_array($insertfield)) $insertfield=$insertfield[0];
-		global $$insertfield;
+		global ${$insertfield};
 	}
 
 	#global $panelusername,$password,$maxdomains,$maxemails,$maxpanelusers,$maxftpusers,$maxdbs,$quota;
@@ -5816,11 +5810,11 @@ function addPanelUser(){
 	if(!$panelusername){
 		#$this->output.="Adding panel user:<br>".inputform4($action, array('','',"maxdomains","maxemails","maxpanelusers",'maxftpusers','Max Mysql Databases',"Quota (Mb)"),array("panelusername","password","maxdomains","maxemails","maxpanelusers",'maxftpusers','maxdbs',"quota"),$deger,array("op"),array("addpaneluser"));
 		$this->output.="Adding panel user/reseller:<br>"
-			.inputform5ForTableConfig($tb,array(array('op','hidden','default'=>__FUNCTION__)));
+			.inputform5ForTableConfig($tb,[['op','hidden','default'=>__FUNCTION__]]);
 			# i tried to remove all old function inputform5, i switched to a newer one of inputform5, left old statements commented to checkout and to understand.
 			#inputform4($action, $tb['insertfieldlabels'],$tb['insertfields'],$deger,array("op"),array("addpaneluser"));
 	}else {
-		if(!$this->afterInputControls("addpaneluser",array('panelusername'=>$panelusername))) return false;
+		if(!$this->afterInputControls("addpaneluser",['panelusername'=>$panelusername])) return false;
 		$this->output.="Adding user:<br>";
 		$success=$this->addPanelUserDirect($panelusername,$password,$maxdomains,$maxemails,$maxpanelusers,$maxftpusers,$maxdbs,$quota,$name,$email);
 		$this->ok_err_text($success,"Added panel user successfully.",'failed to add panel user');
@@ -5840,6 +5834,11 @@ function addFtpUserDirect($panelusername,$ftpusername,$password,$home,$upload,$d
 
 	$this->debugecho2("$panelusername,$ftpusername,$password,$home,$upload,$download,$quota,$domainname,$type,$isSpecialHome",1);
 	$panelusername=trim($panelusername);
+	if ($panelusername=="") {
+		$this->echoln($this->tr('ftp_username_cannot_be_empty'));
+		return False;
+	}
+
 	$ftpusername=trim($ftpusername);
 	if($isSpecialHome) $homedir=$home; # home dir is only inserted if different from default of /var/www/vhosts/ftphome....
 	$homedir=securefilename($homedir);
@@ -5847,6 +5846,7 @@ function addFtpUserDirect($panelusername,$ftpusername,$password,$home,$upload,$d
 	$qu="INSERT INTO ftpaccounts ( reseller, panelusername, domainname, ftpusername, password, homedir, type,status)	VALUES ('".$this->activeuser."','$panelusername','$domainname','$ftpusername', password('$password'),'$homedir','$type','$status')";
 	$success=$this->executeQuery($qu,'add ftp user : '.$ftpusername);
 	$success=$success && $this->addDaemonOp('daemonftp','add',$home);
+	$success=$success && $this->addDaemonOp("daemonftp","syncftp",'noempty','','sync/restart ftp');
 
 	return $success;
 }
@@ -5866,6 +5866,7 @@ function deleteFtpUserDirect($ftpusername,$deletefiles=True){
 	$qu="delete from ".$this->conf['ftpuserstable']['tablename']." where ftpusername='$ftpusername' limit 1";
 	$success=$success && $this->executeQuery($qu,' delete ftp user from ehcp db');
 	if($deletefiles) $success=$success && $this->addDaemonOp("daemonftp","delete",$homedir,'',' ftp delete info ');
+	$success=$success && $this->addDaemonOp("daemonftp","syncftp",'noempty','','sync/restart ftp');
 	return $success;
 }
 
@@ -5897,7 +5898,7 @@ function delSubDomain(){
 
 function addSubDomain(){
 	global $subdomain,$domainname;
-	$this->getVariable(array('subdomain',"domainname"));
+	$this->getVariable(['subdomain',"domainname"]);
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
 	$success=True;
 
@@ -5919,7 +5920,7 @@ function addSubDomain(){
 		$success=$success && $this->executeQuery($qu, $opname);
 
 		#$success=$success && $this->addDaemonOp("daemondomain","addsubdomain",$domainname,$homedir,'add subdomain');
-		$success=$success && $this->add_daemon_op(array('op'=>'daemondomain','action'=>'addsubdomain','info'=>$subdomain,'info2'=>$domainname,'info3'=>$homedir));
+		$success=$success && $this->add_daemon_op(['op'=>'daemondomain','action'=>'addsubdomain','info'=>$subdomain,'info2'=>$domainname,'info3'=>$homedir]);
 		$success=$success && $this->addDaemonOp("syncdomains",'xx',$domainname,'','sync domains');
 		if($success){
 			$sub1="http://".$subdomain.".".$domainname;
@@ -5928,7 +5929,7 @@ function addSubDomain(){
 		}
 		$this->ok_err_text($success, "Add subdomain success", "Error adding subdomain");
 	} else {
-		$inputparams=array(array('subdomain','righttext'=>".$domainname"));
+		$inputparams=[['subdomain','righttext'=>".$domainname"]];
 		$this->output.="Enter subdomain here: <br>(additionally, www. automatically will be added in front of subdomain)".inputform5($inputparams);
 	}
 	$this->showSimilarFunctions('subdomainsDirs');
@@ -5953,7 +5954,7 @@ function showSimilarFunctions($func){
 			case 'options' : 			$out =  $this->tr('similar_options_text');break;
 			case 'customhttpdns': 		$out = "Custom Http: <a href='?op=customhttp'>List</a> - <a href='?op=addcustomhttp'>Add</a>, Custom dns: <a href='?op=customdns'>List</a> - <a href='?op=addcustomdns'>Add</a> --  Custom Permissions: <a href='?op=custompermissions'>List</a> - <a href='?op=addcustompermission'>Add</a>";break;
 			case 'subdomainsDirs': 		$out = "SubDomains: <a href='?op=subdomains'>List</a> - <a href='?op=addsubdomain'>Add</a> - <a href='?op=addsubdomainwithftp'>Add subdomain with ftp</a> - <a href='?op=addsubdirectorywithftp'>Add subdirectory with ftp (Under domainname)</a> - <a href='?op=sync_directories'>Sync Directories</a>";break;
-			case 'HttpDnsTemplatesAliases': $out = "<a href='?op=editdnstemplate'>Edit dns template for this domain </a> - <a href='?op=editapachetemplate'>Edit apache template for this domain </a> - <a href='?op=editdomainaliases'>Edit Aliases for this domain </a>";break;
+			case 'HttpDnsTemplatesAliases': $out = "<a href='?op=editdnstemplate'>Edit dns template for this domain </a> - <a href='?op=editwebservertemplate'>Edit webserver template for this domain </a> - <a href='?op=editdomainaliases'>Edit Aliases for this domain </a>";break;
 			case 'panelusers': 			$out = "<a href='?op=listpanelusers'>List All Panelusers/Clients</a>, <a href='?op=resellers'>List Resellers</a>, <a href='?op=addpaneluser'>Add Paneluser/Client/Reseller</a>";break;
 			case 'server':				$out = "<a href='?op=listservers'>List Servers/IP's</a> - <a href='?op=addserver'>Add Server</a> - <a href='?op=addiptothisserver'>Add ip to this server</a> - <a href='?op=setactiveserverip'>set Active webserver IP</a>";break;
 			case 'backup':				$out = "<a href='?op=dobackup'>Backup</a> - <a href='?op=dorestore'>Restore</a> - <a href='?op=listbackups'>List Backups</a>";break;
@@ -5975,7 +5976,7 @@ function validate_ip_address($ip){
 
 function add_ip_to_this_server(){
 	global $ip;
-	$this->getVariable(array('ip'));
+	$this->getVariable(['ip']);
 
 	if($ip){
 		$this->validate_ip_address($ip);
@@ -5991,9 +5992,9 @@ function add_ip_to_this_server(){
 
 function checkFtpLimit($ftpusername){
 		if(!$this->afterInputControls("addftpuser",
-				array(
+				[
 				"ftpusername"=>$ftpusername
-				)
+				]
 			)
 		) $this->showexit();
 }
@@ -6001,16 +6002,16 @@ function checkFtpLimit($ftpusername){
 function addFtpUser(){
 	$op="addftpuser";
 	global $domainname,$ftpusername,$password,$quota,$upload,$download;
-	$this->getVariable(array("domainname","ftpusername","password","quota","upload","download"));
+	$this->getVariable(["domainname","ftpusername","password","quota","upload","download"]);
 	$homedir=$this->conf['vhosts']."/$ftpusername";
 	$success=True;
 
 	if($ftpusername){
 
 		if(!$this->afterInputControls("addftpuser",
-				array(
+				[
 				"ftpusername"=>$ftpusername
-				)
+				]
 			)
 		) return false;
 
@@ -6020,16 +6021,16 @@ function addFtpUser(){
 		$this->ok_err_text($success,"ftp user Added successfully.","Ftp user add failed. ");	# all these functions are to reduce code needed...
 	} else {
 		if(!$this->beforeInputControls('addftpuser')) return false;
-		$inputparams=array(
-			array('ftpusername','lefttext'=>'Ftp username'),
-			array('password','password_with_generate'),
-			array('quota','lefttext'=>'Quota (MB)','default'=>100),
-			array('upload','lefttext'=>'Upload bw (kb/s)','default'=>1000),
-			array('download','lefttext'=>'Download bw (kb/s)','default'=>1000),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+		$inputparams=[
+			['ftpusername','lefttext'=>'Ftp username'],
+			['password','password_with_generate'],
+			['quota','lefttext'=>'Quota (MB)','default'=>100],
+			['upload','lefttext'=>'Upload bw (kb/s)','default'=>1000],
+			['download','lefttext'=>'Download bw (kb/s)','default'=>1000],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 
-		$this->output.="Note that, this step setups a standalone ftp user, To setup a domain ftp account, use add domain, <br><br>Adding ftp user:<br> (Under $homedir/ftpusername)<br>"
+		$this->output.="Note that, this step setups a standalone ftp user, To setup a domain ftp account, use add domain, <br><br>Adding ftp user:<br> (Under $homedir)<br>"
 			.inputform5($inputparams);
 			# inputform4($action,array("Ftp username","password","Quota (Mb)","Upload bw(kb/s)","Download bw(kb/s)"),array("ftpusername",array("password","password"),"quota","upload","download"),array('','',"50","100","100"),array("op"),array($op));
 	}
@@ -6040,16 +6041,16 @@ function addFtpUser(){
 
 function addFtpToThisPaneluser(){ # add an ftp user freely under your master ftp directory
 	global $ftphomedir,$ftpusername,$password,$_insert;
-	$this->getVariable(array("ftphomedir","ftpusername","password","_insert"));
+	$this->getVariable(["ftphomedir","ftpusername","password","_insert"]);
 	$selfftp=$this->getSelfFtpAccount($returnto=__FUNCTION__); # ftp account for this panel user is with type field=default in ftpaccounts table
 	$masterhome=$this->conf['vhosts']."/$selfftp";
 	$success=True; # must be at start, to keep good formating.
 
 	if($_insert){
 		if(!$this->afterInputControls("addftpuser",
-				array(
+				[
 				"ftpusername"=>$ftpusername
-				)
+				]
 			)
 		) return false;
 
@@ -6068,13 +6069,13 @@ function addFtpToThisPaneluser(){ # add an ftp user freely under your master ftp
 
 	} else {
 		if(!$this->beforeInputControls('addftpuser')) return false;
-		$inputparams=array(
-			array('ftphomedir','lefttext'=>"$masterhome/",'righttext'=>'Home directory of ftp user (may be empty for default of yours)'),
+		$inputparams=[
+			['ftphomedir','lefttext'=>"$masterhome/",'righttext'=>'Home directory of ftp user (may be empty for default of yours)'],
 			"ftpusername",
-			array("password","password_with_generate"),
-			array('email','righttext'=>' of person the subdirectory is setup for..(will be informed)'),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+			["password","password_with_generate"],
+			['email','righttext'=>' of person the subdirectory is setup for..(will be informed)'],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 
 		$this->output.="Enter ftp info  here: <br>".inputform5($inputparams);
 	}
@@ -6086,7 +6087,7 @@ function addFtpToThisPaneluser(){ # add an ftp user freely under your master ftp
 
 function add_ftp_special(){ # add an ftp user freely under /home/ dir freely
 	global $ftphomedir,$ftpusername,$password,$_insert;
-	$this->getVariable(array("ftphomedir","ftpusername","password","_insert"));
+	$this->getVariable(["ftphomedir","ftpusername","password","_insert"]);
 	$this->requireAdmin();
 
 	$masterhome='/home';
@@ -6094,9 +6095,9 @@ function add_ftp_special(){ # add an ftp user freely under /home/ dir freely
 
 	if($_insert){
 		if(!$this->afterInputControls("addftpuser",
-				array(
+				[
 				"ftpusername"=>$ftpusername
-				)
+				]
 			)
 		) return false;
 
@@ -6116,13 +6117,13 @@ function add_ftp_special(){ # add an ftp user freely under /home/ dir freely
 	} else {
 		if(!$this->beforeInputControls('addftpuser')) return false;
 
-		$inputparams=array(
-			array('ftphomedir','lefttext'=>"$masterhome/",'righttext'=>'Home directory of ftp user'),
+		$inputparams=[
+			['ftphomedir','lefttext'=>"$masterhome/",'righttext'=>'Home directory of ftp user'],
 			"ftpusername",
-			array("password","password_with_generate"),
-			array('email','righttext'=>' of person the subdirectory is setup for..(will be informed)'),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+			["password","password_with_generate"],
+			['email','righttext'=>' of person the subdirectory is setup for..(will be informed)'],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 
 		$this->output.="Enter ftp info  here: <br>".inputform5($inputparams);
 	}
@@ -6134,7 +6135,7 @@ function add_ftp_special(){ # add an ftp user freely under /home/ dir freely
 
 function addSubDirectoryWithFtp(){
 	global $subdirectory,$domainname,$ftpusername,$password,$email;
-	$this->getVariable(array('subdirectory',"domainname","ftpusername","password",'email'),True);
+	$this->getVariable(['subdirectory',"domainname","ftpusername","password",'email'],True);
 
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
 	$filter="domainname='$domainname'";
@@ -6143,9 +6144,9 @@ function addSubDirectoryWithFtp(){
 	if($subdirectory){
 
 		if(!$this->afterInputControls("addftpuser",
-				array(
+				[
 				"ftpusername"=>$ftpusername
-				)
+				]
 			)
 		) return false;
 
@@ -6166,13 +6167,13 @@ function addSubDirectoryWithFtp(){
 		$this->ok_err_text($success, "Add subdirectory & ftp success", "Error adding subdirectory");
 	} else {
 		if(!$this->beforeInputControls('addftpuser')) return false;
-		$inputparams=array(
-			array('subdirectory','lefttext'=>"www.$domainname/"),
+		$inputparams=[
+			['subdirectory','lefttext'=>"www.$domainname/"],
 			"ftpusername",
-			array("password","password_with_generate"),
-			array('email','righttext'=>' of person the subdirectory is setup for..'),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+			["password","password_with_generate"],
+			['email','righttext'=>' of person the subdirectory is setup for..'],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 
 		$this->output.="Enter subdirectory info  here: <br>".inputform5($inputparams);
 	}
@@ -6186,7 +6187,7 @@ function addSubDirectoryWithFtp(){
 function addSubDomainWithFtp(){
 
 	global $subdomain,$domainname,$ftpusername,$password,$email;
-	$this->getVariable(array('subdomain',"domainname","ftpusername","password",'email'),True);
+	$this->getVariable(['subdomain',"domainname","ftpusername","password",'email'],True);
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
 	$success=True;
 
@@ -6194,9 +6195,9 @@ function addSubDomainWithFtp(){
 
 	if($subdomain){
 		if(!$this->afterInputControls("addftpuser",
-				array(
+				[
 				"ftpusername"=>$ftpusername
-				)
+				]
 			)
 		) return false;
 
@@ -6224,13 +6225,13 @@ function addSubDomainWithFtp(){
 		$this->ok_err_text($success, "Add subdomain&ftp success", "Error adding subdomain");
 	} else {
 		if(!$this->beforeInputControls('addftpuser')) return false;
-		$inputparams=array(
-			array('subdomain','righttext'=>".$domainname"),
+		$inputparams=[
+			['subdomain','righttext'=>".$domainname"],
 			"ftpusername",
-			array("password","password_with_generate"),
-			array('email','righttext'=>' of person the subdomain is setup for..'),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+			["password","password_with_generate"],
+			['email','righttext'=>' of person the subdomain is setup for..'],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 
 		$this->output.="Enter subdomain here: <br>(additionally, www. automatically will be added in front of subdomain)".inputform5($inputparams);
 	}
@@ -6251,7 +6252,7 @@ function listMyAllDirectories(){
 
 function directories(){
 	global $domainname;
-	$this->getVariable(array("domainname"));
+	$this->getVariable(["domainname"]);
 
 	if($dom<>'')$domainname=$dom;
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
@@ -6267,7 +6268,7 @@ function directories(){
 
 function subDomains(){
 	global $domainname;
-	$this->getVariable(array("domainname"));
+	$this->getVariable(["domainname"]);
 
 	if($dom<>'')$domainname=$dom;
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
@@ -6284,12 +6285,12 @@ function subDomains(){
 
 function listDomains($dom='',$filt=''){
 	global $domainname;
-	$this->getVariable(array("domainname"));
+	$this->getVariable(["domainname"]);
 	if($dom<>'')$domainname=$dom;
 
 	if(!$domainname) {
-		$linkimages=array('images/edit.gif','images/incele.jpg','images/delete1.jpg','images/openinnew.jpg');
-		$linkfiles=array('?op=editdomain','?op=selectdomain','?op=deletedomain',"target=_blank href='?op=redirect_domain");
+		$linkimages=['images/edit.gif','images/incele.jpg','images/delete1.jpg','images/openinnew.jpg'];
+		$linkfiles=['?op=editdomain','?op=selectdomain','?op=deletedomain',"target=_blank href='?op=redirect_domain"];
 		$linkfield='domainname';
 		$filter=$this->applyGlobalFilter($filt);
 		#$this->output.="<hr>filtre: $filter</hr>";
@@ -6302,7 +6303,7 @@ function listDomains($dom='',$filt=''){
 
 function listemailusers($dom=''){ # listemailusers
 	global $domainname;
-	$this->getVariable(array("domainname"));
+	$this->getVariable(["domainname"]);
 
 	if($dom<>'')$domainname=$dom;
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
@@ -6320,18 +6321,18 @@ function listemailusers($dom=''){ # listemailusers
 
 function listftpusers($dom=''){
 	global $domainname;
-	$this->getVariable(array("domainname"));
+	$this->getVariable(["domainname"]);
 	if($dom<>'')$domainname=$dom; # parametre ile verilmisse listele...
 		$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
 
 		# this ensures the ownership of domain
 
 		$filter="domainname='$domainname'";
-		$linkfiles=array('?op=editftpuser','?op=userop&action=ftpuserdelete');
-		$linkimages=array('images/edit.gif','images/delete1.jpg');
+		$linkfiles=['?op=editftpuser','?op=userop&action=ftpuserdelete'];
+		$linkimages=['images/edit.gif','images/delete1.jpg'];
 		$linkfield='ftpusername';
 		$this->output.="<div align=center>$domainname domain ftp user List: <br>Note: deleting a user, will delete his files too..<br>"
-				.$this->tablolistele3_5_4($this->conf['ftpuserstable']['tablename'],$baslik,array("domainname","ftpusername"),$filter,$sirala,$linkimages,$linkfiles,$linkfield,$listrowstart,$listrowcount)."</div>";
+				.$this->tablolistele3_5_4($this->conf['ftpuserstable']['tablename'],$baslik,["domainname","ftpusername"],$filter,$sirala,$linkimages,$linkfiles,$linkfield,$listrowstart,$listrowcount)."</div>";
 
 		$this->showSimilarFunctions("ftp");
 }
@@ -6346,12 +6347,14 @@ function listallemailusers(){
 
 	$this->output.="All domain's email users: ";
 	$this->listTable("", "emailuserstable", $filter);
+	$this->listTable("Email Forwardings", 'emailforwardingstable', $filter);
+	$this->showSimilarFunctions('email');
 }
 
 
 function listAllFtpUsers($filt=''){
-	$linkfiles=array('?op=editftpuser','?op=userop&action=ftpuserdelete');
-	$linkimages=array('images/edit.gif','images/delete1.jpg'); # edit passwordlu image eklenecek
+	$linkfiles=['?op=editftpuser','?op=userop&action=ftpuserdelete'];
+	$linkimages=['images/edit.gif','images/delete1.jpg']; # edit passwordlu image eklenecek
 	$linkfield='ftpusername';
 	$filter=$this->applyGlobalFilter($filt);
 	$this->debugtext("filter: $filter");
@@ -6367,7 +6370,7 @@ function listpanelusers(){
 	$table=$this->conf['paneluserstable'];
 	$filter=$this->globalfilter;
 	$this->output.="<div align=center>All/your panel users: filt: $filter ".
-		$this->tablolistele3_5_4($table['tablename'],array('','','','','','Quota (MB*)'),$table['listfields'],$filter,$sirala,$table['clickimages'],$table['clickfiles'],$table['linkfield'],$listrowstart,$listrowcount)
+		$this->tablolistele3_5_4($table['tablename'],['','','','','','Quota (MB*)'],$table['listfields'],$filter,$sirala,$table['clickimages'],$table['clickfiles'],$table['linkfield'],$listrowstart,$listrowcount)
 		."<a href='?op=addpaneluser'>Add Paneluser/Reseller</a></div>";
 	$this->showSimilarFunctions('panelusers');
 }
@@ -6399,7 +6402,7 @@ function deletepaneluser(){
 	$this->requireNoDemo();
 
 	global $id,$confirm;
-	$this->getVariable(array('id','confirm'));
+	$this->getVariable(['id','confirm']);
 
 	$paneluserinfo=$this->getPanelUserInfo($id);
 	$panelusername=$paneluserinfo['panelusername'];
@@ -6431,7 +6434,7 @@ function deletepaneluser(){
 
 function editFtpUser(){
 	global $ftpusername,$_insert,$status,$newpass,$newpass2;
-	$this->getVariable(array('ftpusername','_insert','status','newpass','newpass2'));
+	$this->getVariable(['ftpusername','_insert','status','newpass','newpass2']);
 	$success=True;
 
 	if($ftpusername=='ehcp'){
@@ -6449,14 +6452,14 @@ function editFtpUser(){
 	}
 
 	if(!$_insert){
-		$inputparams=array(
-			array('status','select','lefttext'=>'Set Active/Passive','secenekler'=>$this->statusActivePassive),
+		$inputparams=[
+			['status','select','lefttext'=>'Set Active/Passive','secenekler'=>$this->statusActivePassive],
 			#array('status','lefttext'=>'Set Active/Passive'),
-			array('newpass','password','lefttext'=>'New pass: (leave empty for no change)'),
-			array('newpass2','password'),
-			array('ftpusername','hidden','default'=>$ftpusername),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+			['newpass','password','lefttext'=>'New pass: (leave empty for no change)'],
+			['newpass2','password'],
+			['ftpusername','hidden','default'=>$ftpusername],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 
 		$this->output.="Changing ftp user: $ftpusername <br>".inputform5($inputparams);
 
@@ -6475,6 +6478,7 @@ function editFtpUser(){
 		$success=$success && $this->executeQuery("update ".$this->conf['ftpuserstable']['tablename']." set status='$status' $passwordset where $filt");
 		$success=$success && $this->addDaemonOp("daemonftp",$status,$this->conf['vhosts'].'/'.$ftpusername);
 		$success=$success && $this->addDaemonOp('syncftp','','','','sync ftp for nonstandard homes');
+		$success=$success && $this->addDaemonOp("daemonftp","syncftp",'noempty','','sync/restart ftp');
 
 		$this->ok_err_text($success,'ftp status/info successfully changed.','ftp status/info could not changed.');
 	}
@@ -6487,17 +6491,17 @@ function editFtpUser(){
 
 function insertrow($tabledesc,$constfields,$constvalues){
 	global $_insert;
-	$this->getVariable(array("_insert"));
+	$this->getVariable(["_insert"]);
 	$table=$this->conf[$tabledesc];
 
 	$linkfield=$table['linkfield'];
-	global $$linkfield;   # get id..
-	$this->getVariable(array($linkfield));
+	global ${$linkfield};   # get id..
+	$this->getVariable([$linkfield]);
 	$fields=$table['insertfields']; # get other edit fields
 
 
 	if($_insert){
-		foreach ($fields as $alan) global $$alan; # yukardakilerin hepsini global yap..
+		foreach ($fields as $alan) global ${$alan}; # yukardakilerin hepsini global yap..
 		$newvalues=$this->getVariable($fields);
 		$fields=array_merge($fields,$constfields);
 		$newvalues=array_merge($newvalues,$constvalues);
@@ -6505,47 +6509,47 @@ function insertrow($tabledesc,$constfields,$constvalues){
 	}else{
 		$values=array_values($this->alanal2($table['tablename'],$fields,$where));
 		$this->output.="insert: $id <br>".inputform4('',
-		array(),# labels
+		[],# labels
 		$fields,
 		$values,
 		#array($res[0],$res[1],$res[2],$res[3],$res[4],$res[5],$res[6],$res[7],$parabirimleri,),
-		array($linkfield,"_insert"),array($$linkfield,"1")
+		[$linkfield,"_insert"],[${$linkfield},"1"]
 		);
 	}
 
 }
 
-function editrow2($tabledesc,$where,$extra=array()){
+function editrow2($tabledesc,$where,$extra=[]){
 	# 1den farki: inputform5 ile calisacak:, editpaneluser icinde kullanilacak,
 	global $_insert;
-	$this->getVariable(array("_insert"));
+	$this->getVariable(["_insert"]);
 	$table=$this->conf[$tabledesc];
 
 	$linkfield=$table['linkfield'];
-	global $$linkfield;   # get id..
-	$this->getVariable(array($linkfield));
+	global ${$linkfield};   # get id..
+	$this->getVariable([$linkfield]);
 	$fields=$table['editfields']; # get other edit fields
 
 
 }
 
-function editrow($tabledesc,$where,$extra=array()){
+function editrow($tabledesc,$where,$extra=[]){
 	global $_insert;
-	$this->getVariable(array("_insert"));
+	$this->getVariable(["_insert"]);
 	$table=$this->conf[$tabledesc];
 
 	$linkfield=$table['linkfield'];
-	global $$linkfield;   # get id..
-	$this->getVariable(array($linkfield));
+	global ${$linkfield};   # get id..
+	$this->getVariable([$linkfield]);
 
 	$fields=$table['editfields']; # get other edit fields
 	$editlabels=$table['editlabels'];
 
 
 	if($_insert){
-		foreach ($fields as $alan) global $$alan; # yukardakilerin hepsini global yap..
+		foreach ($fields as $alan) global ${$alan}; # yukardakilerin hepsini global yap..
 		$newvalues=$this->getVariable($fields);
-		$success=$this->updatequery($table['tablename'],$fields,$newvalues,$linkfield."=".$$linkfield);
+		$success=$this->updatequery($table['tablename'],$fields,$newvalues,$linkfield."=".${$linkfield});
 		return $this->ok_err_text($success,"Updated successfully.","Update failed (editrow)");
 	}else{
 		$values=array_values($this->alanal2($table['tablename'],$fields,$where));
@@ -6554,7 +6558,7 @@ function editrow($tabledesc,$where,$extra=array()){
 		$fields,
 		$values,
 		#array($res[0],$res[1],$res[2],$res[3],$res[4],$res[5],$res[6],$res[7],$parabirimleri,),
-		array($linkfield,"_insert"),array($$linkfield,"1")
+		[$linkfield,"_insert"],[${$linkfield},"1"]
 		);
 		return True;
 	}
@@ -6629,7 +6633,7 @@ function insertquery($table,$fields,$values){
 function safe_execute_query($qu,$params,$opname='',$caller='',$link=false){ # only executes conn->execute
 	# example: $this->safe_query("select * from panelusers where panelusername='%s' and md5('%s')=password",array($username,$password),"","comment-caller")
 	$this->logquery($qu.($caller?' Caller:'.$caller:''));
-	$params2=array($qu);
+	$params2=[$qu];
 	foreach($params as $p) $params2[]=$this->escape($p);
 	$qu = call_user_func_array('sprintf', $params2);
 	$this->logquery($qu.'  Caller:'.$caller);
@@ -6652,7 +6656,7 @@ function safe_execute_query($qu,$params,$opname='',$caller='',$link=false){ # on
 
 function safe_query($qu,$params,$caller=''){ #returns associated array
 	$this->logquery($qu.'  Caller:'.$caller);
-	$params2=array($qu);
+	$params2=[$qu];
 	foreach($params as $p) $params2[]=$this->escape($p);
 	$qu = call_user_func_array('sprintf', $params2);
 	$this->logquery($qu.'  Caller:'.$caller);
@@ -6761,7 +6765,7 @@ function getinsertsql($tablo,$fields,$values){
 
 function logquery($qu){
 	$this->queries[]=$qu;
-	if(count($this->queries)>1000) $this->queries=array(); # limit it
+	if(count($this->queries)>1000) $this->queries=[]; # limit it
 }
 
 function executeQuery($qu,$opname='',$caller='',$link=false,$adoConn=false){ # only executes conn->execute
@@ -6797,7 +6801,7 @@ function query3($qu,$opname='',$caller='',$link=false,$adoConn=false){ # only ex
 		$rs=mysqli_query($link,$qu);
 		$err=mysqli_error($link);
 		$this->debugecho("query executed on another mysql link:($qu)",1,false);
-		$res=array();
+		$res=[];
 		while($r=mysqli_fetch_assoc($rs)) $res[]=$r; # build ado style result set.
 
 	} elseif($adoConn) {
@@ -6937,11 +6941,11 @@ function connectTodb2(){
 
 function checkdbsettings(){
 	global $rootuser,$rootpass;
-	$this->getVariable(array("rootuser","rootpass"));
+	$this->getVariable(["rootuser","rootpass"]);
 	if($rootuser=='' and $rootpass==''){
 		$this->output.="<br>Please check the database exists and configuration is correct in config/dbconf.php.. Additional help will be provided later.<br>
 		To check your db, enter your db root user and pass:";
-		$this->output.=inputform4($action,$yazilacak,array("rootuser","rootpass"),$deger,array("op"),array("checkdbsettings"));
+		$this->output.=inputform4($action,$yazilacak,["rootuser","rootpass"],$deger,["op"],["checkdbsettings"]);
 	} else {
 		$this->output.="Checking your db connection and db:<br>";
 		#to be coded later.
@@ -6952,14 +6956,22 @@ function checkdbsettings(){
 
 
 
-function tr($str){
-	return $this->sayinmylang($str);
+function tr($str,$find=[],$replace=[]){
+	return $this->sayinmylang($str,$find,$replace);
 }
 
-function sayinmylang($str){
+function sayinmylang($str,$find=[],$replace=[]){
 	$res=$this->lang[$this->currentlanguage][$str];
 	if(!$res) $res=$this->lang['en'][$str];
 	if(!$res) $res="($str:language error, not defined ".$this->information(1,True).")";
+
+	# replace parameters.. 
+	if(count($find)>0) {
+		for ($i=0; $i < count($find); $i++) { 
+			$res = str_replace($find[$i], $replace[$i], $res);
+		}
+	}
+
 	# $res="language error: ($str) is not defined in currentlanguage of:(".$this->currentlanguage.") <br> please define <b> \$this->lang['".$this->currentlanguage."']['".$str."']=\"........\";   </b> in  <br>language/".$this->currentlanguage.".php <br>";
 	return $res;
 }
@@ -7109,7 +7121,7 @@ function dynamicInfo2(){
 	return $ret;
 }
 
-function debuginfo(){ # this is debug info for developer
+function debuginfo(){ # this is debug info for developers
 	if($this->debuglevel==0) return;
 	$ret=print_r2($this->queries).$this->clientip;
 	return $ret;
@@ -7153,7 +7165,7 @@ function navigation_bar(){
 
 function failedlogins(){
 	global $mark;
-	$this->getVariable(array('mark'));
+	$this->getVariable(['mark']);
 	if($mark<>'') {
 		$this->executeQuery("update log set notified='yes' where panelusername='$this->activeuser' and (notified is null or notified='')");
 		$this->output.="Marked all read ($mark)";
@@ -7167,12 +7179,13 @@ function failedlogins(){
 }
 
 function check_failed_logins(){
+	if(!$this->isloggedin) return;
 	$s=$this->recordcount('log',"panelusername='$this->activeuser' and (notified is null or notified='')");
 	if($s>0) return "<p class=failedlogin>You have failed login attempts, <a class=failedlogin href='?op=failedlogins'>click here for more info</a></p><br>";
 }
 
 function show($templatefile1='') {
-	global $commandline,$output,$quickdomains,$ehcpversion;
+	global $commandline,$output,$quickdomains,$ehcpversion,$known_to_work;
 	$this->output.=$output.$this->debuginfo();
 	$dynamicInfo=$this->dynamicInfo();
 	$dynamicInfo2=$this->dynamicInfo2();
@@ -7209,7 +7222,7 @@ function show($templatefile1='') {
 
 
 
-	$this->getVariable(array("ajax"));
+	$this->getVariable(["ajax"]);
 
 	if($templatefile1<>'') {
 		$this->templatefile=$templatefile1;
@@ -7262,11 +7275,10 @@ function show($templatefile1='') {
 			$this->templateEcho( // apply template and echo
 				$this->templatefile,
 				// bunlar sablonda kullanilacak tagler.
-				array('{webserver}','{domainname}','{domain}','{adminemail}',"{ehcpversion}","{ajaxscript}","{ajaxonload}","{username}","{logo}",'{myip}','{selecteddomain}','{quickdomains}','{banner}','{stylefile}','{templatedir}','{language}','{dynamicinfo}','{dynamicinfo2}'),
+				['{webserver}','{domainname}','{domain}','{adminemail}',"{ehcpversion}","{ajaxscript}","{ajaxonload}","{username}","{logo}",'{myip}','{selecteddomain}','{quickdomains}','{banner}','{stylefile}','{templatedir}','{language}','{dynamicinfo}','{dynamicinfo2}','{known_to_work}'],
 				// bunlar da tagler yerine konacak degiskenler.
-				array($webserver,$this->selecteddomain,$this->selecteddomain,$this->conf['adminemail'],$ehcpversion1,$this->ajaxscript,$this->ajaxonload,$this->activeuser,$this->logo,$this->conf['dnsip'],$this->selecteddomainstr,$quickdomains,$this->miscconfig['banner'],$stylefile,$templatedir, $this->currentlanguage,$dynamicInfo,$dynamicInfo2)
+				[$webserver,$this->selecteddomain,$this->selecteddomain,$this->conf['adminemail'],$ehcpversion1,$this->ajaxscript,$this->ajaxonload,$this->activeuser,$this->logo,$this->conf['dnsip'],$this->selecteddomainstr,$quickdomains,$this->miscconfig['banner'],$stylefile,$templatedir, $this->currentlanguage,$dynamicInfo,$dynamicInfo2,$known_to_work]
 			);
-			#if(!$this->isDemo and ($this->conf['adminemail']=='ehcpdeveloper@gmail.com')) echo "query count: ".count($this->queries)." <br>".$this->debuginfo();
 		}
 
 }
@@ -7435,14 +7447,16 @@ function doLoginEmailUser($username,$password){
 }
 
 function dologin(){
-	global $kullaniciadi,$sifre,$isloggedin,$username,$password;
-	$this->getVariable(array("kullaniciadi","username","password"));
+	global $kullaniciadi,$sifre,$isloggedin,$username,$password,$clientip;
+	$this->getVariable(["kullaniciadi","username","password"]);
 	$username=strtolower($username); # reason: some panel users type in Admin and cannot do admin ops...
 
 	$this->debugecho2("file:".__FILE__.", Line:".__LINE__.", Function:".__FUNCTION__,4);
 
 	$this->checkTables(); # check tables for missing fields, once on each login
 	$this->check_ehcp_version();
+	$sayi=$this->recordcount('log',"panelusername='$username' and (notified is null or notified='') and ip='$this->clientip'");
+	if($sayi>5) return failed_login("brute force detected"); # if failed login for this ip 5 times, disallow brute force
 
 
 	if(strstr($username,'@')) return $this->doLoginEmailUser($username,$password);
@@ -7485,6 +7499,15 @@ function isPasswordOk($username,$password,$usernamefield='',$passwordfield='',$l
 	}
 }
 
+function failed_login($comment=""){
+		$this->debugecho2("<hr>user/pass is not correct....",2);
+		$this->executeQuery("insert into log (tarih,panelusername,ip,log)values(now(),'$username','$this->clientip','Failed Login Attempt ($comment)')");
+		$userIP = $_SERVER['REMOTE_ADDR'];
+		$f2banDate = date("M d H:i:s");
+		$this->log_to_file("log/ehcp_failed_authentication.log","$f2banDate EHCP authentication failed attemping to login as user $username from $userIP\n");
+		return $this->errorText("Wrong username/password.");
+}
+
 function dologin2($username,$password,$usernamefield='',$passwordfield='',$logintable=''){
 # sets session values if password comparison succeeds..
 	$this->debugecho2("file:".__FILE__.", Line:".__LINE__.", Function:".__FUNCTION__.": $username,$password,$usernamefield,$passwordfield,$logintable<BR>",4);
@@ -7514,16 +7537,11 @@ function dologin2($username,$password,$usernamefield='',$passwordfield='',$login
 			$this->setselecteddomain($this->userconfig['defaultdomain']);
 		}
 
-		$this->addDaemonOp('daemon_vps','vps_check_state','xx');
+		if(defined('vps_file_loaded')) $this->addDaemonOp('daemon_vps','vps_check_state','xx');
 
 		return True;
 	} else {
-		$this->debugecho2("<hr>user/pass is not correct....",2);
-		$this->executeQuery("insert into log (tarih,panelusername,ip,log)values(now(),'$username','$this->clientip','Failed Login Attempt')");
-		$userIP = $_SERVER['REMOTE_ADDR'];
-		$f2banDate = date("M d H:i:s");
-		$this->log_to_file("log/ehcp_failed_authentication.log","$f2banDate EHCP authentication failed attemping to login as user $username from $userIP\n");
-		return $this->errorText("Wrong username/password.");
+		return $this->failed_login();
 	}
 	//echo "<hr>dologin2 bitti..sayi:($sayi)</hr>";
 }
@@ -7673,7 +7691,7 @@ function checkPort2($portno){
 }
 
 function checkPorts(){
-	$portstocheck=array(22,25,53,80,110,143);
+	$portstocheck=[22,25,53,80,110,143];
 	foreach($portstocheck as $port)
 		$ret.=$this->checkPort2($port);
 	if($ret<>'') {
@@ -7752,13 +7770,13 @@ function securedelete($files,$serverip){
 
 	if(strpos($files,'..')!==false) return $this->errorText("Deleting files forbidden: contains (..): ($files)",True);
 
-	$nodelete=array('',"/","/var/www",$this->ehcpdir,$this->vhostsdir,"/bin","/boot","/cdrom","/dev","/ehcp","/etc","/home","/initrd","/initrd.img","/lib","/lost+found","/media","/mnt","/opt","/proc","/root","/sbin","/srv","/sys","/tmp","/usr","/var","/vmlinuz","/web");
+	$nodelete=['',"/","/var/www",$this->ehcpdir,$this->vhostsdir,"/bin","/boot","/cdrom","/dev","/ehcp","/etc","/home","/initrd","/initrd.img","/lib","/lost+found","/media","/mnt","/opt","/proc","/root","/sbin","/srv","/sys","/tmp","/usr","/var","/vmlinuz","/web"];
 	foreach($nodelete as $dir) $nd3[]=$dir."/";
 	if(in_array($files,$nodelete) or in_array($files,$nd3)) {
 		return $this->errorText("Deleting files forbidden-1: ($files)",True);
 	}
 
-	$nodelete2=array("/bin","/boot","/cdrom","/dev","/ehcp","/etc","/home","/initrd","/initrd.img","/lib","/lost+found","/media","/mnt","/opt","/proc","/root","/sbin","/srv","/sys","/tmp","/usr","/vmlinuz","/web");
+	$nodelete2=["/bin","/boot","/cdrom","/dev","/ehcp","/etc","/initrd","/initrd.img","/lib","/lost+found","/media","/mnt","/opt","/proc","/root","/sbin","/srv","/sys","/tmp","/usr","/vmlinuz","/web"];
 	foreach($nodelete2 as $dir) $nd4[]=$dir."/";
 
 	foreach($nodelete2 as $dir){
@@ -7786,7 +7804,7 @@ function securedelete($files,$serverip){
 
 	$this->echoln("checks complete.. removing files: $files");
 
-	$cmds=array();
+	$cmds=[];
 	$cmds[]="rm -rvf $files";
 	if(trim($serverip)=='') $serverip='localhost';
 
@@ -7812,15 +7830,59 @@ function syncFtp(){
 	return True;
 }
 
-function daemonftp($action,$info,$info2,$info3=''){
 
+function restart_ftp_daemon() {
+	# I am testing this new ftp server system.. python based ftp server, using pyftpdlib
+	$this->requireCommandLine(__FUNCTION__);
+	print "\nRestarting ftp server..\n";
+	print debug_backtrace2()."\n";
+
+	$cmd="ps aux | grep [f]tp_server | grep -v sudo | awk '{print $2}' | xargs kill -9";
+	print "$cmd \n";
+	shell_exec($cmd); # stop py based ftp server
+	sleep(2);
+	return $this->start_ftp_daemon();
+}
+
+function start_ftp_daemon() {
+	# I am testing this new ftp server system.. 
+	$this->requireCommandLine(__FUNCTION__);
+	print "\nStarting ftp server..({$this->ftp_server_progname})\n";
+
+	touch("/var/log/ehcp_ftpd.log"); # fix logfile if not done..
+	chmod("/var/log/ehcp_ftpd.log", 0777);
+
+	Proc_Close (Proc_Open ("sudo -u vsftpd {$this->ehcpdir}/{$this->ftp_server_progname} &", [], $foo));
+	return True;
+}
+
+function sync_ftp_daemon() {
+	# difference from prev version: does not restart whole python ftp server, just reloads users in ftp server.. by a signal
+	# will send just USR1 signal to ftp_server2.py
+	$pid=$this->get_pid($this->ftp_server_progname);
+	if($pid=="") {
+		print "!!! pid of ftp server cannot be determined.. cannot restart ftp daemon.. \n\n";
+		return;
+	} else {
+		$this->executeProg3("kill -USR1 $pid");
+		print "Sent USR1 signal to {$this->ftp_server_progname}, pid: $pid, should reload ftp users.. \n\n";
+	}
+	return True;
+}
+
+function daemonftp($action,$info,$info2,$info3=''){
 
 	$this->requireCommandLine(__FUNCTION__);
 	switch($action){
+		case "syncftp": // restart ftp daemon, if needed... in some cases.. whin in vsftp/pureftp, no restart needed, but, with pyftp, restart needed..in current design.
+			return $this->sync_ftp_daemon();
+		break;
+
 		case "delete": // deleting an ftp account
 			$this->securedelete($info,$info3);
 			return True;
 		break;
+
 		case 'add':
 			passthru2("mkdir -p ".$info);
 			passthru2("chown -Rf $this->ftpowner $info");
@@ -7829,11 +7891,12 @@ function daemonftp($action,$info,$info2,$info3=''){
 		break;
 
 		case 'multiserver_add':
-			$this->commands=array();
+			$this->commands=[];
 			$this->commands[]="mkdir -p $info";
 			$this->commands[]="chown -Rf $this->ftpowner $info";
+			# multiserver sync ftp may be needed here.. 
 			$this->execute_server_commands($info2,$this->commands);
-			$this->commands=array(); # make sure it is empty.
+			$this->commands=[]; # make sure it is empty.
 			return True;
 		break;
 
@@ -7936,12 +7999,12 @@ function daemondomain($action,$info,$info2='',$info3=''){// domain operations in
 
 			if(!$this->check_remote_ssh_connection($info3)) return false; # should be equivalent, but do not work: $this->check_remote_ssh_connection($info3) || return false;
 
-			$this->commands=array();
+			$this->commands=[];
 			# all domain dirs should be setup here..
 			$this->initialize_domain_files($homedir);
 			$this->commands[]="echo 'Under Construction-multi-server-ehcp' > $homedir/httpdocs/index.php";
 			$this->execute_server_commands($info3,$this->commands);
-			$this->commands=array(); # ensure it is empty after our job finished.
+			$this->commands=[]; # ensure it is empty after our job finished.
 
 			return True;
 		break;
@@ -7959,7 +8022,7 @@ function daemondomain($action,$info,$info2='',$info3=''){// domain operations in
 				$info3='localhost';
 			}
 
-			$this->commands=array();
+			$this->commands=[];
 			$this->commands[]="rm -Rvf $homedir";
 			$this->commands[]="rm -Rvf ".$this->conf['namedbase'].'/'.$info;
 			$this->execute_server_commands($info3,$this->commands);
@@ -7977,36 +8040,48 @@ function daemondomain($action,$info,$info2='',$info3=''){// domain operations in
 			return True;
 		break;
 
-		default: echo "undefined action in ".__FUNCTION__.": $action";return false;
+		default: 
+			echo "undefined action in ".__FUNCTION__.": $action";
+
+		return False;
 	}
 }
 
 
 function daemon(){
-	set_time_limit(0); # run forever... i hope... :)
-	$this->requireCommandLine(__FUNCTION__); // run from commandline.
+	global $emailenable;
+
+	set_time_limit(0); # run forever... 
+	$this->requireCommandLine(__FUNCTION__); # run from commandline.
 	$this->echoln2("Running daemon now..");
-	$sleep_interval=5;
-	$mail_interval=3600*24; // send info to developer every 1 day. may be disabled by user here.like ping..
-	$mail_last_sent_time=3600*11; // send first 1 hours later.
+	
+	if($emailenable) {
+		$sleep_interval=10;
+	} else {
+		$sleep_interval=5; # generally testing mode.. 
+	}
+
+	$mail_interval=3600*24; # send info to ehcp developer every 1 day. may be disabled by user here.like ping..
+	$mail_last_sent_time=3600*11; # send first 1 hours later.
 
 
 	$this->output.="Daemonized..".$this->myversion."\n__________________________\n\n";
 	$i=$say=0;
 	$this->updateWebstats();
 	passthru2("chmod a+x /var/spool/postfix/var/run/saslauthd"); # for the bug/problem at http://www.ehcp.net/?q=node/149#comment-668
-	@mkdir($this->ehcpdir.'/webmail2');# make this if not present
+	@mkdir($this->ehcpdir.'/webmail2'); # make dir if not present
 	@mkdir($this->ehcpdir.'/upload');
 	$this->executeProg3("chmod a+w ".$this->ehcpdir.'/upload');
 	$this->executeProg3("chmod a+w ".$this->ehcpdir.'/LocalServer.cnf');
 
-	while(True) {// run forever
-	// first check operations that have more than one parameter, ie, info<>''
-	// niye bi ingilizce bi turkce yazdin derseniz: bu uluslararasi bir program o yuzden ingilizce var, ama bi Turk izi de olsun diye... orjinalinde Turk yapimi yani... hehe...
+	while(True) {# run forever
+	# first check operations that have more than one parameter, ie, info<>''
+	# niye bi ingilizce bi turkce yazdin derseniz: bu uluslararasi bir program o yuzden ingilizce var, ama bi Turk izi de olsun diye... orjinalinde Turk yapimi yani... hehe...
 
-		print_r($rs=$this->query("select * from operations where ((status is null)or(status<>'ok'))and(try<2)and(info<>'')"));
+		$rs=$this->query("select * from operations where ((status is null)or(status<>'ok'))and(try<2)and(info<>'')");
+		if(count($rs)>0) print_r($rs);
 
-		// read op db and execute it. donot try if failed 3 or more. sadece op olanlar. info varsa bu domain ekleme/cikarmadir. info parametredir. action da binevi parametre.
+		# read op db and execute it. donot try if failed 3 or more. sadece op olanlar. info varsa bu domain ekleme/cikarmadir. info parametredir. action da binevi parametre.
 		if($rs) {
 		foreach($rs as $op){
 			# increase try count here, if runop fails somehow, such as fatal error, it will not repeat forever,
@@ -8025,13 +8100,14 @@ function daemon(){
 			echo $this->output;
 			}
 		} else {
-			//$this->error_occured("daemon main loop");
+			# $this->error_occured("daemon main loop");
 			if($rs===false)$this->tryReconnect();
 		}
 
-	// second, check operations that have only one parameter..i.e. info=''
-		print_r($rs=$this->query("select * from operations where ((status is null)or(status<>'ok'))and(try<3)and(info is null or info='')"));
-		// read op db and execute it. donot try if failed 5 or more. sadece op olanlar. info varsa bu domain ekleme/cikarmadir. info parametredir. action da binevi parametre.
+	# second, check operations that have only one parameter..i.e. info=''
+		$rs=$this->query("select * from operations where ((status is null)or(status<>'ok'))and(try<3)and(info is null or info='')");
+		if(count($rs)>0) print_r($rs);
+		# read op db and execute it. donot try if failed 5 or more. sadece op olanlar. info varsa bu domain ekleme/cikarmadir. info parametredir. action da binevi parametre.
 		if($rs) {
 		foreach($rs as $op){
 			#$this->executeQuery("update operations set try=try+1 where id=".$op['id']." limit 1",' updating operations, increasing try count ');
@@ -8039,7 +8115,7 @@ function daemon(){
 			if($this->runOp(trim($op['op']))) {
 				echo "\ndaemon->runop success ** \n";
 				$this->executeQuery("update operations set try=try+1,status='ok' where id=".$op['id']." limit 1",'update operations set status ok.');
-			} else { // increase try count
+			} else { # increase try count
 				$q="update operations set try=try+1,status='failed' where id=".$op['id']." limit 1";
 				echo "\ndaemon->runop failure **** : $q\n";
 				$this->executeQuery($q,' increasing try count');
@@ -8047,24 +8123,23 @@ function daemon(){
 			echo $this->output;
 			}
 		} else {
-			//$this->error_occured("daemon main loop2");
 			if($rs===false)$this->tryReconnect();
 		}
 
 		if($mail_interval>0){
-			// send info to developer every 1 day. may be disabled by user here.like ping..
-			// this may be disabled by you, for statistical purposes..
+			# send info to developer every 1 day. may be disabled by user here.like ping..
+			# this may be disabled by you, for statistical purposes..
 			$mail_last_sent_time+=$sleep_interval;
 
 			if($mail_last_sent_time>=$mail_interval){
 				$mail_last_sent_time=0;
-				$ip=$this->getLocalIP();
+				$ip=$this->getlocalip2();
 				# collect any errors from ehcp.log, for debugging of ehcp and programs
 				$ip2=$this->get_outside_ip();
 
 
 				$msg.=$this->executeProg3("grep -i error /var/log/ehcp.log | grep -v error_log | tail -300;ps aux");
-				$this->infoMailUsingWget($this->myversion.'-ehcp_daemon_running_at_ip:'.$ip);// in case php mail function does not work.
+				$this->infoMailUsingWget($this->myversion.'-ehcp_daemon_running_at_ip:'.$ip);# in case php mail function does not work.
 				mail('debug@ehcp.net',$this->myversion."-ehcp_daemon_running_at_ip2:$ip - $ip2",$msg,"From: ".$this->emailfrom);
 			}
 		}
@@ -8268,7 +8343,7 @@ function dnsZoneFiles($arr){// for daemon mode
 	$dnsserverip=$this->getDnsServer();
 	$webserverip=$this->get_webserver_real_ip(); # burada aslinda birden çok IP almasi lazim.
 
-	if($this->isPrivateIp(array($mailserverip,$dnsserverip))){
+	if($this->isPrivateIp([$mailserverip,$dnsserverip])){
 		$mesaj="your ehcp server has a private ip for either mailserver, dnsserver, webserver or all: $mailserverip,$dnsserverip,$webserverip , This may cause some problem";
 		$subject="your ehcp server dns ip problem $dnsserverip";
 		$this->infotoadminemail($mesaj,$subject);
@@ -8313,14 +8388,14 @@ function dnsZoneFiles($arr){// for daemon mode
 		}
 		# end earnolmartin
 
-		$dnstemp=str_replace(array('{mailip}','{dnsip}','{webip}','{serial}',"{ip}","{dnsemail}"),array($mailip,$dnsip,$webip,$serialNum,$this->conf['dnsip'],$this->conf['dnsemail']),$dnstemp);
+		$dnstemp=str_replace(['{mailip}','{dnsip}','{webip}','{serial}',"{ip}","{dnsemail}"],[$mailip,$dnsip,$webip,$serialNum,$this->conf['dnsip'],$this->conf['dnsemail']],$dnstemp);
 
 		# lokalden erisenler icin ayri bir dns, dns icinde view olusturulabilir buraya bak: http://www.oreillynet.com/pub/a/oreilly/networking/news/views_0501.html
 		# amac: bir networkde server varsa, o network icinden erisenler icin bu bir local server dir. her desktop da ayri ayri hosts ayari girmek yerine, sunucu bunlara real degil, lokal ip doner.
 		# bu sayede, kucuk-orta isletmeler icin, sunucunun lokalden cevap vermesi saglanir.. veya dns icinde view destegi, birden cok konfigurasyon v.b...
 		# to translate Turkish comments, use google translate..
 
-		$dnstemplocal=str_replace(array('{mailip}','{dnsip}','{webip}','{serial}',"{ip}","{dnsemail}"),array($mailip,$dnsip,$webip,$serialNum,$this->conf['dnsip'],$this->conf['dnsemail']),$dnstemp);
+		$dnstemplocal=str_replace(['{mailip}','{dnsip}','{webip}','{serial}',"{ip}","{dnsemail}"],[$mailip,$dnsip,$webip,$serialNum,$this->conf['dnsip'],$this->conf['dnsemail']],$dnstemp);
 
 		# $temp=str_replace(array('{serial}',"{ip}","{dnsemail}"),array(rand(1,1000),$this->conf['dnsip'],$this->conf['dnsemail']),$temp); // replace serial,ip,dnsemail etc.   Ymds hata veriyordu iptal ettim. bu sorunla ilgilenilecek...
 		// verdigi hata: Fatal error: date(): Timezone database is corrupt - this should *never* happen!  thats why i cannot use date in daemon mode... this seems a php bug.., for tr locale
@@ -8368,7 +8443,7 @@ function calculateAliasedDomains($doms,$exampledomain){
 	}
 */
 
-	$aliasedarr=array();
+	$aliasedarr=[];
 	foreach($doms as $dom){
 		$aliases=$dom['aliases'];
 		if($aliases=='') continue;
@@ -8383,7 +8458,7 @@ function calculateAliasedDomains($doms,$exampledomain){
 		}
 	}
 
-	$aliasedarr2=array();
+	$aliasedarr2=[];
 
 	# construct domains array as if read from domains table, in fact, these are not read from domains table, but these are aliases.
 	# i added alias domains to dns, because dns should resolve this, for domains to work..
@@ -8418,7 +8493,7 @@ function syncDns(){// for daemon mode
 
 	# put customdns info into zone files..
 	$arr_customdns=$this->query("select * from ".$this->conf['customstable']['tablename']." where name='customdns' ");
-	$arr2=array();
+	$arr2=[];
 
 	foreach($arr as $dom) { # add customdns to array,
 		$customdnsvalue='';
@@ -8449,7 +8524,7 @@ function syncDns(){// for daemon mode
 function whitelist(){
 	# this is a special function, that will be used in a dns project. not related directly to hosting or ehcp. just uses ehcp structure.
 	global $mod,$domainname,$domainler;
-	$this->getVariable(array('mod','domainname','domainler'));
+	$this->getVariable(['mod','domainname','domainler']);
 
 
 	switch($mod){
@@ -8459,15 +8534,15 @@ function whitelist(){
 
 		case 'cocukekle':
 			if(!$domainname){
-				$inputparams=array('domainname'#, array('op','hidden','default'=>__FUNCTION__)
-				);
+				$inputparams=['domainname'#, array('op','hidden','default'=>__FUNCTION__)
+				];
 				$this->output.=inputform5($inputparams);
 			} else {
 
 				if(!$this->afterInputControls("adddomaintothispaneluser",
-						array(
+						[
 						"domainname"=>$domainname,
-						)
+						]
 					)
 				) return false;
 
@@ -8487,8 +8562,8 @@ function whitelist(){
 
 		case 'cocukeklebulk':
 			if(!$domainler){
-				$inputparams=array(array('domainler','textarea')#, array('op','hidden','default'=>__FUNCTION__)
-				);
+				$inputparams=[['domainler','textarea']#, array('op','hidden','default'=>__FUNCTION__)
+				];
 				$this->output.=inputform5($inputparams);
 			} else {
 				$domains=$this->strNewlineToArray($domainler);
@@ -8497,9 +8572,9 @@ function whitelist(){
 				foreach($domains as $dom){
 					if(trim($dom)=='') continue;
 					if(!$this->afterInputControls("adddomaintothispaneluser",
-							array(
+							[
 							"domainname"=>$dom,
-							)
+							]
 						)
 					) continue ;
 
@@ -8537,6 +8612,8 @@ function syncApacheAuth(){
 
 
 	$this->requireCommandLine(__FUNCTION__);
+	print "syncApacheAuth running; Webservertype: {$this->miscconfig['webservertype']}";
+
 	$tablename=$this->conf['passwddirectoriestable']['tablename'];
 	# select directories first,
 	$directories=$this->query("select distinct(directory) from ".$tablename." where directory is not null and directory<>''");
@@ -8592,7 +8669,8 @@ function syncApacheAuth(){
 						auth_basic \"Restricted\";
 						auth_basic_user_file $passwdfile;
 					}
-					";
+					"; 
+				break;
 
 				case 'apache2':
 					$conf.="
@@ -8608,7 +8686,7 @@ function syncApacheAuth(){
 			}
 	}
 
-	writeoutput2("$this->ehcpdir/apachehcp_auth.conf",$conf,'w');
+	writeoutput2("$this->ehcpdir/webserver_ehcp_auth.conf",$conf,'w');
 	#passthru2("/etc/init.d/apache2 reload"); zaten syncsubdomains icinde reload var.
 	return True;
 
@@ -8626,7 +8704,7 @@ function syncpostfix(){
 
 function userop(){
 	global $action,$ftpusername,$mailusername,$panelusername,$id;
-	$this->getVariable(array("action","ftpusername","mailusername","panelusername","id"));
+	$this->getVariable(["action","ftpusername","mailusername","panelusername","id"]);
 	if(!$action) {
 		return $this->errorText(__FUNCTION__.": Error: action not given");
 	}
@@ -8766,7 +8844,7 @@ nedenini bilmiyorum.
 
 function domainop(){
 	global $domainname,$action,$dbusername,$dbuserpass,$dbname,$id,$confirm;
-	$this->getVariable(array("domainname","action","user","pass","dbname","id",'confirm'));
+	$this->getVariable(["domainname","action","user","pass","dbname","id",'confirm']);
 	if($action=='') {
 		$this->output.="userop: action not given <br>";return false;
 		}
@@ -8813,18 +8891,18 @@ function getMysqlServer($host='',$returndefault=False,$returnto=False){
 	# choose a mysqlserver from server farm.. servers table..or return server info for a host
 	# this is written to go into multi-server concept.. Multi server is not complete yet for all server types, only mysql can be separate for customers.
 	global $serverip,$returntoop;
-	$this->getVariable(array('serverip','returntoop'));
+	$this->getVariable(['serverip','returntoop']);
 
 	if($serverip<>'') {
 		$q="select * from ".$this->conf['serverstable']['tablename']." where ip='$serverip' and servertype='mysql'";
 		$ret=$this->query($q);
 		$ret=$ret[0];
-		$server=array('host'=>$ret['ip'],'user'=>'root','pass'=>$ret['password'],'defaultmysqlhostname'=>$ret['defaultmysqlhostname']);
+		$server=['host'=>$ret['ip'],'user'=>'root','pass'=>$ret['password'],'defaultmysqlhostname'=>$ret['defaultmysqlhostname']];
 		$_SESSION['myserver']=$server;
 		$this->redirecttourl("?op=$returntoop");
 	}
 
-	$defaultmyserver=array('host'=>'localhost','user'=>$this->conf['mysqlrootuser'],'pass'=>$this->conf['mysqlrootpass']);
+	$defaultmyserver=['host'=>'localhost','user'=>$this->conf['mysqlrootuser'],'pass'=>$this->conf['mysqlrootpass']];
 	$sayi=$this->recordcount($this->conf['serverstable']['tablename'],"servertype='mysql' and upper(mandatory) in ('E','Y')"); # E=Y Evet=Yes # number of mandatoryservers..
 
 	$where2="servertype='mysql' and (mandatory in ('',null) or (upper(mandatory) not in ('E','Y')))";
@@ -8834,7 +8912,7 @@ function getMysqlServer($host='',$returndefault=False,$returnto=False){
 		$this->output.="Choose mysql server to use:";
 		$q="select * from ".$this->conf['serverstable']['tablename']." where $where2";
 		$servers=$this->query($q);
-		$this->output.=$this->listSelector($arr=$servers,$print=array('ip'),$link="?op=".__FUNCTION__."&returntoop=$returnto&serverip=",$linfield='ip');
+		$this->output.=$this->listSelector($arr=$servers,$print=['ip'],$link="?op=".__FUNCTION__."&returntoop=$returnto&serverip=",$linfield='ip');
 		$this->showexit();
 	} elseif ($host=='' and ($returndefault or $sayi==0)){# if no mandatory, take optional, or default localhost...
 		# belli bir host sorulmuyorsa, default gonder.. .
@@ -8845,7 +8923,7 @@ function getMysqlServer($host='',$returndefault=False,$returnto=False){
 
 		$ret=$this->query("select * from ".$this->conf['serverstable']['tablename']." where $where");
 		$ret=$ret[0];
-		$server=array('host'=>$ret['ip'],'user'=>'root','pass'=>$ret['password'],'defaultmysqlhostname'=>$ret['defaultmysqlhostname']);
+		$server=['host'=>$ret['ip'],'user'=>'root','pass'=>$ret['password'],'defaultmysqlhostname'=>$ret['defaultmysqlhostname']];
 		$this->echoln("Using mandatory mysql server at ".$server['host']);
 	}
 	return $server;
@@ -8853,7 +8931,7 @@ function getMysqlServer($host='',$returndefault=False,$returnto=False){
 
 function addMysqlDbtoUser(){
 	global $domainname,$dbusername,$dbuserpass,$dbname,$id,$confirm;
-	$this->getVariable(array("domainname","dbusername","dbuserpass","dbname","id",'confirm'));
+	$this->getVariable(["domainname","dbusername","dbuserpass","dbname","id",'confirm']);
 
 	if(!$this->beforeInputControls('adddb')) return false;
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
@@ -8869,29 +8947,29 @@ function addMysqlDbtoUser(){
 	}
 
 	if(!$dbusername) {
-		$this->output.="<br>Select User:".$this->listSelector($arr=$users,$print=array('dbusername'),$link="?op=".__FUNCTION__."&dbusername=",$linfield='dbusername');
+		$this->output.="<br>Select User:".$this->listSelector($arr=$users,$print=['dbusername'],$link="?op=".__FUNCTION__."&dbusername=",$linfield='dbusername');
 		return false;
 	}
 
 
 	if(!$dbname){
-		$inputparams=array("dbname",
-			array('dbusername','hidden','value'=>$dbusername),
-			array('op','hidden','value'=>__FUNCTION__)
-		);
+		$inputparams=["dbname",
+			['dbusername','hidden','value'=>$dbusername],
+			['op','hidden','value'=>__FUNCTION__]
+		];
 
 		if($myserver['host']<>'localhost') { # if this is not local mysql server, the db user may not be localhsot, so, ask that..
 			$dbuserhost=$myserver['defaultmysqlhostname'];
-			$inputparams[]=array('dbuserhost','lefttext'=>'dbuser hostname','value'=>$dbuserhost,'righttext'=>'This is host of mysql user, to connect from, <br>You should write hostname of your webserver here..');
+			$inputparams[]=['dbuserhost','lefttext'=>'dbuser hostname','value'=>$dbuserhost,'righttext'=>'This is host of mysql user, to connect from, <br>You should write hostname of your webserver here..'];
 		}
 
 		$this->output.="Mysql Server:".$myserver['host'].inputform5($inputparams);
 
 	} else {
 		if(!$this->afterInputControls("adddb",
-								array(
+								[
 								"dbname"=>$dbname
-								)
+								]
 						)
 		) return false;
 		$this->output.="<br>Adding db to user: $dbusername db: $dbname:";
@@ -8908,7 +8986,7 @@ function addMysqlDb(){
 	// **** burda bikac sorun olabilir.. enonemlisi, bu success olayi calismiyor.. success lerden biri fail olsa da, sonuc degismiyor..
 	// diger sorun, if(!rs) denilen yerlerde, dbden okumus sorunsuzca, ama sonuc bos ise, sanki dbden okuyamamış gibi davranıyor..
 	global $domainname,$dbusername,$dbuserpass,$dbname,$dbuserhost,$id,$confirm;
-	$this->getVariable(array("domainname","dbusername","dbuserpass","dbname","dbuserhost","id",'confirm'));
+	$this->getVariable(["domainname","dbusername","dbuserpass","dbname","dbuserhost","id",'confirm']);
 
 	if(!$this->beforeInputControls('adddb')) return false; # check limit
 	$domainname=$this->chooseDomain(__FUNCTION__,$domainname);
@@ -8917,27 +8995,27 @@ function addMysqlDb(){
 	$success=True;
 
 	if($dbname==''){
-		$inputparams=array(
+		$inputparams=[
 			"dbname",
 			"dbusername",
-			array("dbuserpass","password_with_generate"),
-			array('op','hidden','value'=>__FUNCTION__)
-		);
+			["dbuserpass","password_with_generate"],
+			['op','hidden','value'=>__FUNCTION__]
+		];
 
 
 		if($myserver['host']<>'localhost') { # if this is not local mysql server, the db user may not be localhsot, so, ask that..
 			$dbuserhost=$myserver['defaultmysqlhostname'];
-			$inputparams[]=array('dbuserhost','lefttext'=>'dbuser hostname','value'=>$dbuserhost,'righttext'=>'This is host of mysql user, to connect from, <br>You should write hostname of your webserver here..');
+			$inputparams[]=['dbuserhost','lefttext'=>'dbuser hostname','value'=>$dbuserhost,'righttext'=>'This is host of mysql user, to connect from, <br>You should write hostname of your webserver here..'];
 		}
 
 		$this->output.="Mysql Server:".$myserver['host'].inputform5($inputparams);
 
 	}else {
 		if(!$this->afterInputControls("adddb",
-						array(
+						[
 						"dbname"=>$dbname,
 						"dbusername"=>$dbusername
-						)
+						]
 				)
 		) return false;
 
@@ -9077,7 +9155,7 @@ function restart_webserver2($server){
 	if($serverip=='') $serverip='localhost';
 	if($webservertype=='') $webservertype='apache2';
 
-	$this->server_command($serverip,"service $webservertype restart");
+	$this->server_command($serverip,"/etc/init.d/$webservertype restart");
 	# configtest_reload yapılacak.
 }
 
@@ -9088,13 +9166,14 @@ function restart_webserver(){
 	echo "\n".__FUNCTION__.": Current webserver is:".$this->miscconfig['webservertype']."\n";
 
 	if($this->miscconfig['webservertype']=='apache2') {
-		passthru2("service nginx stop");
-		passthru2("service apache2 restart");
+		passthru2("/etc/init.d/nginx stop");
+		passthru2("/etc/init.d/apache2 restart");
 	} elseif($this->miscconfig['webservertype']=='nginx') {
-		passthru2("service apache2 stop");
-		passthru2("service php5-fpm restart");
-		passthru2("service nginx restart");
+		passthru2("/etc/init.d/apache2 stop");
+		passthru2("/etc/init.d/nginx restart");
+		passthru2("/etc/init.d/{$this->php_fpm} restart");
 	}
+	echo "\n".__FUNCTION__.":Finished";
 	return True;
 }
 
@@ -9124,15 +9203,15 @@ function fixApacheConfigSsl($domain=''){
 	if($this->miscconfig['webservertype']=='apache2') {
 		passthru2("rm -rvf /etc/apache2/sites-enabled/*", true, true);
 
-		passthru2("a2enmod ssl");
-		passthru2("cp -vf $this->ehcpdir/etc/apache2_ssl/fork/apachetemplate_passivedomains $this->ehcpdir/", true, true);
+		passthru2("/usr/sbin/a2enmod ssl");
+		passthru2("cp -vf $this->ehcpdir/etc/apache2_ssl/fork/webserver_template_passivedomains $this->ehcpdir/", true, true);
 
 		// We will bind on configured panel IP address
 
-		$findarray=array('webserverip');
-		$replacearray=array($this->getWebServer());
-		$this->replaceArrayPutInFile("$this->ehcpdir/etc/apache2_ssl/fork/apachetemplate_ipbased","$this->ehcpdir/apachetemplate",$findarray,$replacearray);
-		$this->replaceArrayPutInFile("$this->ehcpdir/etc/apache2_ssl/fork/apache_subdomain_template","$this->ehcpdir/apache_subdomain_template",$findarray,$replacearray);
+		$findarray=['webserverip'];
+		$replacearray=[$this->getWebServer()];
+		$this->replaceArrayPutInFile("$this->ehcpdir/etc/apache2_ssl/fork/webserver_template_ipbased","$this->ehcpdir/webserver_template",$findarray,$replacearray);
+		$this->replaceArrayPutInFile("$this->ehcpdir/etc/apache2_ssl/fork/webserver_subdomain_template","$this->ehcpdir/webserver_subdomain_template",$findarray,$replacearray);
 		$this->replaceArrayPutInFile("$this->ehcpdir/etc/apache2_ssl/fork/default-ssl","/etc/apache2/sites-enabled/default-ssl",$findarray,$replacearray);
 		$this->replaceArrayPutInFile("$this->ehcpdir/etc/apache2_ssl/fork/default"	 ,"/etc/apache2/sites-enabled/default"	,$findarray,$replacearray);
 		$this->replaceArrayPutInFile("$this->ehcpdir/etc/apache2_ssl/fork/ports.conf" ,"/etc/apache2/ports.conf"				 ,$findarray,$replacearray);
@@ -9141,9 +9220,9 @@ function fixApacheConfigSsl($domain=''){
 
 	} elseif($this->miscconfig['webservertype']=='nginx') {
 		passthru2("rm -rvf /etc/nginx/sites-enabled/*", true, true);
-		passthru2("cp -vf $this->ehcpdir/etc/nginx_ssl/apache_subdomain_template.nginx $this->ehcpdir/etc/nginx", true, true);
-		passthru2("cp -vf $this->ehcpdir/etc/nginx_ssl/apachetemplate.nginx $this->ehcpdir/etc/nginx", true, true);
-		passthru2("cp -vf $this->ehcpdir/etc/nginx_ssl/default.nginx $this->ehcpdir/etc/nginx", true, true);
+		passthru2("cp -vf $this->ehcpdir/etc/nginx_ssl/webserver_subdomain_template $this->ehcpdir/etc/nginx", true, true);
+		passthru2("cp -vf $this->ehcpdir/etc/nginx_ssl/webserver_template $this->ehcpdir/etc/nginx", true, true);
+		passthru2("cp -vf $this->ehcpdir/etc/nginx_ssl/default $this->ehcpdir/etc/nginx", true, true);
 
 
 		$this->executeQuery("update misc set value='nginx' where name='webservertype'");
@@ -9162,19 +9241,19 @@ function fixApacheConfigSslOnly($domain=''){
 	if($this->miscconfig['webservertype']=='apache2') {
 
 		passthru2("rm -rvf /etc/apache2/sites-enabled/*", true, true);
-		passthru2("a2enmod ssl");
-		passthru2("a2enmod rewrite");
+		passthru2("/usr/sbin/a2enmod ssl");
+		passthru2("/usr/sbin/a2enmod rewrite");
 
-		passthru2("cp -vf $this->ehcpdir/etc/apache2_sslonly/fork/apachetemplate_passivedomains $this->ehcpdir/", true, true);
+		passthru2("cp -vf $this->ehcpdir/etc/apache2_sslonly/fork/webserver_template_passivedomains $this->ehcpdir/", true, true);
 
 		$this->executeQuery("update misc set value='apache2' where name='webservertype'");
 
 		// We will bind on configured panel IP address
 
-		$findarray=array('webserverip');
-		$replacearray=array($this->getWebServer());
-		$this->replaceArrayPutInFile("$this->ehcpdir/etc/apache2_sslonly/fork/apachetemplate_ipbased","$this->ehcpdir/apachetemplate",$findarray,$replacearray);
-		$this->replaceArrayPutInFile("$this->ehcpdir/etc/apache2_sslonly/fork/apache_subdomain_template","$this->ehcpdir/apache_subdomain_template",$findarray,$replacearray);
+		$findarray=['webserverip'];
+		$replacearray=[$this->getWebServer()];
+		$this->replaceArrayPutInFile("$this->ehcpdir/etc/apache2_sslonly/fork/webserver_template_ipbased","$this->ehcpdir/webserver_template",$findarray,$replacearray);
+		$this->replaceArrayPutInFile("$this->ehcpdir/etc/apache2_sslonly/fork/webserver_subdomain_template","$this->ehcpdir/webserver_subdomain_template",$findarray,$replacearray);
 		$this->replaceArrayPutInFile("$this->ehcpdir/etc/apache2_sslonly/fork/default-ssl","/etc/apache2/sites-enabled/default-ssl",$findarray,$replacearray);
 		$this->replaceArrayPutInFile("$this->ehcpdir/etc/apache2_sslonly/fork/default"	 ,"/etc/apache2/sites-enabled/default"	,$findarray,$replacearray);
 		$this->replaceArrayPutInFile("$this->ehcpdir/etc/apache2_sslonly/fork/ports.conf" ,"/etc/apache2/ports.conf"				 ,$findarray,$replacearray);
@@ -9183,9 +9262,9 @@ function fixApacheConfigSslOnly($domain=''){
 	} elseif ($this->miscconfig['webservertype']=='nginx'){
 		passthru2("rm -rvf /etc/nginx/sites-enabled/*", true, true);
 
-		passthru2("cp -vf $this->ehcpdir/etc/nginx_sslonly/apache_subdomain_template.nginx $this->ehcpdir/etc/nginx", true, true);
-		passthru2("cp -vf $this->ehcpdir/etc/nginx_sslonly/apachetemplate.nginx $this->ehcpdir/etc/nginx", true, true);
-		passthru2("cp -vf $this->ehcpdir/etc/nginx_sslonly/default.nginx $this->ehcpdir/etc/nginx", true, true);
+		passthru2("cp -vf $this->ehcpdir/etc/nginx_sslonly/webserver_subdomain_template $this->ehcpdir/etc/nginx", true, true);
+		passthru2("cp -vf $this->ehcpdir/etc/nginx_sslonly/webserver_template $this->ehcpdir/etc/nginx", true, true);
+		passthru2("cp -vf $this->ehcpdir/etc/nginx_sslonly/default $this->ehcpdir/etc/nginx", true, true);
 
 
 		$this->executeQuery("update misc set value='nginx' where name='webservertype'");
@@ -9259,9 +9338,9 @@ function resetNonSSLApacheConf(){
 
 function resetNonSSLNginxConf(){
 	// Copy nonssl nginx configs back into shared ehcp nginx config directory
-	passthru2("cp -vf $this->ehcpdir/etc/nginx_nonssl/apache_subdomain_template.nginx $this->ehcpdir/etc/nginx", true, true);
-	passthru2("cp -vf $this->ehcpdir/etc/nginx_nonssl/apachetemplate.nginx $this->ehcpdir/etc/nginx", true, true);
-	passthru2("cp -vf $this->ehcpdir/etc/nginx_nonssl/default.nginx $this->ehcpdir/etc/nginx", true, true);
+	passthru2("cp -vf $this->ehcpdir/etc/nginx_nonssl/webserver_subdomain_template $this->ehcpdir/etc/nginx", true, true);
+	passthru2("cp -vf $this->ehcpdir/etc/nginx_nonssl/webserver_template $this->ehcpdir/etc/nginx", true, true);
+	passthru2("cp -vf $this->ehcpdir/etc/nginx_nonssl/default $this->ehcpdir/etc/nginx", true, true);
 
 	passthru2("rm -rvf /etc/nginx/sites-enabled/*", true, true);
 
@@ -9276,7 +9355,7 @@ function sync_domains_multi_server($file='') { # this should be same as syncdoma
 
 	$this->requireCommandLine(__FUNCTION__);
 	echo "\n".__FUNCTION__.": start syncing domains";
-	if($file=='') $file="apachehcp.conf"; # gecici olarak yaptim. ****
+	if($file=='') $file="webserver_ehcp.conf"; # gecici olarak yaptim. ****
 	$filt=andle($this->activefilt,"(serverip is null or serverip='') and homedir<>''"); # exclude where serverip is set, that is, for remote dns hosted only domains..
 	$arr=$this->getDomains($filt);
 	$webserverip=$this->getWebServer();
@@ -9286,7 +9365,7 @@ function sync_domains_multi_server($file='') { # this should be same as syncdoma
 
 	if($this->miscconfig['disablecustomhttp']=='') $arr_customhttp=$this->query("select * from ".$this->conf['customstable']['tablename']." where name='customhttp'  and (webservertype is null or webservertype='' or webservertype='".$this->miscconfig['webservertype']."')");
 
-	$arr2=array();
+	$arr2=[];
 
 	# farkli webserver'lara yazabilmek icin,  herbir domain'i ayri degerlendirmek, ilgili webserver'a konfigurasyonlari gondermek lazim.
 	# group by webserver tarzi bisey olabilir, sonra herbir grup icin bu kodlar calistirilir. birer dizine konur. sonra her dizin kendi sunucusuna rsync yapilir.
@@ -9379,7 +9458,7 @@ function initialize_logs2($dir){
 	# fill commands to be executed on relatd server. these will be executed all in once.
 	$this->commands[]="mkdir -p $dir";
 	$this->commands[]="mkdir -p $dir/logs";
-	$this->commands[]="echo '' >> $dir/logs/access_log";// these are defined in apachetemplate file, bunlarin log_rotate olayi yapilmali.
+	$this->commands[]="echo '' >> $dir/logs/access_log";// these are defined in webserver_template file, bunlarin log_rotate olayi yapilmali.
 	$this->commands[]="echo '' >> $dir/logs/error_log";
 
 	#passthru2("chown $this->ftpowner -Rf $dir");
@@ -9417,7 +9496,7 @@ function initialize_domain_files($homedir){
 
 }
 
-function prepare_webserver_files($file,$server){
+function prepare_webserver_files($file,$server){ # Multi server environment.. being developed.. 
 	# Case webserver* is not taken into account here. for this function to work, all servers need to have real ip.
 	# this function is a re-write of sync_domains (syncDomains) function, will be used in multi-server environments.
 	# idea: prepare server files, then, send these files to related servers, if localhost, send to related dirs in local machine.
@@ -9427,7 +9506,7 @@ function prepare_webserver_files($file,$server){
 	$this->requireCommandLine(__FUNCTION__);
 
 
-	$this->commands=array('#!/bin/bash','echo "$0: commands are executed from within ehcp '.date_tarih().'" >> /var/log/ehcp.log'); # these will be commands to be executed on local or remote server as a whole, ?? i am testing this technique
+	$this->commands=['#!/bin/bash','echo "$0: commands are executed from within ehcp '.date_tarih().'" >> /var/log/ehcp.log']; # these will be commands to be executed on local or remote server as a whole, ?? i am testing this technique
 
 	$serverip=$server['ip'];
 	$webservertype=$server['servertype'];
@@ -9439,7 +9518,7 @@ function prepare_webserver_files($file,$server){
 	if($webservertype=='') $webservertype='apache2';
 	$accessip=$this->get_server_access_ip($serverip);
 	if($accessip<>'localhost' and $file=='') $file="$this->ehcpdir/serverfiles/$accessip/webserver/ehcp_webserver_remote_config_produced_by_".$this->miscconfig['dnsip'].'.conf';  # for testing, or give a diffrent name for this, so that track easier.
-	if($accessip=='localhost') $file="$this->ehcpdir/apachehcp.conf";
+	if($accessip=='localhost') $file="$this->ehcpdir/webserver_ehcp.conf";
 
 	# clean old server files first:
 	passthru2("rm -vf $this->ehcpdir/serverfiles/$accessip/webserver/*",True,True);
@@ -9467,9 +9546,9 @@ function prepare_webserver_files($file,$server){
 	print_r($arr2);
 
 	$success=True;
-	$arr_customhttp=array();
+	$arr_customhttp=[];
 	if($this->miscconfig['disablecustomhttp']=='') $arr_customhttp=$this->query("select * from ".$this->conf['customstable']['tablename']." where name='customhttp'  and (webservertype is null or webservertype='' or webservertype='".$this->miscconfig['webservertype']."')");
-	$arr2=array();
+	$arr2=[];
 
 
 	# prepare webserver config files for this server, put in serverfiles/ folder.
@@ -9506,7 +9585,7 @@ function prepare_webserver_files($file,$server){
 	#process passive domains
 	$passivedomains=$this->getDomains($this->passivefilt);
 
-	$passives=array();
+	$passives=[];
 	foreach($passivedomains as $p){
 		if($ssl_enabled){
 			$p['webserverip']=$webserverip;
@@ -9516,10 +9595,10 @@ function prepare_webserver_files($file,$server){
 	}
 
 
-	if($serverip=='localhost') $passive_file="$this->ehcpdir/apachehcp_passivedomains.conf";
+	if($serverip=='localhost') $passive_file="$this->ehcpdir/webserver_ehcp_passivedomains.conf";
 	else $passive_file="$this->ehcpdir/serverfiles/$serverip/webserver/ehcp_webserver_remote_config_passivedomains_produced_by_".$this->miscconfig['dnsip'].'.conf';
 
-	$this->putArrayToFile($passives,$passive_file,"apachetemplate_passivedomains");
+	$this->putArrayToFile($passives,$passive_file,"webserver_template_passivedomains");
 
 
 
@@ -9528,7 +9607,7 @@ function prepare_webserver_files($file,$server){
 	# domain array prepared. now, put these in configs.
 
 	#begin: reconstruct apache config file:
-	$fileout="# This is an automatically generated file, by ehcp. Do not edit this file by hand. if you need to change apache configs, edit apachetemplate file (to take effect for all domains) in ehcp dir, or use custom http in ehcp gui \n";
+	$fileout="# This is an automatically generated file, by ehcp. Do not edit this file by hand. if you need to change apache configs, edit (webserver)webserver_template file (to take effect for all domains) in ehcp dir, or use custom http in ehcp gui \n";
 	$alanlar=array_keys($arr2[0]); // gets array keys, from first(0th) array element of two-dimensional $arr2 array.
 
 	// following code, replaces fields from template to values here in $arr2 two-dim array. each $arr2 element written to output file according to template file.
@@ -9536,16 +9615,20 @@ function prepare_webserver_files($file,$server){
 
 	# load webserver config template: (these are a bit different than single server sync_domains, because, here, multiple templates may be used simultaneously, since many servers with different webserver possible..)
 	switch($webservertype){
-		case 'apache2': $webserver_template_filename="$this->ehcpdir/apachetemplate";break;
-		case 'nginx'  : $webserver_template_filename="$this->ehcpdir/etc/nginx/apachetemplate.nginx";break;
+		case 'apache2': $webserver_template_filename="$this->ehcpdir/webserver_template";break;
+		case 'nginx'  : $webserver_template_filename="$this->ehcpdir/etc/nginx/webserver_template";break;
 		# put other webservers here.., lighthttpd, litespeed,
 	}
 	$webserver_template_file_contents=file_get_contents($webserver_template_filename);
 
 
 	$ssl_enabled=strstr($webserver_template_file_contents,"{webserverip}")!==false; # *1 if template file contains {webserverip} then, ssl is assumed to enabled on apache configs. this case, non-ssl custom http's are disabled to prevent apache config error. All custom http's should be fixed by admin in this case.
-	if ($ssl_enabled) $this->echoln("ssl seems enabled in this server, because tag {webserverip} is found in apache config templates files..");
-	else $this->echoln("ssl seems not enabled in this server, because tag {webserverip} is not found in apache config templates files..");
+	
+	if($this->miscconfig['webservertype']=='apache2') {
+		# this part should be revised.. sslenabled option is currently only for apache.. 
+		if ($ssl_enabled) $this->echoln("ssl seems enabled in this server, because tag {webserverip} is found in apache config templates files..");
+		else $this->echoln("ssl seems not enabled in this server, because tag {webserverip} is not found in apache config templates files..");
+	}
 
 
 	foreach($arr2 as $ar1) {// template e gore apache dosyasini olustur
@@ -9570,7 +9653,7 @@ function prepare_webserver_files($file,$server){
 			$webserver_template=$webserver_template_file_contents;
 		}
 
-		$webserver_template=str_replace(array('{ehcpdir}','{localip}'),array($this->ehcpdir,$this->miscconfig['localip']),$webserver_template);
+		$webserver_template=str_replace(['{ehcpdir}','{localip}'],[$this->ehcpdir,$this->miscconfig['localip']],$webserver_template);
 		$webserver_config=str_replace($replacealanlar,$ar1,$webserver_template);
 		$fileout.=$webserver_config;
 	}
@@ -9618,10 +9701,10 @@ function get_webservers(){
 
 	$webservers=$this->query("select servertype,ip from servers where servertype in ('apache2','nginx')");
 	$localserver=$this->query("select servertype,ip from servers where servertype in ('apache2','nginx') and ip='localhost'");
-	if(count($localserver)==0) $webservers[]=array('servertype'=>$this->miscconfig['webservertype'],'ip'=>'localhost'); # add localhost if not exist
+	if(count($localserver)==0) $webservers[]=['servertype'=>$this->miscconfig['webservertype'],'ip'=>'localhost']; # add localhost if not exist
 
 	#print_r($webservers);
-	$w2=array();  # servers in "servers" table
+	$w2=[];  # servers in "servers" table
 	foreach($webservers as $w) $w2[$w['ip']]=$w['servertype']; # convert to ip=>type pairs
 
 	echo "w2:";
@@ -9630,7 +9713,7 @@ function get_webservers(){
 	$doms=$this->getDomains();
 	if(is_array($this->last_deleted_domaininfo)) $doms[]=$this->last_deleted_domaininfo; # server of last deleted domain also needs to be updated,so, add that
 
-	$w3=array();
+	$w3=[];
 
 	# find servers related to domains: (including last deleted domain)
 	foreach($doms as $dom){
@@ -9653,8 +9736,8 @@ function get_webservers(){
 	print_r($w3);
 
 
-	$w4=array();
-	foreach($w3 as $ip=>$type) $w4[]=array('servertype'=>$type,'ip'=>$ip);#convert back to servers array
+	$w4=[];
+	foreach($w3 as $ip=>$type) $w4[]=['servertype'=>$type,'ip'=>$ip];#convert back to servers array
 
 	#$keys=array_keys($w3);	foreach($keys as $k) $w4[]=array('servertype'=>$w3[$k],'ip'=>$k); #convert back to servers array
 	echo "w4:";
@@ -9715,10 +9798,10 @@ function get_dnsservers(){
 
 	$dnsservers=$this->query("select servertype,ip from servers where servertype in ('binddns')");
 	$localserver=$this->query("select servertype,ip from servers where servertype in ('binddns') and ip='localhost'");
-	if(count($localserver)==0) $dnsservers[]=array('servertype'=>'binddns','ip'=>'localhost'); # add localhost if not exist # binddns harici bir sey kullanılacaksa, modifiye edilmeli.get_webservers a bak.
+	if(count($localserver)==0) $dnsservers[]=['servertype'=>'binddns','ip'=>'localhost']; # add localhost if not exist # binddns harici bir sey kullanılacaksa, modifiye edilmeli.get_webservers a bak.
 
 	#print_r($webservers);
-	$w2=array();  # servers in "servers" table
+	$w2=[];  # servers in "servers" table
 	foreach($dnsservers as $w) $w2[$w['ip']]=$w['servertype']; # convert to ip=>type pairs
 
 	print_r($w2);
@@ -9730,7 +9813,7 @@ function get_dnsservers(){
 
 
 
-	$w3=array();
+	$w3=[];
 
 	foreach($doms as $dom){
 		$ip=$dom['dnsserverips'];
@@ -9748,10 +9831,10 @@ function get_dnsservers(){
 	if($w3['localhost']=='') $w3['localhost']='binddns';
 	print_r($w3);
 
-	$w4=array();
+	$w4=[];
 	$keys=array_keys($w3);
 
-	foreach($keys as $k) $w4[]=array('servertype'=>$w3[$k],'ip'=>$k); #convert back to servers array
+	foreach($keys as $k) $w4[]=['servertype'=>$w3[$k],'ip'=>$k]; #convert back to servers array
 
 	print_r($w4);
 
@@ -9798,7 +9881,7 @@ function prepare_dns_files($server){
 
 	# put customdns info into zone files..
 	$arr_customdns=$this->query("select * from ".$this->conf['customstable']['tablename']." where name='customdns' ");
-	$arr2=array();
+	$arr2=[];
 
 	foreach($arr as $dom) { # add customdns to array,
 		$customdnsvalue='';
@@ -9920,11 +10003,11 @@ function prepare_dns_zone_files($server,$arr2){
 		echo "\n".__FUNCTION__.": buraya geldi.\n";
 
 		# replace any old style tags that may be left on template:
-		$replacealanlar=array_merge($replacealanlar,array('{serial}','{ip}','{dnsemail}','{mailip}','{dnsip}','{webip}')); # tags to replace
-		$ar1=array_merge($ar1,array(rand(1,1000),$this->conf['dnsip'],$this->conf['dnsemail'],$mailip,$dnsip,$webip)); # tag contents to put
+		$replacealanlar=array_merge($replacealanlar,['{serial}','{ip}','{dnsemail}','{mailip}','{dnsip}','{webip}']); # tags to replace
+		$ar1=array_merge($ar1,[rand(1,1000),$this->conf['dnsip'],$this->conf['dnsemail'],$mailip,$dnsip,$webip]); # tag contents to put
 
 
-		$dnstemp=$this->build_from_template($dnstemp,array('{dnsserverips}','{webserverips}','{mailserverips}'),array($dnsserverips,$webserverips,$mailserverips),$replacealanlar,$ar1);
+		$dnstemp=$this->build_from_template($dnstemp,['{dnsserverips}','{webserverips}','{mailserverips}'],[$dnsserverips,$webserverips,$mailserverips],$replacealanlar,$ar1);
 		#echo "Hazirlanan dns config: \n$dnstemp";
 
 		# lokalden erisenler icin ayri bir dns, dns icinde view olusturulabilir buraya bak: http://www.oreillynet.com/pub/a/oreilly/networking/news/views_0501.html
@@ -10099,10 +10182,10 @@ function generate_password($length = 8) {
 function generate_index_file($dir,$template,$domainname){
 	if($this->noExistingIndex("$dir")){
 		$filestr=$this->loadTemplate($template); # load template
-		$findarray=array('webserverip','domainname','localip');   # replace some variables,
+		$findarray=['webserverip','domainname','localip'];   # replace some variables,
 		$localipcode="<?php echo getenv('REMOTE_ADDR'); ?>";
 
-		$replacearray=array($this->getWebServer(),$domainname,$localipcode);
+		$replacearray=[$this->getWebServer(),$domainname,$localipcode];
 		$findarray2=arrayop($findarray,"strop");
 		$fileout=str_replace($findarray2,$replacearray,$filestr);
 
@@ -10113,9 +10196,18 @@ function generate_index_file($dir,$template,$domainname){
 
 function initializeDomainFiles($dom,$domainname){ # singleserver  mode
 	$this->requireCommandLine(__FUNCTION__);
+	
 	if ($domainname<>''){
 		if($dom['domainname']<>$domainname) return ; # do only requested domains.
 	}
+
+	if ($domainname=='' && $this->miscconfig['initialize_domain_files']=='') {
+		print "\n Domain files are not initialized, due to option initialize_domain_files disabled ({$dom['domainname']})\n";
+		return;
+	} 
+
+	print __FUNCTION__.":execution single domain if any: $domainname \n";
+	print_r($dom);
 
 	$domainname=$dom['domainname'];
 	$homedir=$dom['homedir'];
@@ -10136,7 +10228,7 @@ function initializeDomainFiles($dom,$domainname){ # singleserver  mode
 
 
 	# put some files if not exists:
-	foreach(array('ehcpinfo.html','error_page.html') as $f) {
+	foreach(['ehcpinfo.html','error_page.html'] as $f) {
 		if(!file_exists("$homedir/httpdocs/$f")){
 			passthru2("cp -f $f $homedir/httpdocs/");
 		}
@@ -10157,12 +10249,8 @@ function syncDomains($file='',$domainname='') {
 	$this->requireCommandLine(__FUNCTION__);
 
 	echo "\nstart syncing domains\nlocalip:".$this->miscconfig['localip'].", dnsip:".$this->miscconfig['dnsip']."\nwebservertype:".$this->miscconfig['webservertype']."\n";
-	if($file=='') $file="apachehcp.conf";
+	if($file=='') $file="webserver_ehcp.conf";
 	$filt=andle($this->activefilt,"(serverip is null or serverip='') and homedir<>'' order by theorder"); # exclude where serverip is set, that is, for remote dns hosted only domains..
-
-	if($domainname<>'') {
-		echo "###>>  syncdomain is initialising files only for a single domain: $domainname !!\n";
-	}
 
 	$arr=$this->getDomains($filt);
 	if($this->debuglevel>0) print_r($arr);
@@ -10171,12 +10259,19 @@ function syncDomains($file='',$domainname='') {
 	echo "\nwebserverip: $webserverip\n";
 
 	$success=True;
-	$arr_customhttp=array();
-	if($this->miscconfig['disablecustomhttp']=='') $arr_customhttp=$this->query("select * from ".$this->conf['customstable']['tablename']." where name='customhttp'  and (webservertype is null or webservertype='' or webservertype='".$this->miscconfig['webservertype']."')");
-	$arr2=array();
+	$arr_customhttp=[];
+	if($this->miscconfig['disablecustomhttp']=='') 
+	$arr_customhttp=$this->query("select * from ".$this->conf['customstable']['tablename']." where name='customhttp'  and (webservertype is null or webservertype='' or webservertype='".$this->miscconfig['webservertype']."')");
+	
+	$arr2=[];
 
-	$webserver_template_filename="$this->ehcpdir/apachetemplate"; # this file may be an apache template actually, or an nginx template, code will be fixed later..
-	$ips=array();
+	$webserver_template_filename="$this->ehcpdir/webserver_template"; # this file may be an apache template actually, or an nginx template, code will be fixed later..
+	$ips=[];
+
+	if($domainname<>'') {
+		echo "###>>  syncdomain is initialising files only for a single domain: $domainname !!\n";
+	}
+
 
 	foreach($arr as $dom) { // setup necessry dirs/files if doesnt exist..
 		$this->initializeDomainFiles($dom,$domainname);
@@ -10206,7 +10301,7 @@ function syncDomains($file='',$domainname='') {
 				echo "\nThis domain has custom webserverips,adjusting:".$dom['domainname'].":".$dom['webserverips'];
 				$dom['webserverip']=$i;   # if entered in db exclusively.  # diger ip ler ne olacak ? sanirim multiserver fonksiyonlarinda halledilecek...
 				switch($this->miscconfig['webservertype']){
-					case 'apache2': $webserver_template_filename="$this->ehcpdir/apachetemplate_ipbased";break;
+					case 'apache2': $webserver_template_filename="$this->ehcpdir/webserver_template_ipbased";break;
 					# other servers, if multi-ip supported, it seems no change needed for nginx
 				}
 				if(!in_array($i,$ips)) $ips[]=$i;
@@ -10218,7 +10313,7 @@ function syncDomains($file='',$domainname='') {
 		$arr2[]=$dom;
 	}
 
-	# here write config to apachehcp.conf file.
+	# here write config to webserver_ehcp.conf file.
 	# you may see daemon mode output at logfile, typically tail -f /var/log/ehcp.log from command line
 
 	echo "\n**Syncing domains for webserver type of (".$this->miscconfig['webservertype']."):";
@@ -10227,8 +10322,8 @@ function syncDomains($file='',$domainname='') {
 
 	$this->build_logrotate_conf($arr2,'localhost');
 
-	#begin: reconstruct apache config file:
-	$fileout="# This is an automatically generated file, by ehcp. Do not edit this file by hand. if you need to change webserver configs, edit apachetemplate(or similar) file (to take effect for all domains) in ehcp dir, or use (custom http or edit webserver/apache template to take effect for single domain) in ehcp gui \n";
+	#begin: reconstruct webserver config file:
+	$fileout="# This is an automatically generated file, by ehcp. Do not edit this file by hand. if you need to change webserver configs, edit webserver_template(or similar) file (to take effect for all domains) in ehcp dir, or use (custom http or edit webserver/apache template to take effect for single domain) in ehcp gui \n";
 
 	if($this->miscconfig['webservertype']=='apache2') {
 		foreach($ips as $i){# eger ipler kullanılacaksa
@@ -10247,9 +10342,12 @@ function syncDomains($file='',$domainname='') {
 		# *1 if template file contains {webserverip} then, ssl/ipbased is assumed to enabled on apache configs.
 		# in this case, non-ssl/ipbased custom http's are disabled to prevent apache config error. All custom http's should be fixed by admin in this case.
 
-		if ($sslenabled) $this->echoln("ssl/ipbased seems enabled in this server, because tag {webserverip} is found in apache config templates files.."); # this is a bit apache specific code.
-		else $this->echoln("ssl/ipbased seems not enabled in this server, because tag {webserverip} is not found in apache config templates files..");
+		if($this->miscconfig['webservertype']=='apache2') {
+			# this part should be revised.. sslenabled option is currently only for apache.. 
 
+			if ($sslenabled) $this->echoln("ssl/ipbased seems enabled in this server, because tag {webserverip} is found in apache config templates files.."); # this is a bit apache specific code.
+			else $this->echoln("ssl/ipbased seems not enabled in this server, because tag {webserverip} is not found in apache config templates files..");
+		}
 
 		foreach($arr2 as $ar1) {// template e gore apache dosyasini olustur
 			if($this->miscconfig['disablecustomhttp']=='') {
@@ -10279,7 +10377,7 @@ function syncDomains($file='',$domainname='') {
 			else $wildcard='';
 
 			# replace some fields that does not exist in domain array
-			$webserver_template=str_replace(array('{ehcpdir}','{localip}','{wildcarddomain}'),array($this->ehcpdir,$this->miscconfig['localip'],$wildcard),$webserver_template);
+			$webserver_template=str_replace(['{ehcpdir}','{localip}','{wildcarddomain}'],[$this->ehcpdir,$this->miscconfig['localip'],$wildcard],$webserver_template);
 			$webserver_config=str_replace($replacealanlar,$ar1,$webserver_template);
 			$webserver_config=$this->ssl_fix_template($ar1['domainname'],$webserver_config);
 			$fileout.=$webserver_config;
@@ -10300,7 +10398,7 @@ function syncDomains($file='',$domainname='') {
 	echo "Passive domains:\n";
 	print_r($passivedomains);
 
-	$passives=array();
+	$passives=[];
 	foreach($passivedomains as $p){
 		if($ssl_enabled){
 			$p['webserverip']=$webserverip;
@@ -10309,7 +10407,7 @@ function syncDomains($file='',$domainname='') {
 		$passives[]=$p;
 	}
 
-	$this->putArrayToFile($passivedomains,"apachehcp_passivedomains.conf","apachetemplate_passivedomains");
+	$this->putArrayToFile($passivedomains,"webserver_ehcp_passivedomains.conf","webserver_template_passivedomains");
 
 	$passiveindex=$this->miscconfig['passiveindexfile'];
 	if($passiveindex=='') $passiveindex=$this->sayinmylang("domain_deactivated_contact_administrator");
@@ -10331,9 +10429,11 @@ function syncDomains($file='',$domainname='') {
 	$this->updateHostsFile();
 
 	# syncDomains
-	if(!$this->is_webserver_running()) {
-		$this->echoln2("webserver seems not working...appearantly, some error occured; rolling back to non-ssl mode.");
-		$this->fixApacheConfigNonSsl();
+	if($this->check_webserver_enabled) {
+		if(!$this->is_webserver_running()) {
+			$this->echoln2("webserver seems not working...appearantly, some error occured; rolling back to non-ssl mode.");
+			$this->fixApacheConfigNonSsl();
+		}
 	}
 
 	return $success;
@@ -10352,7 +10452,7 @@ function updateHostsFile(){
 	$count = 0;
 
 	$ip=$this->miscconfig['localip'];
-	if(!$ip) $ip=getlocalip();
+	if(!$ip) $ip=$this->getlocalip2();
 
 	if(trim($ip)=='') {
 		print __FUNCTION__.": localip of ehcp is not defined. Define it in settings. \n";
@@ -10402,7 +10502,7 @@ function initializeLogs($dir){
 
 	passthru2("mkdir -p ".$dir);
 	passthru2("mkdir -p ".$dir."/logs");
-	$this->write_file_if_not_exists("$dir/logs/access_log","");// these are defined in apachetemplate file, bunlarin log_rotate olayi yapilmali.
+	$this->write_file_if_not_exists("$dir/logs/access_log","");// these are defined in webserver_template file, bunlarin log_rotate olayi yapilmali.
 	$this->write_file_if_not_exists("$dir/logs/error_log","");
 
 	passthru2("chown root:root -Rf $dir/logs"); # bu olmayinca, biri logs dizinini silince, apache hata verip cikiyor.. # suanda access ver error loglar silinemiyor kullanici tarafindan...ancak sunucudan ssh ile silinebilir...!
@@ -10456,14 +10556,14 @@ function initialize_subdomain_files($dom,$domainname){
 function syncSubdomains($file='',$domainname) {
 	$this->requireCommandLine(__FUNCTION__);
 	echo "\nstart syncing sub domains, ";
-	if($file=='') $file="apachehcp_subdomains.conf";
+	if($file=='') $file="webserver_ehcp_subdomains.conf";
 	$arr=$this->query("select * from ".$this->conf['subdomainstable']['tablename']);
 	$webserverip=$this->getWebServer();
 	$success=True;
 
-	$arr2=array();
-	$ips=array();
-	$webserver_template_filename="$this->ehcpdir/apache_subdomain_template";
+	$arr2=[];
+	$ips=[];
+	$webserver_template_filename="$this->ehcpdir/webserver_subdomain_template";
 
 	if($arr)
 		foreach($arr as $dom) { // setup necessry dirs/files if doesnt exist..
@@ -10482,8 +10582,8 @@ function syncSubdomains($file='',$domainname) {
 					$dom['webserverip']=$i;   # if entered in db exclusively.  # diger ip ler ne olacak ? sanirim multiserver fonksiyonlarinda halledilecek...
 					# todo: this part will be reorganized. if subdomain contains specific IP,this part is wrong in this situation. Config should be built for each subdomain, not in array_to_file below..
 					switch($this->miscconfig['webservertype']){
-						case 'apache2': $webserver_template_filename="$this->ehcpdir/apache_subdomain_template_ipbased";break;
-						case 'nginx': $webserver_template_filename="$this->ehcpdir/etc/nginx/apache_subdomain_template.nginx";break;
+						case 'apache2': $webserver_template_filename="$this->ehcpdir/webserver_subdomain_template_ipbased";break;
+						case 'nginx': $webserver_template_filename="$this->ehcpdir/etc/nginx/webserver_subdomain_template";break;
 						# other servers, if multi-ip supported
 					}
 					if(!in_array($i,$ips)) $ips[]=$i;
@@ -10514,7 +10614,7 @@ function syncSubdomains($file='',$domainname) {
 
 function configtest_restart_webserver(){
 	$webserver=trim($this->miscconfig['webservertype']);
-	if($webserver=='' or !in_array($webserver,array('apache2','nginx'))) {
+	if($webserver=='' or !in_array($webserver,['apache2','nginx'])) {
 		$this->echoln("webservertype is not defined in settings/config or not recognised. now setting is:($webserver). setting to default of apache2.");
 		$webserver='apache2';
 	}
@@ -10523,7 +10623,7 @@ function configtest_restart_webserver(){
 		passthru2("/etc/init.d/nginx stop");
 		$this->echoln2("checking $webserver syntax: ");
 		print "Running configtest, apache2ctl: \n";
-		system("apache2ctl configtest",$ret);
+		system("/usr/sbin/apache2ctl configtest",$ret);
 		# burda apache config test ediyor... custom http de abuk subuk seyler girenler nedeniyle...
 		# bu olmazsa, apache baslayamiyor ve ehcp arayuzu de, ayni apache dan calistigindan, ulasilamaz hale geliyor..
 		# Bu konuda, basic bir python arayuzu yapmayi planliyorum.
@@ -10534,17 +10634,17 @@ function configtest_restart_webserver(){
 		print "ret: $ret \n";
 
 		if($ret==8){
-			echo "\n $webserver configde hata olustu-error occured.. \n";
+			echo "\n $webserver config CONTAINS ERRORS.. \n";
 			$this->infotoadminemail("","your ehcpserver-error in $webserver config",false);
 			$success=false;
 		} else {
-			echo "\n $webserver config NORMAL GORUNUYOR... yukluyor.";
+			echo "\n $webserver config SEEMS NORMAL CONTINUING LOADING.";
 			passthru2("/etc/init.d/apache2 restart");
 			$success=true;
 		}
 	} elseif($webserver=='nginx') {
 		passthru2("/etc/init.d/apache2 stop");
-		passthru2("/etc/init.d/php5-fpm restart");
+		passthru2("/etc/init.d/{$this->php_fpm} restart");
 
 		$this->echoln("checking $webserver syntax: ");
 		$out=shell_exec('/etc/init.d/nginx 2>&1');
@@ -10558,11 +10658,11 @@ function configtest_restart_webserver(){
 		system("/etc/init.d/nginx configtest",$ret);
 
 		if($ret<>0){
-			echo "\n $webserver configde hata olustu-error occured.. \n";
+			echo "\n $webserver config CONTAINS ERRORS.. \n";
 			$this->infotoadminemail("","your ehcpserver-error in $webserver config",false);
 			$success=false;
 		} else {
-			echo "\n $webserver config NORMAL GORUNUYOR... yukluyor.";
+			echo "\n $webserver config SEEMS NORMAL CONTINUING LOADING.";
 			passthru2("/etc/init.d/nginx restart");
 			$success=true;
 		}
@@ -10649,7 +10749,7 @@ function installwp($domainpath, $dbname, $dbusername,$dbuserpass) {
 	passthru2("wp user set-role admin administrator $common",True);
 	passthru2("wp theme activate twentythirteen $common",True);
 	
-	foreach (array('twentytwelve','twentythirteen','twentyfourteen') as $theme) {
+	foreach (['twentytwelve','twentythirteen','twentyfourteen'] as $theme) {
 		copy("{$this->ehcpdir}/etc/wp/themes/$theme/footer.php","$domainpath/wp-content/themes/$theme/footer.php");
 	}
 
@@ -10680,8 +10780,8 @@ function runop2($op,$action,$info,$info2='',$info3=''){
 		case 'fixApacheConfigSsl'		: return $this->fixApacheConfigSsl($info);break;
 		case 'fixApacheConfigSslOnly'	: return $this->fixApacheConfigSslOnly($info);break;
 		case 'installwp'				: return $this->installwp($action,$info,$info2,$info3); break;
-		case 'daemon_vps'				: return $this->call_func_in_module('vps_module','daemon_vps',array('action'=>$action,'info'=>$info,'info2'=>$info2)); break; # array in this is params
-		case 'daemon_vpn'				: return $this->call_func_in_module('vpn_module','daemon_vpn',array('action'=>$action,'info'=>$info,'info2'=>$info2)); break; # array in this is params
+		case 'daemon_vps'				: return $this->call_func_in_module('vps_module','daemon_vps',['action'=>$action,'info'=>$info,'info2'=>$info2]); break; # array in this is params
+		case 'daemon_vpn'				: return $this->call_func_in_module('vpn_module','daemon_vpn',['action'=>$action,'info'=>$info,'info2'=>$info2]); break; # array in this is params
 		case 'generate_ssl_config1'		: return $this->call_func_in_module('ssl_module','generate_ssl_config1',$info); break;
 
 
@@ -10691,18 +10791,6 @@ function runop2($op,$action,$info,$info2='',$info3=''){
 }
 
 function fixMailConfiguration(){
-/*
-Şöyle birşey yapılabilir:
-
-arayüzden bir komut ile, sunucuda bazı kontroller yapılıp bir rapor hazırlanabilir, bu rapor, gerek soru sorarken, gerekse problemleri teşhis ederken işe yarayabilir. 
-rapor daemon tarafından hazırlanır, hazır olunca da gui'de bir ikaz görünebilir.
-
-Mesela, /etc/postfix/main.cf içinde "dovecot" geçiyorsa, birşeyler ters gidebilir. 
-/var/spool/postfix/  sahipliği doğru değilse, sıkıntı olabilir gibi.. 
-
-*/
-
-
 	# this re-runs function mailconfiguration,configurepamsmtp, configureauthmysql, that is, mail related functions in install_lib.php
 	# purpose: in case mail/ehcp configuration is corrupted, or ehcp mysql db pass changed, update system configuration accordingly
 	# this function was for mail configuration at start, became whole ehcp configuration later.. included vsftpd, net2ftp... and so on..
@@ -10711,8 +10799,8 @@ Mesela, /etc/postfix/main.cf içinde "dovecot" geçiyorsa, birşeyler ters gideb
 	$this->write_file_if_not_exists('/etc/mailname','mail.myserver.com') ; # on some systems, this is deleted somehow.
 	if(!file_exists('/etc/postfix/main.cf')) passthru2("cp ".$this->ehcpdir."/etc/postfix/main.cf.sample /etc/postfix/main.cf"); # on some systems, this is deleted somehow.
 
-	$params=array('ehcppass'=>$this->dbpass);
-	$params2=array_merge($params,array('ehcpinstalldir'=>$this->conf['ehcpdir']));
+	$params=['ehcppass'=>$this->dbpass];
+	$params2=array_merge($params,['ehcpinstalldir'=>$this->conf['ehcpdir']]);
 
 	global $ip,$ehcpmysqlpass,$ehcpinstalldir;
 	include('config.php');
@@ -10859,7 +10947,7 @@ function getAndInstallFile($bilgi,$domainname,$directory){
 	passthru2("rm -rf $tmpdir");
 
 	if(!(strpos($bilgi['scriptname'],"ehcp itself")===false)){ # if this is ehcp itself... # download new version of ehcp, overwrite settings&config files. should work directly if you have latest ehcp.
-		$settingsfiles=array('config.php','apachetemplate','dnszonetemplate','apachetemplate_passivedomains','apache_subdomain_template','dnsnamedconftemplate', 'dnsnamedconftemplate_slave');
+		$settingsfiles=['config.php','webserver_template','dnszonetemplate','webserver_template_passivedomains','webserver_subdomain_template','dnsnamedconftemplate', 'dnsnamedconftemplate_slave'];
 		foreach($settingsfiles as $tocopy)
 			passthru2("cp -Rvf ".$this->conf['ehcpdir']."/$tocopy $targetdirectory");
 	}
@@ -10879,7 +10967,7 @@ function getAndInstallFile($bilgi,$domainname,$directory){
 	print_r($bilgi['commandsaftercopy']);
 	foreach(explode("\n",$bilgi['commandsaftercopy']) as $com) {
 		$com=trim($com);
-		$com=str_replace(array('{domainname}','{domainhome}','{targetdirectory}'),array($domainname,$domainhome,$targetdirectory),$com);
+		$com=str_replace(['{domainname}','{domainhome}','{targetdirectory}'],[$domainname,$domainhome,$targetdirectory],$com);
 		$com=trim($com);
 		if($com<>'') passthru2($com);
 	}
@@ -10897,7 +10985,7 @@ function getAndInstallFile($bilgi,$domainname,$directory){
 		$inf[1]=str_replace('..','',$inf[1]); # avoid hi-jacking by ../../ ... etc.
 		$cmd="chown -Rf ".$inf[0]." $targetdirectory/".$inf[1]; # path is relative to target dir. this way, this does not write to system files, I hope.
 		passthru2($cmd); # adjust first..
-		$params=array('domainname'=>$domainname,'name'=>'fileowner','value'=>$inf[0],'value2'=>"$directory/".$inf[1]);
+		$params=['domainname'=>$domainname,'name'=>'fileowner','value'=>$inf[0],'value2'=>"$directory/".$inf[1]];
 		$this->insert_custom_setting_direct($params); # insert this for adjusting next time, while syncing...
 	}
 
@@ -10967,7 +11055,7 @@ function ilerigeriekle($kayitsayisi,$baslangic,$satirsayisi,$querystring) {
 	$ilerimiktar=$baslangic+$satirsayisi;
 	$self=$_SERVER['PHP_SELF'];
 	$querystring=$_SERVER['QUERY_STRING'];
-	$querystring=str_replace(array("&baslangic=$baslangic&satirsayisi=$satirsayisi","&&"),array("","&"),$querystring);
+	$querystring=str_replace(["&baslangic=$baslangic&satirsayisi=$satirsayisi","&&"],["","&"],$querystring);
 	$self2=$self."?".$querystring;
 
         if($satirsayisi>0) {
@@ -11029,7 +11117,7 @@ function tablolistele3_5_4($tablo,$baslik,$alan,$filtre,$sirala,$linkyazi,$linkd
 // 3_5_2 den fark, mssqlden de okuyabilmesi olacak.. yeni yazyorum. adodb ye gectim.
 
 GLOBAL $aranan,$arananalan,$app,$baslangic,$satirsayisi,$listall;
-$this->getVariable(array("arananalan","aranan","hepsi",'baslangic','satirsayisi','listall'));
+$this->getVariable(["arananalan","aranan","hepsi",'baslangic','satirsayisi','listall']);
 
 $color1="#FFE8B2";
 $color2="#E2E2E2";
@@ -11093,7 +11181,7 @@ if($kayitsayisi==0){
 	//return $result2;
 }
 
-$selectalan=array();
+$selectalan=[];
 foreach($alan as $al){
 		if(is_array($al)) $selectalan[]=$al[0];
 		else $selectalan[]=$al;
@@ -11213,7 +11301,7 @@ function isTrue($param,$str='',$returnit=False){ # this is a test function to fi
 		$ret="<b>this is exact '' - empty</b><hr>";
 		$found=true;
 	}
-	if($param===array()){
+	if($param===[]){
 		$ret="<b>this is exact empty array</b><hr>";
 		$found=true;
 	}
@@ -11233,7 +11321,7 @@ function isTrue($param,$str='',$returnit=False){ # this is a test function to fi
 function sifreHatirlat(){ # password reminder
 	$tarih=date_tarih();
 	global $email,$panelusername,$hash;
-	$this->getVariable(array("email",'panelusername','hash'));
+	$this->getVariable(["email",'panelusername','hash']);
 
 	if($email<>"") {
 
@@ -11282,33 +11370,60 @@ function sifreHatirlat(){ # password reminder
 			$this->output.='No such email';
 		}
 	} else {
-		$inputparams=array(
-			array('email','lefttext'=>'Enter your email:'),
-			array('panelusername','righttext'=>'leave empty if you dont remember'),
-			array('op','hidden','default'=>__FUNCTION__)
-		);
+		$inputparams=[
+			['email','lefttext'=>'Enter your email:'],
+			['panelusername','righttext'=>'leave empty if you dont remember'],
+			['op','hidden','default'=>__FUNCTION__]
+		];
 
 		$this->output.=inputform5($inputparams);
-		#inputform4($action,array('Enter your email:'),array('email'),array(),array("op"),array('sifrehatirlat'));
+		#inputform4($action,array('Enter your email:'),array('email'),[],array("op"),array('sifrehatirlat'));
 	}
 	return true;
 }
 
-function getLocalIP() {
-	global $localip;//only for daemon mode
-	$ipline=exec("ifconfig eth0 | grep 'inet ' | grep 'dres' | grep 255.255 | grep -v '127.0.0' ");
+function getlocalip($interface='eth0') {
+	global $localip;
+	$ipline=exec("ifconfig $interface 2>/dev/null | grep \"inet addr\" ");
 	$ipline=strstr($ipline,"addr:");
 	$pos=strpos($ipline," ");
-	$ipline=substr($ipline,5,$pos-5);
+	$ipline=trim(substr($ipline,5,$pos-5));
 	$localip=$ipline;
 	return $ipline;
 }
+
+
+function getlocalip2($interface='eth0') {
+	global $localip;
+
+	if($localip<>'') return $localip;
+
+	$ip='';
+	if($ip=='') $ip=$this->getlocalip($interface);
+	if($ip=='') $ip=$this->getlocalip('eth1');
+	if($ip=='') $ip=$this->getlocalip('eth2');
+
+	if($ip=='') {
+		$ipline=exec("ifconfig | grep 'inet ' | grep 'addr' | grep 255.255 | grep -v '127.0.0' ");
+		$ipline=strstr($ipline,"addr:");
+		$pos=strpos($ipline," ");
+		$ip=trim(substr($ipline,5,$pos-5));
+
+		if($ip=='') {
+			echo "Your ip cannot be determined automatically... \nYour ip may be one of:\n";
+			system("ifconfig | grep 'inet addr:' ");
+		}
+	}
+	$localip=$ip;
+	return $ip;
+}
+
 
 function infoMailUsingWget($str){
 	# send email when php email function, or email server of server not functioning.. using remote php script..
 	global $user_name,$user_email,$localip;
 	echo "please wait...\n";
-	$ip=$this->getLocalIP();
+	$ip=$this->getlocalip2();
 	$str=str_replace(" ","_",$str); # because in url, space breaks variable msg in url
 	#$command="wget -q -O /dev/null --timeout=15 \"http://www.ehcp.net/diger/msg.php?msg=ip:$ip,$str&name=$user_name&email=$user_email&ip=$ip\"";
 	# that command had some errors, so, i switched to file_get_contents.

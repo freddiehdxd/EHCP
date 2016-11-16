@@ -1,10 +1,11 @@
 #!/bin/bash
 # ehcp - Easy Hosting Control Panel install/remove by info@ehcp.net (actually, no remove yet)
-# this is a basic shell installer, real installation in install_lib.php, which is called by install_1.php, install_2.php
+# this is a basic (!) shell installer, real installation in install_lib.php, which is called by install_1.php, install_2.php
+# 
 #
 # please contact me if you made any modifications.. or you need help
 # msn/email: info@ehcp.net
-# skype/yahoo/gtalk: ehcpdeveloper
+# skype:ehcpanel
 #
 # Main Developer: info@ehcp.net
 # Marcel <marcelbutucea@gmail.com>
@@ -13,11 +14,12 @@
 #
 # by earnolmartin@gmail.com : many fixes,
 # by own3mall@gmail.com : many fixes,
+# by admin@tecflare.com : quiet install,
 # (Looking for other volunteer developers.. in future, maybe, we may have some budget... )
-# last modified by ehcpdeveloper on 1.11.2014 (d-m-y)
+# last modified by ehcpdeveloper on 16.11.2016 (d-m-y)
 
 
-ehcpversion="0.37.4.b"
+ehcpversion="0.38.2.b"
 emailenable=true  # write true/false lowercase for bash.. 
 
 echo
@@ -45,6 +47,17 @@ fi
 ################################################################################################
 
 # Stub function for apt-get
+
+function check_internet () {
+	host google.com 2>&1 > /dev/null
+	if [ $? -ne 0 ] ; then
+		echo "You seem to have no internet connection. Are you sure you want to try to continue? (y/n)"
+		read c
+		if [ "$c" == "n" ] ; then
+			exit
+		fi
+	fi
+}
 
 function installaptget () {
 	echo "now let's try to install apt-get on your system."
@@ -86,7 +99,7 @@ function ehcpHeader() {
 	echo
 	echo
 	echo "Now, ehcp pre-installer begins, a series of operations will be performed and main installer will be invoked. "
-	echo "if any problem occurs, refer to www.ehcp.net forum section, or contact me, mail/msn: info@ehcp.net"
+	echo "If any problem occurs, refer to www.ehcp.net forum section, or contact me, mail/msn: info@ehcp.net"
 	echo
 	echo "For automated installs, use $0 unattended (passwords are default in this case)"
 
@@ -98,15 +111,16 @@ function ehcpHeader() {
 
 	echo
 	echo "Note that ehcp can only be installed automatically on Debian based Linux OS'es or Linux'es with apt-get enabled..(Ubuntu, Kubuntu, debian and so on) Do not try to install ehcp with this installer on redhat, centos and non-debian Linux's... To use ehcp on no-debian systems, you need to manually install.. "
-	echo "this installer is for installing onto a clean, newly installed Ubuntu/Debian. If you install it on existing system, some existing packages will be removed after prompting, if they conflict with packages that are used in ehcp, so, be careful to answer yes/no when using in non-new system"
-	echo "Actually, I dont like saying like, 'No warranty, I cannot be responsible for any damage.... ', But, this is just a utility.. use at your own."
-	echo "ehcp also sends some usage data to developer for statistical/improvement purposes"
+	echo "This installer is for installing onto a clean, newly installed Ubuntu/Debian. If you install it on existing system, some existing packages will be removed after prompting, if they conflict with packages that are used in ehcp, so, be careful to answer yes/no when using in non-new system"
+	echo "Note that, this is just a utility.. use at your own risk."
+	echo "Ehcp also sends some usage data to developer for statistical/improvement purposes"
 	echo
 	echo "Outline of install process:"
-	echo "1- Install php command line version (Preinstaller)"
-	echo "2- Run install_1.php and install_2.php to install other server related software, such as mysql/mariadb, apache, nginx (Main installer)"
+	echo "1- Update apt-get repo info (apt-get update)"
+	echo "2- Install Php (That will run Main installer)"
+	echo "3- Run Main installer (Run install_1.php and install_2.php to install other server related software, such as mysql/mariadb, apache, nginx, etc.)"
 	echo
-	echo "press enter to continue"
+	echo "Press enter to continue"
 	echo
 	if [ "$unattended" == "" ] ; then
 		read
@@ -157,12 +171,12 @@ function checkAptget(){
 
 # Retrieve statistics
 # Marcel: This freezed the installer on one of my Centos Servers (needs more investigating)
-# ehcpdeveloper:answer: this infomail may be disabled, only for statistical purposes... may hang if for 10 second if user is not connected to internet, or something is wrong with wget or dns resolution...
+# developer:answer: this infomail may be disabled, only for statistical purposes... may hang if for 10 second if user is not connected to internet, or something is wrong with wget or dns resolution...
 # no hanging longer than 10 sec should occur... i think.. btw, your code is perfect, Marcel
 
 function infoMail(){
 	if $emailenable ; then
-		ip=`ifconfig | grep "inet addr" | grep -v "127.0.0.1" | awk '{print $2}' `
+		ip=`ifconfig | grep "inet addr" | grep -v "127.0.0.1" | awk '{print $2}'  2>/dev/null `
 		wget -q -O /dev/null --timeout=10 http://www.ehcp.net/diger/msg.php?msg=$1.$ip > /dev/null 2>&1 &
 	fi
 }
@@ -178,12 +192,14 @@ function installPack(){
 
 	if [ $distro == "ubuntu" ] || [ $distro == "debian" ];then
 		# first, try to install without any prompt, then if anything goes wrong, normal install..
-		apt-get -y --no-remove --allow-unauthenticated install $1
+		apt-get -y -qq --no-remove --allow-unauthenticated install $1
+		echo "apt-get -y -qq --no-remove --allow-unauthenticated install $1" >> ehcp-apt-get-install.log
+
 		if [ $? -ne 0 ]; then
 				apt-get --allow-unauthenticated install $1
 		fi
 	else
-		# Yum is nice, you don't get prompted :)
+		# Yum is nice, you don't get prompted :) ; Yum is not fully supported yet in ehcp. only apt fully supported. 
 		yum -y -t install $1
 	fi
 }
@@ -213,7 +229,7 @@ function aptgetInstall(){
 	killall update-notifier > /dev/null 2>&1 # these cause other apt-get commands fail because of dpkg lock
 
 	# first, try to install without any prompt, then if anything goes wrong, normal install..
-	cmd="apt-get -y --no-remove --allow-unauthenticated install $1"
+	cmd="apt-get -y -qq --no-remove --allow-unauthenticated install $1"
 	echo "Running: $cmd"
 	logToFile "$cmd"
 	$cmd
@@ -233,7 +249,7 @@ function aptgetRemove(){
 	fi
 
 	# first, try to uninstall without any prompt, then if anything goes wrong, normal uninstall..
-	cmd="apt-get -y remove $1"
+	cmd="apt-get -y -qq remove $1"
 	logToFile "$cmd"
 	$cmd
 
@@ -358,7 +374,7 @@ function libldapFix(){ # by earnolmartin@gmail.com
 	#Remove originally installed libpam-ldap if it exists
 	origDir=$(pwd)
 	aptgetRemove libpam-ldap
-	DEBIAN_FRONTEND=noninteractive apt-get -y install libpam-ldap
+	DEBIAN_FRONTEND=noninteractive apt-get -y -qq install libpam-ldap
 	cd $patchDir
 	mkdir lib32gccfix
 	cd lib32gccfix
@@ -489,7 +505,8 @@ function ubuntuVSFTPDFix(){ # by earnolmartin@gmail.com
 						fi
 					fi
 					#install
-					dpkg -i vsftpd_2.3.5-3ubuntu1.deb
+					rm -f /etc/systemd/system/vsftpd.service
+					dpkg -i --force-confdef vsftpd_2.3.5-3ubuntu1.deb
 					cd $origDir
 					fixVSFTPConfig
 				 fi
@@ -506,7 +523,8 @@ function ubuntuVSFTPDFix(){ # by earnolmartin@gmail.com
 							wget -N -O "vsftpd_3.0.2-patched_ubuntu.deb" http://dinofly.com/files/linux/vsftpd_3.0.2-1ubuntu1_amd64_patched.deb
 						fi
 					fi
-					sudo dpkg -i vsftpd_3.0.2-patched_ubuntu.deb
+					rm -f /etc/systemd/system/vsftpd.service
+					dpkg -i --force-confdef vsftpd_3.0.2-patched_ubuntu.deb
 					cd $origDir
 					fixVSFTPConfig
 				fi
@@ -526,7 +544,8 @@ function ubuntuVSFTPDFix(){ # by earnolmartin@gmail.com
 					# if [ $? -ne 0 ] ; then # just retry
 					# 	wget -N -O "vsftpd_3.0.2-1ubuntu2.deb" http://dinofly.com/files/linux/vsftpd_3.0.2-1ubuntu2_amd64.deb
 					# fi
-					sudo dpkg -i vsftpd_3.0.2-1ubuntu2.deb
+					rm -f /etc/systemd/system/vsftpd.service
+					dpkg -i --force-confdef vsftpd_3.0.2-1ubuntu2.deb
 				fi
 				fixVSFTPConfig
 			fi
@@ -644,6 +663,7 @@ function check_mysql(){
 #############################################################
 # End Functions & Start Install							 #
 #############################################################
+check_internet
 checkUser $@
 ehcpHeader
 
@@ -683,11 +703,17 @@ mkdir /etc/ehcp
 aptgetInstall python-software-properties # for add-apt-repository
 
 # apt-get upgrade  # may be cancelled later... this may be dangerous... server owner should do it manually...
-# alias ins='apt-get -y install $1'
+# alias ins='apt-get -y -qq install $1'
 # sftp://bv@10.0.2.2
 aptgetInstall php5
 aptgetInstall php5-mysqlnd  # why here: If I install php5-mysql after install_1.php started, mysqli_connect functions does not work.
 aptgetInstall php5-cli
+
+# in case previuos ones fail..
+aptgetInstall php
+aptgetInstall php-mysqlnd  # why here: If I install php5-mysql after install_1.php started, mysqli_connect functions does not work.
+aptgetInstall php-cli
+
 aptgetInstall sudo
 aptgetInstall wget
 aptgetInstall aptitude
@@ -753,7 +779,7 @@ fi
 mv /var/www/new/ehcp/install_?.php /etc/ehcp/   # move it, to prevent later unauthorized access of installer from web
 cd "/var/www/new/ehcp"
 # Run VSFTPD Fix depending on version
-ubuntuVSFTPDFix
+# ubuntuVSFTPDFix  ; switching to another ftp server.. 
 # Run SlaveDNS Fix So that DNS Zones can be transfered
 slaveDNSApparmorFix
 # Run log chmod fix
@@ -811,8 +837,9 @@ sory for any inconvenience. you can contact email/msn: info@ehcp.net
 you may join us in developing this control panel.
 
 You may visit http://www.ehcp.net
-You may support by doing php coding, or html design, graphic design...
+You may support by donating cash, buying a pro license, doing php coding, html design, graphic design...
 You may support by donating free dedicated or virtual servers for this project...
-CURRENTLY I NEED A DEDICATED SERVER WITH 8 CORE, 8GRAM, 500G hdd at least.
+
+CURRENTLY WE NEED A DEDICATED SERVER WITH 8 CORE, 8GRAM, 500G hdd at least  (or, you may consider to buy a pro license or donate..)
 
 ehcp : Finished all operations.. go to your panel at http://yourip/ now..."

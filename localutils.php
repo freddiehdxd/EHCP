@@ -51,7 +51,7 @@ function mymkdir($dirname){
 if(!function_exists("print_r2")){
 function print_r2($array)
 {
-	if (is_array($array)) return "<pre>Array:\n".str_replace(array("\n" , " "), array('<br>', '&nbsp;'), print_r($array, true)).'</pre>';
+	if (is_array($array)) return "<pre>Array:\n".str_replace(["\n" , " "], ['<br>', '&nbsp;'], print_r($array, true)).'</pre>';
 	elseif ($array===null) return "(null) ";
 	elseif ($array==="") return "(bosluk= \"\")";
 	elseif ($array===false) return "(bool-false)";
@@ -98,8 +98,8 @@ function andle($s1,$s2) { //iki string'in andlenmi halini bulur. bir bosa "and" 
 
 function to_array($ar){ # convert a variable to array if it is not already,
     if(is_array($ar)) return $ar;  # if array, dont do anything
-    if(!$ar) return array(); # bos ise, bos array dondur.
-    if(!is_array($ar)) return array($ar); # array olmayan bir degisken ise, arraya dondur ve return et.
+    if(!$ar) return []; # bos ise, bos array dondur.
+    if(!is_array($ar)) return [$ar]; # array olmayan bir degisken ise, arraya dondur ve return et.
     return "(arraya cevirme yapilamadi.)"; # hicbiri degilse hata var zaten.
 }
 
@@ -237,7 +237,7 @@ function replacelineinfile($find,$replace,$where,$addifnotexists=false) {
 	} //else print_r($file);
 
 	$len=strlen($find);
-	$newfile=array();
+	$newfile=[];
 
 	foreach($filearr as $line){
 		$line=trim($line)."\n";
@@ -278,6 +278,11 @@ function addifnotexists($what,$where) {
 	if(!$filearr) {
 		echo "cannot open file, trying to setup: ($where)\n";
 		$fp = fopen($where,'w');
+		if(!$fp) {
+			print "File cannot be initialized. check file path/name.. returning: $where";
+			return False;
+		}
+
 		fclose($fp);
 		$filearr=file($where);
 
@@ -302,15 +307,11 @@ function addifnotexists($what,$where) {
 if(!function_exists('getlocalip')){
 function getlocalip($interface='eth0') {
 	global $localip;
-	$ipline=exec("ifconfig $interface | grep \"inet addr\"");
- 	# echo $ipline."\n\n";
+	$ipline=exec("ifconfig $interface | grep \"inet addr\" 2>/dev/null ");
 	$ipline=strstr($ipline,"addr:");
- 	# echo $ipline."\n\n";
 	$pos=strpos($ipline," ");
 	$ipline=trim(substr($ipline,5,$pos-5));
- 	# echo "($ipline)\n\n";
 	$localip=$ipline;
-	# echo "(getlocalip) your ip is determined to be ($localip) using interface $interface \n";
 	return $ipline;
 }
 }
@@ -337,12 +338,12 @@ function inputform5ForTableConfig($tableConfig,$addArray){
 	# written for compatibility with inputform5 general function.
 	# convert a table config (like in start of classapp.php, 'subdomainstable'=>array....) to an array that is acceptable by function inputform5 and call inputform5
 	$fields=$tableConfig['insertfields'];
-	$fields2=array();
+	$fields2=[];
 	$say=count($fields);
 
 	for($i=0;$i<$say;$i++) {
 		if(is_array($fields[$i])) $newitem=$fields[$i]; # accept fields both arrays and non-arrays
-		else $newitem=array($fields[$i]);
+		else $newitem=[$fields[$i]];
 		if($tableConfig['insertfieldlabels'][$i]<>'') $newitem['lefttext']=$tableConfig['insertfieldlabels'][$i];
 		$fields2[]=$newitem;
 	}
@@ -364,8 +365,8 @@ degistirildi. artik textarea gosterebiliyor.
 $res.="alanlar:".print_r2($alan);
 $res.="degerler:".print_r2($deger);
  */
-	if(!is_array($alanlar)) $alanlar=array($alanlar);# convert to array if not , i.e, you dont need to use an array if you only has one input element,
-	$alanlar[]=array('_insert','tip'=>'hidden','varsayilan'=>'1');
+	if(!is_array($alanlar)) $alanlar=[$alanlar];# convert to array if not , i.e, you dont need to use an array if you only has one input element,
+	$alanlar[]=['_insert','tip'=>'hidden','varsayilan'=>'1'];
 	$alansayisi=count($alanlar);
 
 	$res.="
@@ -408,7 +409,7 @@ function generatepass(){
 
 function inputelement2($alan){
 
-	if(!is_array($alan)) $alan=array($alan); # convert to array if not
+	if(!is_array($alan)) $alan=[$alan]; # convert to array if not
 
 
 	$solyazi=$alan['solyazi'].$alan['lefttext'];
@@ -425,7 +426,7 @@ function inputelement2($alan){
 
 
 	if($alanadi=='') $alanadi=$alan[0]; # fieldname is the first element, if not defined as 'alanadi'=>'fieldname_example'
-	if(!$solyazi and !in_array($alantipi,array('hidden','comment','submit'))) $solyazi=$alanadi;
+	if(!$solyazi and !in_array($alantipi,['hidden','comment','submit'])) $solyazi=$alanadi;
 	if($alantipi=='comment') $span=" colspan=3 "; # no 3 columns for comment type
 
 
@@ -603,7 +604,7 @@ function get_filename_extension($filename) {
 
 if(!function_exists('securefilename')){
 function securefilename($fn){
-	$ret=str_replace(array("\\",'..','%','&'),array('','',''),$fn);
+	$ret=str_replace(["\\",'..','%','&'],['','',''],$fn);
 	#$ret=escapeshellarg($ret);
 	return $ret;
 }
@@ -715,8 +716,8 @@ function debug_backtrace2(){
 }
 }
 
-function textarea_to_array($area,$start=array(),$end=array()){
-	$templ=array();
+function textarea_to_array($area,$start=[],$end=[]){
+	$templ=[];
 	$templates=explode("\n",$area);
 	#echo print_r2($templates);
 	$templates=array_merge($start,$templates,$end);

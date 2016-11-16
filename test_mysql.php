@@ -5,7 +5,7 @@ include_once("config/dbutil.php"); # this should be removed later...
 include_once("classapp.php"); # real application class
 
 
-degiskenal(array("op"));
+degiskenal(["op"]);
 global $commandline;
 $commandline=false;
 $user = $_SERVER['HTTP_USER_AGENT'];
@@ -23,7 +23,7 @@ if($argv and $argc and (is_array($argv))and (!$user)) {
 $app = new Application();
 $app->cerceve="standartcerceve";
 $app->usertable="domainusers";
-$app->userfields=array("id","domainname","username","email","quota");
+$app->userfields=["id","domainname","username","email","quota"];
 $app->connectTodb();
 
 $app->query("select now()");
