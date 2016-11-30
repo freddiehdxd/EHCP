@@ -1,7 +1,7 @@
 <?php
 // ehcp language file
 $this->lang['en']=
-array(
+[
 'undefined_limittype'=>'Undefined limittype.',
 'norecordfound'=>'Nothing/No Record Found.',
 'recordcount'=>'Record Count:',
@@ -133,8 +133,8 @@ array(
 	Do NOT ENTER here any html code.. this is for webserver configuration.. 
 
 	",
-''=>''
-);
+'subdomains_related_to_this_domain'=>'<br><br>Subdomains related to this domain:',
+];
 
 
 

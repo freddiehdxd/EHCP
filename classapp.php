@@ -5260,7 +5260,7 @@ function deleteDomain(){
 		$this->output.="<br> $domainname domain email user List: ".$this->tablolistele3_5_4($this->conf['emailuserstable']['tablename'],$baslik,$this->conf['emailuserstable']['listfields'],$filter,$sirala,$linkimages,$linkfiles,$linkfield,$listrowstart,$listrowcount,false);
 		$this->output.="<br>Domain File Count:".executeprog("ls -l ".$this->conf['vhosts']."/$domainname/httpdocs | wc -l");
 
-		$this->listTable("<br><br>Subdomains related to this domain: $domainname", 'subdomainstable', "domainname='$domainname'");
+		$this->listTable($this->tr('subdomains_related_to_this_domain')."$domainname", 'subdomainstable', "domainname='$domainname'");
 
 		if($panelusercount==0) $this->output.="<br>Panel user to be deleted:".$domainpaneluser;
 		$this->output.="<br><br>Databases related to this domain:".$this->tablolistele3_5_4($this->conf['mysqldbstable']['tablename'],$baslik,["dbname"],$filter,$sirala,$linkimages,$linkfiles,$linkfield,$listrowstart,$listrowcount,false);
@@ -11031,7 +11031,7 @@ function installScript($scriptname,$domainname,$directory){
 }
 
 function listTable($baslik1,$conf_tabloadi,$filtre=""){
-	return $this->listTable2($baslik1,$this->conf[$conf_tabloadi],$filtre="");
+	return $this->listTable2($baslik1,$this->conf[$conf_tabloadi],$filtre);
 }
 
 function listTable2($baslik1,$tablo,$filtre=""){ # this function is for calling from modules..
