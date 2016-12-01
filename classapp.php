@@ -748,10 +748,10 @@ function check_webserver($retry=0){
 			$this->check_webserver($retry+1);			
 		}
 		if($this->miscconfig['switchtoapacheonerror']=='') {
+			print __FUNCTION__.": webserver seems DOWN, however, switchtoapacheonerror disabled, so, doing nothing.. \n";
+		} else {
 			print __FUNCTION__.": webserver seems DOWN, fixing apache configuration by some operations such as disabling custom http & ssl.. \n";
 			$this->fixApacheConfigNonSsl2();
-		} else {
-			print __FUNCTION__.": webserver seems DOWN, however, switchtoapacheonerror disabled, so, doing nothing.. \n";
 		}
 	}
 	return True;
@@ -2146,6 +2146,10 @@ function rebuild_apache2_config(){
 
 function searchForFile($f){
 	return count(glob($f)) > 0;
+}
+
+function search_for_files($f){
+	return True;
 }
 
 function rebuild_nginx_config(){
@@ -9198,6 +9202,8 @@ function is_webserver_running(){
 
 function fixApacheConfigSsl($domain=''){
 	$this->requireCommandLine(__FUNCTION__,True);
+	syslog(LOG_WARNING,"Ehcp: changing webserver confing to ".$this->miscconfig['webservertype']);
+
 	$this->generateSslFiles();
 
 	if($this->miscconfig['webservertype']=='apache2') {
@@ -9236,6 +9242,8 @@ function fixApacheConfigSsl($domain=''){
 
 function fixApacheConfigSslOnly($domain=''){
 	$this->requireCommandLine(__FUNCTION__,True);
+	syslog(LOG_WARNING,"Ehcp: changing webserver confing to ".$this->miscconfig['webservertype']);
+
 	$this->generateSslFiles();
 
 	if($this->miscconfig['webservertype']=='apache2') {
@@ -9292,6 +9300,7 @@ function fixApacheConfigNonSsl(){
         $ehcpinstalldir=$this->conf['ehcpdir'];
 
 	include_once("install_lib.php");
+	syslog(LOG_WARNING,"Ehcp: changing webserver confing apache2 nonssl");
 
 	rebuild_apache2_config2(); # in install_lib.php
 
